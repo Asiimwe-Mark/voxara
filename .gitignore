@@ -19,6 +19,7 @@
 *.pem
 .env*.local
 .env
+.env.example
 
 # vercel
 .vercel
