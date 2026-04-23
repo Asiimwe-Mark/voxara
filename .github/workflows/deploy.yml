@@ -1,0 +1,33 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      # Add your deployment step here:
+      # - name: Deploy to Fly.io
+      #   run: flyctl deploy --remote-only
+      # OR
+      # - name: Deploy to Railway
+      #   run: railway up
+      # OR push the Docker image to your registry
+      - name: Build Docker image
+        run: docker build -t faceless-video:${{ github.sha }} .
+
+      - name: Echo deploy info
+        run: echo "Image faceless-video:${{ github.sha }} built. Add your deployment provider step here."

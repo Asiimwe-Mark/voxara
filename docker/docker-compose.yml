@@ -1,0 +1,245 @@
+version: "3.8"
+
+services:
+  # ======================================================
+  # Supabase Local Development Stack
+  # ======================================================
+  supabase-db:
+    image: supabase/postgres:15.6.1.143
+    container_name: faceless-supabase-db
+    restart: unless-stopped
+    ports:
+      - "54322:5432"
+    volumes:
+      - supabase_db_data:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d:ro
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  supabase-studio:
+    image: supabase/studio:2025.04.14-sha-0b9f2f5
+    container_name: faceless-supabase-studio
+    restart: unless-stopped
+    ports:
+      - "54323:3000"
+    environment:
+      STUDIO_PG_META_URL: http://supabase-meta:8080
+      POSTGRES_PASSWORD: postgres
+      DEFAULT_ORGANIZATION_NAME: voxara
+      DEFAULT_PROJECT_NAME: local
+      SUPABASE_URL: http://supabase-kong:8000
+      SUPABASE_PUBLIC_URL: http://localhost:54321
+      SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+      SUPABASE_SERVICE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGmc96R2wBZ3g0nCwO9Wg3PpLqzC6bJ4P4B4bH4bH4b
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+
+  supabase-kong:
+    image: kong:3.8.0
+    container_name: faceless-supabase-kong
+    restart: unless-stopped
+    ports:
+      - "54321:8000"
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+    volumes:
+      - ./docker/kong/kong.yml:/var/lib/kong/kong.yml:ro
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+
+  supabase-auth:
+    image: supabase/gotrue:v2.174.0
+    container_name: faceless-supabase-auth
+    restart: unless-stopped
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:postgres@supabase-db:5432/postgres
+      GOTRUE_SITE_URL: http://localhost:3000
+      GOTRUE_URI_ALLOW_LIST: http://localhost:3000,http://localhost:54321
+      GOTRUE_JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_DISABLE_SIGNUP: "false"
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+      GOTRUE_SMTP_HOST: mailpit
+      GOTRUE_SMTP_PORT: 1025
+      GOTRUE_SMTP_USER: ""
+      GOTRUE_SMTP_PASS: ""
+      GOTRUE_SMTP_ADMIN_EMAIL: admin@voxara.local
+      GOTRUE_MAILER_URLPATHS_INVITE: http://localhost:3000/invite
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: http://localhost:3000/confirm
+      GOTRUE_MAILER_URLPATHS_RECOVERY: http://localhost:3000/reset-password
+      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: http://localhost:3000/settings
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+
+  supabase-rest:
+    image: postgrest/postgrest:v12.2.3
+    container_name: faceless-supabase-rest
+    restart: unless-stopped
+    environment:
+      PGRST_DB_URI: postgres://authenticator:postgres@supabase-db:5432/postgres
+      PGRST_DB_SCHEMAS: public,storage
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_APP_SETTINGS_JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+
+  supabase-realtime:
+    image: supabase/realtime:v2.34.9
+    container_name: faceless-supabase-realtime
+    restart: unless-stopped
+    environment:
+      PORT: 4000
+      DB_HOST: supabase-db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: postgres
+      DB_SSL: "false"
+      JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters
+      SECURE_CHANNELS: "true"
+      REPLICATION_MODE: RLS
+      REPLICATION_POLL_INTERVAL: 100
+      SLOT_NAME: supabase_realtime_replication_slot
+      TEMPORARY_SLOT: "true"
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+
+  supabase-storage:
+    image: supabase/storage-api:v1.22.3
+    container_name: faceless-supabase-storage
+    restart: unless-stopped
+    environment:
+      ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+      SERVICE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGmc96R2wBZ3g0nCwO9Wg3PpLqzC6bJ4P4B4bH4bH4b
+      POSTGREST_URL: http://supabase-rest:3000
+      DATABASE_URL: postgres://supabase_storage_admin:postgres@supabase-db:5432/postgres
+      FILE_SIZE_LIMIT: 52428800
+      STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: stub
+      REGION: local
+      GLOBAL_S3_BUCKET: stub
+      ENABLE_IMAGE_TRANSFORMATION: "true"
+      IMGPROXY_URL: http://supabase-imgproxy:5001
+    volumes:
+      - supabase_storage_data:/var/lib/storage
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+
+  supabase-meta:
+    image: supabase/postgres-meta:v0.86.0
+    container_name: faceless-supabase-meta
+    restart: unless-stopped
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: supabase-db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: postgres
+      PG_META_DB_USER: postgres
+      PG_META_DB_PASSWORD: postgres
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+
+  supabase-imgproxy:
+    image: darthsim/imgproxy:v3.24.0
+    container_name: faceless-supabase-imgproxy
+    restart: unless-stopped
+    environment:
+      IMGPROXY_BIND: ":5001"
+      IMGPROXY_LOCAL_FILESYSTEM_ROOT: /
+      IMGPROXY_USE_ETAG: "true"
+      IMGPROXY_ENABLE_WEBP_DETECTION: "true"
+    volumes:
+      - supabase_storage_data:/var/lib/storage:ro
+    depends_on:
+      supabase-storage:
+        condition: service_started
+
+  # ======================================================
+  # Mailpit (Email testing)
+  # ======================================================
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: faceless-mailpit
+    restart: unless-stopped
+    ports:
+      - "54324:8025" # Web UI
+      - "1025:1025"  # SMTP
+
+  # ======================================================
+  # Redis (for rate limiting & caching)
+  # ======================================================
+  redis:
+    image: redis:7-alpine
+    container_name: faceless-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass redispassword
+
+  # ======================================================
+  # Next.js App (Optional – can run on host instead)
+  # ======================================================
+  # app:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: faceless-app
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     NODE_ENV: development
+  #     NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
+  #     NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+  #     SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGmc96R2wBZ3g0nCwO9Wg3PpLqzC6bJ4P4B4bH4bH4b
+  #     GEMINI_API_KEY: ${GEMINI_API_KEY}
+  #     PEXELS_API_KEY: ${PEXELS_API_KEY}
+  #     STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+  #     STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+  #     RESEND_API_KEY: ${RESEND_API_KEY}
+  #     MUX_TOKEN_ID: ${MUX_TOKEN_ID}
+  #     MUX_TOKEN_SECRET: ${MUX_TOKEN_SECRET}
+  #     INNGEST_EVENT_KEY: ${INNGEST_EVENT_KEY}
+  #     HEYGEN_API_KEY: ${HEYGEN_API_KEY}
+  #     ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY}
+  #     UPSTASH_REDIS_REST_URL: http://redis:6379
+  #     UPSTASH_REDIS_REST_TOKEN: redispassword
+  #   depends_on:
+  #     - supabase-db
+  #     - redis
+  #   volumes:
+  #     - ./:/app
+  #     - /app/node_modules
+  #   command: npm run dev
+
+volumes:
+  supabase_db_data:
+  supabase_storage_data:
+  redis_data:

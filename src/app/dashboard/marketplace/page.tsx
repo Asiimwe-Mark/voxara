@@ -1,0 +1,31 @@
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { TemplateMarketplace } from "@/components/marketplace/TemplateMarketplace";
+
+export default async function MarketplacePage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("credits, plan")
+    .eq("id", user.id)
+    .single();
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Template Marketplace</h2>
+        <p className="text-muted-foreground">
+          Browse and purchase professionally crafted video templates
+        </p>
+      </div>
+      <TemplateMarketplace
+        userId={user.id}
+        userCredits={profile?.credits ?? 0}
+        userPlan={profile?.plan ?? "free"}
+      />
+    </div>
+  );
+}
