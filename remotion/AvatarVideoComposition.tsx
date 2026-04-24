@@ -101,7 +101,7 @@ const Watermark: React.FC = () => (
       textShadow: '0 2px 4px rgba(0,0,0,0.5)',
     }}
   >
-    voxara.app
+    voxara
   </div>
 )
 
