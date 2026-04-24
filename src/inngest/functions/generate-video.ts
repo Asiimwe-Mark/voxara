@@ -8,6 +8,7 @@ import { generateHeyGenVideo } from "@/features/avatar/services/heygen";
 import { generateDIDVideo } from "@/features/avatar/services/d-id";
 import { generateSynthesiaVideo } from "@/features/avatar/services/synthesia";
 import { deliverWebhook } from "@/lib/webhooks/deliver";
+import type { PlanType } from "@/types/billing";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -68,7 +69,20 @@ export const generateVideo = inngest.createFunction(
     // 3. Avatar vs Faceless pipeline
     if (video.avatar_id && video.user_avatars?.avatar_model_id) {
       const avatarModelId = video.user_avatars.avatar_model_id;
-      const voiceId = video.voice_id ?? undefined;
+      
+      // Check user tier to determine voice provider
+      // Free tier uses Edge-TTS (free), paid tiers use ElevenLabs (paid)
+      const userTier = await step.run("check-user-tier", async () => {
+        const { data: profile } = await supabaseAdmin
+          .from("profiles")
+          .select("plan")
+          .eq("id", userId)
+          .single();
+        return profile?.plan ?? "free";
+      });
+
+      // Use Edge-TTS for free tier (no voice cost), ElevenLabs for paid tiers
+      const voiceId = userTier === "free" ? undefined : (video.voice_id ?? undefined);
 
       // Try HeyGen first
       let avatarResult = await step.run("generate-heygen", async () => {
@@ -110,6 +124,19 @@ export const generateVideo = inngest.createFunction(
       finalVideoUrl = avatarResult.videoUrl;
     } else {
       // Faceless pipeline: voiceover + stock footage + Remotion render
+      
+      // Check user tier - faceless pipeline already uses Edge-TTS (free for all)
+      // This check is here for future enhancement if we want to offer ElevenLabs for paid tiers
+      const userTier = await step.run("check-user-tier", async () => {
+        const { data: profile } = await supabaseAdmin
+          .from("profiles")
+          .select("plan")
+          .eq("id", userId)
+          .single();
+        return profile?.plan ?? "free";
+      });
+
+      // Faceless pipeline uses Edge-TTS which is free for all tiers
       const audioUrl = await step.run("generate-voiceover", async () => {
         return await generateVoiceover(script, userId, videoId);
       });

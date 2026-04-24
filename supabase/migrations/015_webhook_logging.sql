@@ -22,23 +22,23 @@ ALTER TABLE public.webhook_logs
   ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();
 
 -- Create indexes for common queries
-CREATE INDEX IF NOT EXISTS idx_webhook_logs_provider 
+CREATE INDEX IF NOT EXISTS idx_webhook_logs_provider
   ON public.webhook_logs(provider);
 
-CREATE INDEX IF NOT EXISTS idx_webhook_logs_event_type 
+CREATE INDEX IF NOT EXISTS idx_webhook_logs_event_type
   ON public.webhook_logs(event_type);
 
-CREATE INDEX IF NOT EXISTS idx_webhook_logs_status 
+CREATE INDEX IF NOT EXISTS idx_webhook_logs_status
   ON public.webhook_logs(status);
 
-CREATE INDEX IF NOT EXISTS idx_webhook_logs_created_at 
+CREATE INDEX IF NOT EXISTS idx_webhook_logs_created_at
   ON public.webhook_logs(created_at DESC);
 
-CREATE INDEX IF NOT EXISTS idx_webhook_logs_user_id 
+CREATE INDEX IF NOT EXISTS idx_webhook_logs_user_id
   ON public.webhook_logs(user_id);
 
 -- Create composite index for common queries
-CREATE INDEX IF NOT EXISTS idx_webhook_logs_provider_status 
+CREATE INDEX IF NOT EXISTS idx_webhook_logs_provider_status
   ON public.webhook_logs(provider, status);
 
 -- Enable RLS (Row Level Security)
@@ -51,7 +51,7 @@ CREATE POLICY "admins_can_view_webhook_logs"
   USING (
     auth.jwt() ->> 'role' = 'authenticated' AND
     EXISTS (
-      SELECT 1 FROM public.profiles 
+      SELECT 1 FROM public.profiles
       WHERE id = auth.uid() AND plan = 'agency'
     )
   );
@@ -84,7 +84,10 @@ CREATE TRIGGER trigger_webhook_logs_updated_at
   EXECUTE FUNCTION public.update_webhook_logs_updated_at();
 
 -- Create a view for webhook statistics
-CREATE OR REPLACE VIEW public.webhook_stats_24h AS
+-- FIX: make the view SECURITY INVOKER so it respects the querying user's RLS
+CREATE OR REPLACE VIEW public.webhook_stats_24h
+WITH (security_invoker = on)
+AS
 SELECT
   provider,
   status,

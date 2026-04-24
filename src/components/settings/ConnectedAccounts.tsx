@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Youtube, Instagram, Music2, Linkedin, Link2, Loader2, Trash2 } from "lucide-react";
+import { PlayCircle, Camera, Music2, Briefcase, Link2, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +22,7 @@ interface ConnectedAccountsProps {
 const platformConfig = {
   youtube: {
     name: "YouTube",
-    icon: Youtube,
+    icon: PlayCircle,
     color: "bg-red-500",
     oauthUrl: "/api/oauth/youtube",
   },
@@ -34,13 +34,13 @@ const platformConfig = {
   },
   instagram: {
     name: "Instagram",
-    icon: Instagram,
+    icon: Camera,
     color: "bg-pink-500",
     oauthUrl: "/api/oauth/instagram",
   },
   linkedin: {
     name: "LinkedIn",
-    icon: Linkedin,
+    icon: Briefcase,
     color: "bg-blue-600",
     oauthUrl: "/api/oauth/linkedin",
   },

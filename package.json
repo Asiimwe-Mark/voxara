@@ -1,5 +1,5 @@
 {
-  "name": "faceless-video-app",
+  "name": "voxara",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -48,6 +48,7 @@
     "@genkit-ai/core": "^1.32.0",
     "@genkit-ai/google-genai": "^1.32.0",
     "@google/genai": "*",
+    "@react-email/components": "^0.0.31",
     "@hookform/resolvers": "^5.2.2",
     "@mux/mux-node": "^14.0.1",
     "@mux/mux-player-react": "^3.11.8",

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -23,8 +23,6 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
     const systemPrompt = `You are an expert video editor AI. Given a video script, available footage URLs, and the current timeline tracks, create an optimized Edit Decision List (EDL).
 
 Script: "${script}"
@@ -50,12 +48,11 @@ Return ONLY a valid JSON object with the following structure:
           "start": number,
           "end": number,
           "type": "video",
-          "url": string,
-          "properties": { "transition": "cut" | "fade" }
+          "url": "string",
+          "properties": { "transition": "cut or fade" }
         }
       ]
-    },
-    // ... other tracks (audio, text) if modified
+    }
   ]
 }
 
@@ -68,8 +65,11 @@ Guidelines:
 - Generate unique clip IDs using a prefix like "ai-clip-{timestamp}-{index}".
 - Do not include any explanatory text outside the JSON.`;
 
-    const result = await model.generateContent(systemPrompt);
-    const responseText = result.response.text();
+    const result = await genAI.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: systemPrompt,
+    });
+    const responseText = result.text ?? "";
 
     // Extract JSON from the response (in case the model wraps it in markdown)
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);

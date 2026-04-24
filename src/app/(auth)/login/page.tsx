@@ -44,6 +44,8 @@ export default function LoginPage() {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { email: '', password: '' },
+
+    
   })
 
   async function onSubmit(values: FormValues) {
@@ -52,6 +54,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithPassword(values)
       if (error) {
         toast.error(error.message)
+        console.log(process.env.NEXT_PUBLIC_SUPABASE_URL)
         return
       }
       toast.success('Welcome back!')

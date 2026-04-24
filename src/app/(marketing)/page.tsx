@@ -94,9 +94,9 @@ const PLANS = [
   {
     name: 'Free',
     price: 0,
-    credits: 3,
+    credits: 1,
     features: [
-      '3 videos/month',
+      '1 videos/month',
       '720p quality',
       'Watermark',
       'Basic voices',
@@ -201,7 +201,7 @@ export default function LandingPage() {
             No credit card required
           </div>
           <div className="flex items-center gap-2">
-            <Video className="h-4 w-4 text-blue-600" />3 free videos per month
+            <Video className="h-4 w-4 text-blue-600" />1 free video per month
           </div>
           <div className="flex items-center gap-2">
             <Shield className="h-4 w-4 text-purple-600" />

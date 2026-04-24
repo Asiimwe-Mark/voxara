@@ -25,9 +25,12 @@ export const VIDEO_CONFIG = {
 
 // Credit Configuration
 export const CREDITS_CONFIG = {
-  FREE_TIER_MONTHLY_CREDITS: 3,
+  FREE_TIER_MONTHLY_CREDITS: 1, // Reduced from 3 to 1 to prevent abuse
   CREDITS_PER_VIDEO: 1,
   FREE_TRIAL_DURATION_DAYS: 7,
+  // Social sharing rewards
+  SOCIAL_SHARE_CREDITS: 2, // Credits earned per social share
+  SOCIAL_SHARE_MAX_PER_MONTH: 5, // Max social share credits per month
 };
 
 // Pricing Configuration
