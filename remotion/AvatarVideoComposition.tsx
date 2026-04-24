@@ -1,6 +1,7 @@
 import {
   AbsoluteFill,
   Audio,
+  Composition,
   Img,
   Sequence,
   useCurrentFrame,
