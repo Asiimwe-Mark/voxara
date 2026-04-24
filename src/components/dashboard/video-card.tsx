@@ -278,7 +278,7 @@ export function VideoCard({ video }: VideoCardProps) {
         </div>
         {video.youtube_id && (
           <Badge className="absolute top-2 left-2 bg-red-600 text-white text-xs">
-            <PlayCircle className="mr-1 h-3 w-3" /> YouTube
+            <YouTube className="mr-1 h-3 w-3" /> YouTube
           </Badge>
         )}
       </div>
@@ -350,7 +350,7 @@ export function VideoCard({ video }: VideoCardProps) {
                     Publish to TikTok
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handlePublish('instagram')}>
-                    <Camera className="mr-2 h-4 w-4 text-pink-500" />
+                    <Instagram className="mr-2 h-4 w-4 text-pink-500" />
                     Publish to Instagram
                   </DropdownMenuItem>
                 </DropdownMenuContent>
