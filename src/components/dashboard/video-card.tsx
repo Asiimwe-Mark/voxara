@@ -20,7 +20,7 @@ import {
   Gift
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { FaFacebook as Facebook, FaLinkedin as Linkedin, FaXTwitter as Twitter,FaInstagram as Instagram,FaYouTube as YouTube } from 'react-icons/fa6' // Using react-icons for social media icons
+import { FaFacebook as Facebook, FaLinkedin as Linkedin, FaXTwitter as Twitter,FaInstagram as Instagram,FaYoutube as YouTube } from 'react-icons/fa6' // Using react-icons for social media icons
 import {
   Card,
   CardContent,
