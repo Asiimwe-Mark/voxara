@@ -6,7 +6,7 @@ import { AvatarGallery } from '@/components/avatar/AvatarGallery';
 import { VoiceGallery } from '@/components/avatar/VoiceGallery';
 
 export default async function AIStudioPage() {
-  const supabase = await createClient();
+  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 

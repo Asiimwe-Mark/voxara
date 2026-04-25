@@ -8,7 +8,10 @@ import { VideoCard } from '@/components/dashboard/video-card'
 import { Badge } from '@/components/ui/badge'
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
+  const supabase = await createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
   const {
     data: { user },
   } = await supabase.auth.getUser()

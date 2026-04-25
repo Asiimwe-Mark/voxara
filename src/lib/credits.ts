@@ -12,7 +12,7 @@ const supabaseAdmin = createAdminClient(
  * Fires auto-top-up Inngest event if balance falls below threshold.
  */
 export async function deductCredits(userId: string, amount: number = 1): Promise<boolean> {
-  const supabase = await createClient();
+  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);;
   const { data, error } = await supabase.rpc('deduct_credits', {
     p_user_id: userId,
     p_credits: amount,
@@ -58,13 +58,13 @@ async function triggerAutoTopUpCheck(userId: string): Promise<void> {
 }
 
 export async function addCredits(userId: string, amount: number): Promise<void> {
-  const supabase = await createClient();
+  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);;
   const { error } = await supabase.rpc('add_credits', { p_user_id: userId, p_credits: amount });
   if (error) throw new Error(`addCredits failed: ${error.message}`);
 }
 
 export async function getCredits(userId: string): Promise<number> {
-  const supabase = await createClient();
+  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);;
   const { data, error } = await supabase
     .from('profiles')
     .select('credits')

@@ -17,7 +17,7 @@ export interface SubscriptionDetails {
  * Get the current user's subscription details
  */
 export async function getCurrentSubscription(): Promise<SubscriptionDetails | null> {
-  const supabase = await createClient();
+  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);;
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) return null;
@@ -100,7 +100,7 @@ export async function hasFeatureAccess(feature: string): Promise<boolean> {
  * Get or create a payment customer
  */
 export async function getOrCreatePaymentCustomer(userId: string) {
-  const supabase = await createClient();
+  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);;
   const provider = process.env.PAYMENT_PROVIDER || 'lemon-squeezy';
 
   // Check if payment customer exists
@@ -132,7 +132,7 @@ export async function updateUserPlan(
   plan: PlanType,
   credits: number
 ) {
-  const supabase = await createClient();
+  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);;
 
   return supabase
     .from("profiles")
@@ -155,7 +155,7 @@ export async function addPaymentSubscription(
   status: string,
   renewsAt?: Date
 ) {
-  const supabase = await createClient();
+  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);;
 
   return supabase.from("payment_subscriptions").insert({
     user_id: userId,
@@ -173,7 +173,7 @@ export async function addPaymentSubscription(
  * Cancel a user's subscription
  */
 export async function cancelSubscription(userId: string) {
-  const supabase = await createClient();
+  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);;
 
   // Update subscription status
   await supabase
@@ -256,7 +256,7 @@ export async function createCheckoutSession(
   successUrl: string,
   cancelUrl: string
 ): Promise<string> {
-  const supabase = await createClient();
+  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);;
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) throw new Error("User not authenticated");
@@ -304,7 +304,7 @@ export async function createCheckoutSession(
  * Create a Stripe Customer Portal session
  */
 export async function createPortalSession(returnUrl: string): Promise<string> {
-  const supabase = await createClient();
+  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);;
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) throw new Error("User not authenticated");

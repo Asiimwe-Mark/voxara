@@ -5,7 +5,7 @@ import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
 export const metadata = { title: 'Analytics' };
 
 export default async function AnalyticsPage() {
-  const supabase = await createClient();
+  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
