@@ -9,7 +9,7 @@ import { captureException } from '@/lib/monitoring';
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase = await createClient();
+     const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
     // Verify admin access
     const {

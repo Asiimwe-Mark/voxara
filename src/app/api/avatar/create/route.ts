@@ -4,7 +4,7 @@ import { createHeyGenAvatar } from '@/features/avatar/services/heygen';
 import { inngest } from '@/inngest/client';
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
+   const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

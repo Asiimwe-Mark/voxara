@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Too many reset requests. Please try again later.' }, { status: 429 });
   }
 
-  const supabase = await createClient();
+  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
   let body: { email?: string };
   try {

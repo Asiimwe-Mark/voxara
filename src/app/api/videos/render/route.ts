@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Too many render requests. Please try again later." }, { status: 429 });
   }
 
-  const supabase = await createClient();
+  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {

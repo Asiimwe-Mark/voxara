@@ -4,7 +4,10 @@ import { createPaymentAdapter } from "@/lib/payment-adapter";
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_ANON_KEY!
+    );
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -32,7 +35,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Store payment session in database for tracking
-    await supabase.from('payment_sessions').insert({
+    const { error: insertError } = await supabase.from('payment_sessions').insert({
       user_id: user.id,
       provider,
       session_id: session.id,
@@ -40,10 +43,12 @@ export async function POST(request: NextRequest) {
       credits,
       metadata: session.metadata,
       status: 'pending',
-    }).catch(err => {
-      console.warn('Failed to store payment session:', err);
-      // Don't fail checkout if DB insert fails
     });
+
+    if (insertError) {
+      console.warn('Failed to store payment session:', insertError);
+      // Don't fail checkout if DB insert fails
+    }
 
     return NextResponse.json({ url: session.url });
   } catch (error) {

@@ -119,7 +119,11 @@ export async function POST(request: NextRequest) {
     );
   } catch (err) {
     // Refund credit on unexpected error
-    await supabaseAdmin.rpc('add_credits', { p_user_id: userId, p_credits: 1 }).catch(() => {});
+    try {
+      await supabaseAdmin.rpc('add_credits', { p_user_id: userId, p_credits: 1 });
+    } catch {
+      // ignore refund errors
+    }
     console.error('v1/videos POST error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
