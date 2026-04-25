@@ -15,20 +15,20 @@ import { Users, CheckCircle2, XCircle, Clock } from 'lucide-react'
 export default async function InvitePage({
   params,
 }: {
-  params: Promise<{ token: string }>
+  params: { token: string } // ✅ FIXED (removed Promise)
 }) {
-  const { token } = await params
-  const supabase = await createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  const { token } = params
+
+  // ✅ Use normal server client (NOT service role for reading)
+  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   if (!user) redirect(`/login?redirect=/invite/${token}`)
 
-  const { data: invite } = await supabase
+  const { data: inviteData } = await supabase
     .from('organization_invites')
     .select(
       'id, organization_id, email, role, accepted_at, expires_at, organizations(name)'
@@ -36,8 +36,8 @@ export default async function InvitePage({
     .eq('token', token)
     .maybeSingle()
 
-  // Invite not found
-  if (!invite) {
+  // ❌ Invite not found
+  if (!inviteData) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-md text-center">
@@ -57,6 +57,9 @@ export default async function InvitePage({
       </div>
     )
   }
+
+  // ✅ TYPE SAFE (no more "possibly null")
+  const invite = inviteData
 
   // Already accepted
   if (invite.accepted_at) {
@@ -128,19 +131,23 @@ export default async function InvitePage({
 
   const orgName = (invite.organizations as any)?.name ?? 'the workspace'
 
+  // ✅ Server Action (service role ONLY here)
   async function acceptInvite() {
     'use server'
-    const supabase = await createClient(
+
+    const supabaseAdmin = await createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
+
     const {
       data: { user },
-    } = await supabase.auth.getUser()
+    } = await supabaseAdmin.auth.getUser()
+
     if (!user) redirect('/login')
 
-    // Idempotent insert — ignore if already a member
-    await supabase
+    // Insert membership (idempotent)
+    await supabaseAdmin
       .from('organization_members')
       .upsert(
         {
@@ -150,7 +157,9 @@ export default async function InvitePage({
         },
         { onConflict: 'organization_id,user_id' }
       )
-    await supabase
+
+    // Mark invite accepted
+    await supabaseAdmin
       .from('organization_invites')
       .update({ accepted_at: new Date().toISOString() })
       .eq('id', invite.id)
@@ -171,6 +180,7 @@ export default async function InvitePage({
             <strong className="capitalize">{invite.role}</strong>.
           </CardDescription>
         </CardHeader>
+
         <CardContent>
           <form action={acceptInvite}>
             <Button type="submit" className="w-full" size="lg">
@@ -178,6 +188,7 @@ export default async function InvitePage({
             </Button>
           </form>
         </CardContent>
+
         <CardFooter className="justify-center">
           <Button asChild variant="ghost" size="sm">
             <Link href="/dashboard">Decline — go to Dashboard</Link>
