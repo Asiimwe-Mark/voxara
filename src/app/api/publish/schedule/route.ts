@@ -12,7 +12,18 @@ const scheduleSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
+ const supabaseUrl = process.env.SUPABASE_URL;
+   const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+ 
+   if (!supabaseUrl || !supabaseAnonKey) {
+     console.error("SUPABASE_URL or SUPABASE_ANON_KEY is not set");
+     return NextResponse.json(
+       { error: "Supabase integration is not configured" },
+       { status: 500 }
+     );
+   }
+ 
+   const supabase = await createClient(supabaseUrl, supabaseAnonKey);
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

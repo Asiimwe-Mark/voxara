@@ -8,8 +8,18 @@ export async function GET(request: NextRequest) {
   const error = searchParams.get("error");
   const errorDescription = searchParams.get("error_description");
 
-  const supabase = await createClient();
-
+ const supabaseUrl = process.env.SUPABASE_URL;
+   const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+ 
+   if (!supabaseUrl || !supabaseAnonKey) {
+     console.error("SUPABASE_URL or SUPABASE_ANON_KEY is not set");
+     return NextResponse.json(
+       { error: "Supabase integration is not configured" },
+       { status: 500 }
+     );
+   }
+ 
+   const supabase = await createClient(supabaseUrl, supabaseAnonKey);
   if (error) {
     console.error("TikTok OAuth error:", error, errorDescription);
     return NextResponse.redirect(
@@ -88,7 +98,7 @@ export async function GET(request: NextRequest) {
       ? new Date(Date.now() + expires_in * 1000).toISOString()
       : null;
 
-    const { error: dbError } = await supabaseAdmin.from("social_accounts").upsert(
+    const { error: dbError } = await (await supabaseAdmin).from("social_accounts").upsert(
       {
         user_id: userId,
         platform: "tiktok",

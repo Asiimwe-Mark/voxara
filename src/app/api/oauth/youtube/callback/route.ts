@@ -8,7 +8,18 @@ export async function GET(request: NextRequest) {
   const state = searchParams.get("state");
   const error = searchParams.get("error");
 
-  const supabase = await createClient();
+ const supabaseUrl = process.env.SUPABASE_URL;
+   const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+ 
+   if (!supabaseUrl || !supabaseAnonKey) {
+     console.error("SUPABASE_URL or SUPABASE_ANON_KEY is not set");
+     return NextResponse.json(
+       { error: "Supabase integration is not configured" },
+       { status: 500 }
+     );
+   }
+ 
+   const supabase = await createClient(supabaseUrl, supabaseAnonKey);
 
   if (error) {
     console.error("YouTube OAuth error:", error);
@@ -73,7 +84,7 @@ export async function GET(request: NextRequest) {
 
     // Store tokens in Supabase Vault (recommended) or encrypted column
     // For simplicity, we store in social_accounts with tokens
-    const { error: dbError } = await supabaseAdmin.from("social_accounts").upsert(
+    const { error: dbError } = await (await supabaseAdmin).from("social_accounts").upsert(
       {
         user_id: userId,
         platform: "youtube",

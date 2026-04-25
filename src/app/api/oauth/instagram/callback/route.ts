@@ -8,8 +8,6 @@ export async function GET(request: NextRequest) {
   const error = searchParams.get("error");
   const errorDescription = searchParams.get("error_description");
 
-  const supabase = await createClient();
-
   // Handle OAuth error from Instagram
   if (error) {
     console.error("Instagram OAuth error:", error, errorDescription);
@@ -76,7 +74,7 @@ export async function GET(request: NextRequest) {
     const profileData = await profileResponse.json();
 
     // Store in database using service role client
-    const supabaseAdmin = createClient(
+    const supabaseAdmin = await createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );

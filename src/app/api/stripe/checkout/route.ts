@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
 
     // Initialize payment adapter
     const paymentAdapter = createPaymentAdapter();
-    const provider = process.env.PAYMENT_PROVIDER || 'lemon-squeezy';
+    const provider = process.env.PAYMENT_PROVIDER || 'Paddle';
 
     // Create checkout session with payment adapter
     const session = await paymentAdapter.createCheckout({
