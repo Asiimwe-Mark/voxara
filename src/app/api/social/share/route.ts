@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { CREDITS_CONFIG } from "@/lib/constants";
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
+  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const supabase = await createClient();
+  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
