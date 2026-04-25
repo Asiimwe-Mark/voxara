@@ -77,14 +77,14 @@ export async function POST(request: NextRequest) {
   await inngest.send({
     name: 'social/publish-scheduled',
     data: { scheduleId: schedule.id },
-    ts: scheduledDate,
+    ts: scheduledDate.getTime()
   });
 
   return NextResponse.json({ success: true, schedule }, { status: 201 });
 }
 
 export async function GET() {
-  const supabase = await createClient();
+  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
