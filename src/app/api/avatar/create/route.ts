@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
   await inngest.send({
     name: 'avatar/poll-status',
     data: { avatarId: avatar.id, retryCount: 0 },
-    ts: new Date(Date.now() + 2 * 60 * 1000), // Start after 2 minutes
+    ts: new Date(Date.now() + 2 * 60 * 1000).getTime(), // Start after 2 minutes
   });
 
   return NextResponse.json({ success: true, avatar });
