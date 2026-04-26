@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { TemplateMarketplace } from "@/components/marketplace/TemplateMarketplace";
 
 export default async function MarketplacePage() {
-  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 

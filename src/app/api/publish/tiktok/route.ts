@@ -1,19 +1,9 @@
+import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
-  const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-  
-    if (!supabaseUrl || !supabaseAnonKey) {
-      console.error("SUPABASE_URL or SUPABASE_ANON_KEY is not set");
-      return NextResponse.json(
-        { error: "Supabase integration is not configured" },
-        { status: 500 }
-      );
-    }
-  
-    const supabase = await createClient(supabaseUrl, supabaseAnonKey);
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -90,7 +80,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, publishId });
   } catch (error) {
-    console.error("TikTok publish error:", error);
+    logger.error("TikTok publish error:", { detail: error });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to publish to TikTok" },
       { status: 500 }

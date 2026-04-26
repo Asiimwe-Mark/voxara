@@ -1,12 +1,10 @@
+import { supabaseAdmin } from '@/lib/supabase/admin';
+import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import { inngest } from '@/inngest/client';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 async function validateApiKey(request: NextRequest): Promise<string | null> {
   const apiKey = request.headers.get('x-api-key');
@@ -119,12 +117,8 @@ export async function POST(request: NextRequest) {
     );
   } catch (err) {
     // Refund credit on unexpected error
-    try {
-      await supabaseAdmin.rpc('add_credits', { p_user_id: userId, p_credits: 1 });
-    } catch {
-      // ignore refund errors
-    }
-    console.error('v1/videos POST error:', err);
+    await supabaseAdmin.rpc('add_credits', { p_user_id: userId, p_credits: 1 }).catch(() => {});
+    logger.error('v1/videos POST error:'', { detail: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

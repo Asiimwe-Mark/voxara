@@ -19,7 +19,7 @@ export interface Profile {
   avatar_url: string | null;
   credits: number;
   plan: PlanType;
-  stripe_customer_id: string | null;
+  payment_customer_id: string | null;
   created_at: string;
   updated_at?: string;
 }
@@ -76,7 +76,7 @@ export interface TimelineClip {
   type: "video" | "image" | "text" | "audio";
   url?: string;
   content?: string;
-  properties: Record<string, any>;
+  properties: Record<string, unknown>;
 }
 
 export interface TimelineTrack {
@@ -132,15 +132,15 @@ export interface UserVoice {
 export interface StripeCustomer {
   id: string;
   user_id: string;
-  stripe_customer_id: string;
+  payment_customer_id: string;
   created_at: string;
 }
 
 export interface StripeSubscription {
   id: string;
   user_id: string;
-  stripe_subscription_id: string;
-  stripe_price_id: string | null;
+  payment_subscription_id: string;
+  payment_price_id: string | null;
   status: string;
   current_period_start: string | null;
   current_period_end: string | null;
@@ -154,7 +154,7 @@ export interface CreditPack {
   name: string;
   credits: number;
   price_amount: number;
-  stripe_price_id: string | null;
+  payment_price_id: string | null;
   active: boolean;
   created_at: string;
 }
@@ -165,7 +165,7 @@ export interface CreditPurchase {
   credit_pack_id: string | null;
   credits_purchased: number;
   amount_paid: number;
-  stripe_payment_intent_id: string | null;
+  payment_intent_id: string | null;
   status: string;
   created_at: string;
 }
@@ -203,7 +203,7 @@ export interface PublishingSchedule {
   platforms: SocialPlatform[];
   scheduled_time: string;
   status: "pending" | "processing" | "published" | "failed";
-  publish_result: Record<string, any> | null;
+  publish_result: Record<string, unknown> | null;
   created_at: string;
 }
 
@@ -243,7 +243,7 @@ export interface OrganizationInvite {
 export interface OrganizationSubscription {
   id: string;
   organization_id: string;
-  stripe_subscription_id: string | null;
+  payment_subscription_id: string | null;
   plan: PlanType;
   seats: number;
   credits_shared: number;
@@ -313,7 +313,7 @@ export interface VideoTemplate {
   category: string | null;
   price: number;
   preview_url: string | null;
-  template_data: Record<string, any> | null;
+  template_data: Record<string, unknown> | null;
   downloads: number;
   rating: number | null;
   status: "pending" | "approved" | "rejected";
@@ -327,14 +327,14 @@ export interface TemplatePurchase {
   amount_paid: number;
   platform_fee: number;
   creator_payout: number;
-  stripe_payment_intent_id: string | null;
+  payment_intent_id: string | null;
   created_at: string;
 }
 
 export interface CreatorAccount {
   id: string;
   user_id: string;
-  stripe_account_id: string | null;
+  payment_account_id: string | null;
   charges_enabled: boolean;
   payouts_enabled: boolean;
   created_at: string;

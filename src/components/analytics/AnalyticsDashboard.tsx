@@ -48,7 +48,7 @@ export function AnalyticsDashboard({ plan }: { plan: string }) {
     fetch(`/api/analytics/overview?period=${period}`)
       .then((r) => r.json())
       .then(setData)
-      .catch(console.error)
+      .catch((e) => process.env.NODE_ENV !== 'production' && console.error(e))
       .finally(() => setLoading(false));
   }, [period, isPaidPlan]);
 

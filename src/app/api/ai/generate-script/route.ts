@@ -1,10 +1,11 @@
+import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generateScript } from "@/features/video/services/script-generator";
 import { deductCredits } from "@/lib/credits";
 
 export async function POST(request: NextRequest) {
-   const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
     // Attempt to refund the credit on AI failure so users aren't charged for errors
     const { addCredits } = await import("@/lib/credits");
     await addCredits(user.id, 1).catch(() => {});
-    console.error("Script generation failed:", error);
+    logger.error("Script generation failed:", { detail: error });
     return NextResponse.json({ error: "Failed to generate script. Please try again." }, { status: 500 });
   }
 }

@@ -1,12 +1,9 @@
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { inngest } from '@/inngest/client';
 import { createClient } from '@supabase/supabase-js';
 import { checkHeyGenAvatarStatus } from '@/features/avatar/services/heygen';
 import { sendAvatarReadyEmail } from '@/lib/email/avatar-notification';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export const pollAvatarStatus = inngest.createFunction(
   { id: 'poll-avatar-status', name: 'Poll Avatar Status', retries: 10 },

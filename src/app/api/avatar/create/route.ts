@@ -4,7 +4,7 @@ import { createHeyGenAvatar } from '@/features/avatar/services/heygen';
 import { inngest } from '@/inngest/client';
 
 export async function POST(request: NextRequest) {
-   const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
   await inngest.send({
     name: 'avatar/poll-status',
     data: { avatarId: avatar.id, retryCount: 0 },
-    ts: Date.now() + 2 * 60 * 1000, // Start after 2 minutes
+    ts: new Date(Date.now() + 2 * 60 * 1000), // Start after 2 minutes
   });
 
   return NextResponse.json({ success: true, avatar });

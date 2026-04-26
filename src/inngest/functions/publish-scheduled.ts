@@ -1,11 +1,8 @@
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { inngest } from '@/inngest/client';
 import { createClient } from '@supabase/supabase-js';
 import { google } from 'googleapis';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 async function publishToYouTubeFull(
   account: { access_token: string; refresh_token: string; token_expires_at: string | null },
@@ -15,8 +12,8 @@ async function publishToYouTubeFull(
   caption: string
 ): Promise<{ success: boolean; videoId?: string; error?: string }> {
   const oauth2Client = new google.auth.OAuth2(
-    process.env.YOUTUBE_CLIENT_ID!,
-    process.env.YOUTUBE_CLIENT_SECRET!,
+    (process.env.YOUTUBE_CLIENT_ID ?? (() => { throw new Error('YOUTUBE_CLIENT_ID is required for YouTube OAuth'); })()),
+    (process.env.YOUTUBE_CLIENT_SECRET ?? (() => { throw new Error('YOUTUBE_CLIENT_SECRET is required for YouTube OAuth'); })()),
     `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/youtube/callback`
   );
 

@@ -6,12 +6,11 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { VideoCard } from '@/components/dashboard/video-card'
 import { Badge } from '@/components/ui/badge'
+import { ShareForCredits } from '@/components/credits/ShareForCredits'
+import { ReferralCard } from '@/components/credits/ReferralCard'
 
 export default async function DashboardPage() {
-  const supabase = await createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -123,6 +122,21 @@ export default async function DashboardPage() {
         </div>
       )}
 
+      {/* Free-tier growth widgets — visible only to free users */}
+      {profile?.plan === 'free' && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <ReferralCard />
+          {videos && videos.length > 0 && (
+            <ShareForCredits
+              videoId={videos[0].id}
+              videoUrl={videos[0].video_url ?? ''}
+              videoTitle={videos[0].title ?? 'My Video'}
+              currentCredits={profile?.credits ?? 0}
+            />
+          )}
+        </div>
+      )}
+
       {/* Video grid or empty state */}
       {videos && videos.length > 0 ? (
         <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -151,9 +165,10 @@ export default async function DashboardPage() {
             </Button>
             {profile?.plan === 'free' && (
               <p className="text-xs text-muted-foreground mt-4">
-                Free plan includes {profile?.credits ?? 3} credits.{' '}
+                Free plan includes {profile?.credits ?? 1} credit.{' '}
+                Share your videos to earn up to 5 more/month —{' '}
                 <Link href="/pricing" className="underline hover:text-primary">
-                  Upgrade for more.
+                  or upgrade for unlimited.
                 </Link>
               </p>
             )}

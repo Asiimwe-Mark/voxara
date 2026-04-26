@@ -1,17 +1,15 @@
+import { supabaseAdmin } from '@/lib/supabase/admin';
+import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 
-const supabaseAdmin = createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(request: NextRequest, context: RouteContext) {
   const { id } = await context.params;
-  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -28,7 +26,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
   const { id } = await context.params;
-  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -49,7 +47,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
 export async function DELETE(request: NextRequest, context: RouteContext) {
   const { id } = await context.params;
-  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -68,12 +66,12 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     try {
       const Mux = (await import("@mux/mux-node")).default;
       const mux = new Mux({
-        tokenId: process.env.MUX_TOKEN_ID!,
-        tokenSecret: process.env.MUX_TOKEN_SECRET!,
+        tokenId: (process.env.MUX_TOKEN_ID ?? (() => { throw new Error('MUX_TOKEN_ID is required for Mux video'); })()),
+        tokenSecret: (process.env.MUX_TOKEN_SECRET ?? (() => { throw new Error('MUX_TOKEN_SECRET is required for Mux video'); })()),
       });
       await mux.video.assets.delete(video.mux_asset_id);
     } catch (err) {
-      console.error("Failed to delete Mux asset:", err);
+      logger.error("Failed to delete Mux asset:", { detail: err });
       // Continue with DB deletion even if Mux fails
     }
   }

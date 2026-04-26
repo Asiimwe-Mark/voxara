@@ -1,19 +1,9 @@
+import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.error("SUPABASE_URL or SUPABASE_ANON_KEY is not set");
-    return NextResponse.json(
-      { error: "Supabase integration is not configured" },
-      { status: 500 }
-    );
-  }
-
-  const supabase = await createClient(supabaseUrl, supabaseAnonKey);
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -24,7 +14,7 @@ export async function GET(request: NextRequest) {
   const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/instagram/callback`;
 
   if (!clientId) {
-    console.error("INSTAGRAM_CLIENT_ID is not set");
+    logger.error("INSTAGRAM_CLIENT_ID is not set");
     return NextResponse.json(
       { error: "Instagram integration is not configured" },
       { status: 500 }

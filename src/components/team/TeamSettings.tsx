@@ -64,7 +64,7 @@ export function TeamSettings({ organizationId }: TeamSettingsProps) {
 
     if (!error && data) {
       setMembers(
-        data.map((m: any) => ({
+        data.map((m: Record<string, unknown>) => ({
           id: m.id,
           user_id: m.user_id,
           email: m.profiles?.email,

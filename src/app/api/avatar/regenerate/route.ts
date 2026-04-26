@@ -1,10 +1,11 @@
+import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createHeyGenAvatar } from "@/features/avatar/services/heygen";
 import { inngest } from "@/inngest/client";
 
 export async function POST(request: NextRequest) {
-   const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
     await inngest.send({
       name: "avatar/poll-status",
       data: { avatarId, retryCount: 0 },
-      ts: Date.now() + 2 * 60 * 1000, // Start after 2 minutes
+      ts: new Date(Date.now() + 2 * 60 * 1000), // Start after 2 minutes
     });
 
     return NextResponse.json({
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
       message: "Avatar regeneration started",
     });
   } catch (error) {
-    console.error("Avatar regeneration error:", error);
+    logger.error("Avatar regeneration error:", { detail: error });
 
     // Revert status to failed if regeneration fails to start
     await supabase

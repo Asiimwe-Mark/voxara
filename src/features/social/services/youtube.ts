@@ -1,10 +1,7 @@
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { google } from "googleapis";
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 interface YouTubeTokens {
   access_token: string;
@@ -23,8 +20,8 @@ async function getRefreshedTokens(userId: string): Promise<YouTubeTokens> {
   if (!account) throw new Error("YouTube account not connected");
 
   const oauth2Client = new google.auth.OAuth2(
-    process.env.YOUTUBE_CLIENT_ID!,
-    process.env.YOUTUBE_CLIENT_SECRET!,
+    (process.env.YOUTUBE_CLIENT_ID ?? (() => { throw new Error('YOUTUBE_CLIENT_ID is required for YouTube OAuth'); })()),
+    (process.env.YOUTUBE_CLIENT_SECRET ?? (() => { throw new Error('YOUTUBE_CLIENT_SECRET is required for YouTube OAuth'); })()),
     `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/youtube/callback`
   );
 

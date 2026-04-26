@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 /**
  * Paddle Payment Provider Client
  * Handles all interactions with the Paddle Billing API
@@ -51,7 +52,7 @@ export class PaddleClient {
   private async request<T>(
     method: string,
     endpoint: string,
-    body?: Record<string, any>
+    body?: Record<string, unknown>
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
 
@@ -81,7 +82,7 @@ export class PaddleClient {
       const data = (await response.json()) as { data?: T };
       return data.data as T;
     } catch (error) {
-      console.error(`Paddle API request failed: ${method} ${endpoint}`, error);
+      logger.error(`Paddle API request failed: ${method} ${endpoint}`, error);
       throw error;
     }
   }
@@ -93,7 +94,7 @@ export class PaddleClient {
     email: string;
     name?: string;
     locale?: string;
-    customData?: Record<string, any>;
+    customData?: Record<string, unknown>;
   }): Promise<PaddleCustomer> {
     return this.request<PaddleCustomer>(
       'POST',
@@ -133,7 +134,7 @@ export class PaddleClient {
     } catch (error) {
       // If customer already exists, retrieve by email
       // For now, we'll retry with a get approach
-      console.warn('Error creating customer, attempting retrieval:', error);
+      logger.warn('Error creating customer, attempting retrieval:'', { detail: error instanceof Error ? error.message : String(error) });
       throw error;
     }
   }
@@ -235,12 +236,12 @@ export class PaddleClient {
     subscriptionId: string,
     params: {
       items?: Array<{ price_id: string; quantity: number }>;
-      customData?: Record<string, any>;
+      customData?: Record<string, unknown>;
       collectionMode?: 'automatic' | 'manual';
       discountId?: string;
     }
   ): Promise<PaddleSubscription> {
-    const body: Record<string, any> = {};
+    const body: Record<string, unknown> = {};
 
     if (params.items) body.items = params.items;
     if (params.customData) body.custom_data = params.customData;
@@ -312,7 +313,7 @@ export class PaddleClient {
 
       return hash === signature;
     } catch (error) {
-      console.error('Webhook signature verification failed:', error);
+      logger.error('Webhook signature verification failed:'', { detail: error instanceof Error ? error.message : String(error) });
       return false;
     }
   }

@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 /**
  * Paddle Webhook Utilities
  * Handles webhook signature verification and event type checking
@@ -156,7 +157,7 @@ export function verifyPaddleWebhookSignature(
     // Use constant-time comparison to prevent timing attacks
     return timingSafeCompare(hash, signature);
   } catch (error) {
-    console.error('Webhook signature verification failed:', error);
+    logger.error('Webhook signature verification failed:'', { detail: error instanceof Error ? error.message : String(error) });
     return false;
   }
 }
@@ -199,7 +200,7 @@ export function isSubscriptionStatusEvent(eventType: string): boolean {
 /**
  * Extract user ID from webhook data
  */
-export function extractUserIdFromWebhook(data: Record<string, any>): string | null {
+export function extractUserIdFromWebhook(data: Record<string, unknown>): string | null {
   // Try custom_data first
   if (data?.custom_data?.user_id) {
     return data.custom_data.user_id;
@@ -221,7 +222,7 @@ export function extractUserIdFromWebhook(data: Record<string, any>): string | nu
 /**
  * Extract credits amount from webhook data
  */
-export function extractCreditsFromWebhook(data: Record<string, any>): number {
+export function extractCreditsFromWebhook(data: Record<string, unknown>): number {
   // From custom_data
   if (data?.custom_data?.credits) {
     return parseInt(data.custom_data.credits, 10);

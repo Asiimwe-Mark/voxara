@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
   compress: true,
 
   // Image optimization
@@ -23,7 +22,7 @@ const nextConfig = {
 
   productionBrowserSourceMaps: false,
 
-  // Next.js 16-compatible experimental options
+  // Next.js experimental options
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb',
@@ -40,100 +39,45 @@ const nextConfig = {
     'inngest',
   ],
 
-  // Headers for security
+  // Security headers
   async headers() {
     return [
       {
         source: '/:path*',
         headers: [
-          {
-            key: 'X-DNS-Prefetch-Control',
-            value: 'on',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-          {
-            key: 'Permissions-Policy',
-            value: 'geolocation=(), microphone=(), camera=()',
-          },
+          { key: 'X-DNS-Prefetch-Control', value: 'on' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-XSS-Protection', value: '1; mode=block' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'geolocation=(), microphone=(), camera=()' },
         ],
       },
-      // Cache static assets
       {
         source: '/static/:path*',
         headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-      // Don't cache HTML
-      {
-        source: '/:path*.html',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=0, must-revalidate',
-          },
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
       },
     ];
   },
 
-  // Redirects
   async redirects() {
     return [
-      {
-        source: '/docs',
-        destination: 'https://docs.voxara.app',
-        permanent: true,
-      },
-      {
-        source: '/api/docs',
-        destination: 'https://docs.voxara.app/api',
-        permanent: true,
-      },
+      { source: '/docs', destination: 'https://docs.voxara.app', permanent: true },
+      { source: '/api/docs', destination: 'https://docs.voxara.app/api', permanent: true },
     ];
   },
 
-  // Rewrites
   async rewrites() {
-    return {
-      beforeFiles: [
-        // API rewrites if needed
-      ],
-    };
+    return { beforeFiles: [] };
   },
 
-  // Turbopack configuration (Next.js 16+)
+  // Turbopack configuration
   turbopack: {},
 
-  // Webpack configuration (kept for reference, Turbopack handles most cases)
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      // Server-side only packages
-    } else {
-      // Client-side only packages
-    }
-    return config;
-  },
+  webpack: (config) => config,
 
-  // Environment variables validation
   env: {
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -148,4 +92,18 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+// Wrap with Sentry for automatic error capture in build pipeline
+const { withSentryConfig } = require('@sentry/nextjs');
+
+module.exports = withSentryConfig(nextConfig, {
+  // Sentry webpack plugin options
+  silent: true,
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  // Disable source map upload if no auth token set
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  disableServerWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
+  disableClientWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
+  hideSourceMaps: true,
+  widenClientFileUpload: true,
+});

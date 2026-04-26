@@ -1,18 +1,16 @@
+import { supabaseAdmin } from '@/lib/supabase/admin';
+import logger from '@/lib/logger';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export interface WebhookLogEntry {
-  provider: 'lemon-squeezy' | 'flutterwave' | 'stripe';
+  provider: 'paddle' | 'flutterwave';
   eventType: string;
   userId?: string;
-  payload: Record<string, any>;
+  payload: Record<string, unknown>;
   status: 'success' | 'failure';
   errorMessage?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -32,7 +30,7 @@ export async function logWebhookEvent(entry: WebhookLogEntry) {
     });
   } catch (err) {
     // If logging fails, just log to console to avoid throwing
-    console.error('[WebhookLogger] Failed to log webhook event:', err);
+    logger.error('[WebhookLogger] Failed to log webhook event:'', { detail: err instanceof Error ? err.message : String(err) });
   }
 }
 
@@ -70,7 +68,7 @@ export async function getWebhookLogs(
     if (error) throw error;
     return data || [];
   } catch (err) {
-    console.error('[WebhookLogger] Failed to fetch logs:', err);
+    logger.error('[WebhookLogger] Failed to fetch logs:'', { detail: err instanceof Error ? err.message : String(err) });
     return [];
   }
 }
@@ -92,9 +90,9 @@ export async function getWebhookStats(hours: number = 24) {
       success: data?.filter(d => d.status === 'success').length || 0,
       failure: data?.filter(d => d.status === 'failure').length || 0,
       byProvider: {
-        'lemon-squeezy': 0,
+        
         'flutterwave': 0,
-        'stripe': 0,
+        
       } as Record<string, number>,
     };
 
@@ -106,7 +104,7 @@ export async function getWebhookStats(hours: number = 24) {
 
     return stats;
   } catch (err) {
-    console.error('[WebhookLogger] Failed to get stats:', err);
+    logger.error('[WebhookLogger] Failed to get stats:'', { detail: err instanceof Error ? err.message : String(err) });
     return null;
   }
 }
@@ -119,18 +117,34 @@ export async function alertOnWebhookFailure(
   recipient?: string
 ) {
   if (entry.status === 'failure') {
-    console.error('[WebhookAlert]', {
+    logger.error('[WebhookAlert]', {
       provider: entry.provider,
       eventType: entry.eventType,
       error: entry.errorMessage,
       timestamp: new Date().toISOString(),
     });
 
-    // TODO: Integrate with email service or Slack
-    // Example:
-    // await sendWebhookFailureEmail(
-    //   recipient || process.env.ADMIN_EMAIL!,
-    //   entry
-    // );
+    // Send admin alert email via Resend when webhook keeps failing
+    const adminEmail = process.env.ADMIN_ALERT_EMAIL ?? process.env.RESEND_FROM_EMAIL;
+    if (adminEmail && process.env.RESEND_API_KEY) {
+      try {
+        const { Resend } = await import('resend');
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        await resend.emails.send({
+          from: process.env.RESEND_FROM_EMAIL ?? 'alerts@voxara.app',
+          to: adminEmail,
+          subject: `[Voxara] Webhook delivery failed: ${entry.eventType}`,
+          text: [
+            `Webhook delivery failed repeatedly.`,
+            `Event: ${entry.eventType}`,
+            `Endpoint: ${entry.endpointId}`,
+            `Error: ${entry.errorMessage}`,
+            `Time: ${new Date().toISOString()}`,
+          ].join('\n'),
+        });
+      } catch {
+        // Alert sending failed — not worth crashing over
+      }
+    }
   }
 }

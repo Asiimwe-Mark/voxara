@@ -45,7 +45,7 @@ export interface PaddleCheckoutSession {
     price_id: string;
     quantity: number;
   }>;
-  custom_data?: Record<string, any>;
+  custom_data?: Record<string, unknown>;
   completed_at?: string;
   created_at: string;
   updated_at: string;
@@ -87,7 +87,7 @@ export interface PaddleTransaction {
   updated_at: string;
   currency_code: string;
   collection_mode: 'automatic' | 'manual';
-  custom_data?: Record<string, any>;
+  custom_data?: Record<string, unknown>;
   discount_id?: string;
   totals?: {
     subtotal: string;
@@ -111,7 +111,7 @@ export interface PaddleSubscription {
     starts_at: string;
     ends_at: string;
   };
-  custom_data?: Record<string, any>;
+  custom_data?: Record<string, unknown>;
   discount_id?: string;
   items: Array<{
     status: 'active' | 'trialing' | 'paused' | 'past_due' | 'canceled' | 'expired';
@@ -163,7 +163,7 @@ export interface PaddleWebhookEvent {
   event_type: PaddleEventType;
   occurred_at: string;
   notification_id: string;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
 }
 
 export type PaddleEventType =
@@ -213,7 +213,7 @@ export interface PaddleCheckoutCreateParams {
     purchase_order_number?: string;
     additional_information?: string;
   };
-  custom_data?: Record<string, any>;
+  custom_data?: Record<string, unknown>;
   return_url?: string;
 }
 
@@ -228,7 +228,7 @@ export interface PaddleTransactionCreateParams {
   currency_code?: string;
   collection_mode?: 'automatic' | 'manual';
   discount_id?: string;
-  custom_data?: Record<string, any>;
+  custom_data?: Record<string, unknown>;
   billing_details?: {
     enable_checkout: boolean;
     purchase_order_number?: string;
@@ -249,7 +249,7 @@ export interface PaddleSubscriptionCreateParams {
     purchase_order_number?: string;
     additional_information?: string;
   };
-  custom_data?: Record<string, any>;
+  custom_data?: Record<string, unknown>;
   discount_id?: string;
   proration_billing_mode?: 'full_cycle' | 'prorated_immediately' | 'prorated_next_billing_period';
   trial_period?: {

@@ -7,7 +7,7 @@ export interface Profile {
   avatar_url: string | null;
   credits: number;
   plan: PlanType;
-  stripe_customer_id: string | null;
+  payment_customer_id: string | null;
   created_at: string;
   updated_at?: string;
 }
@@ -53,7 +53,7 @@ export interface OrganizationInvite {
 export interface OrganizationSubscription {
   id: string;
   organization_id: string;
-  stripe_subscription_id: string | null;
+  payment_subscription_id: string | null;
   plan: PlanType;
   seats: number;
   credits_shared: number;

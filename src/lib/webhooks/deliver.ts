@@ -1,15 +1,12 @@
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export interface WebhookPayload {
   event: string;
   timestamp: string;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
 }
 
 interface DeliveryResult {
@@ -129,7 +126,7 @@ async function logDelivery(
  */
 export async function deliverWebhook(
   eventType: string,
-  data: Record<string, any>,
+  data: Record<string, unknown>,
   userId: string
 ): Promise<void> {
   // Find all active endpoints subscribed to this event
@@ -166,7 +163,7 @@ export async function deliverAdHocWebhook(
   url: string,
   secret: string,
   eventType: string,
-  data: Record<string, any>
+  data: Record<string, unknown>
 ): Promise<DeliveryResult> {
   const payload: WebhookPayload = {
     event: eventType,
@@ -186,8 +183,8 @@ export function verifyWebhookSignature(
   secret: string
 ): boolean {
   const expected = generateSignature(payload, secret);
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expected)
-  );
+  const sigBuf = Buffer.from(signature.trim(), 'utf8');
+  const expBuf = Buffer.from(expected, 'utf8');
+  if (sigBuf.length !== expBuf.length) return false;
+  return crypto.timingSafeEqual(sigBuf, expBuf);
 }

@@ -1,20 +1,17 @@
+/**
+ * Payment Adapter — Voxara
+ *
+ * Supported providers:
+ *   paddle      — Primary (global, USD, card/PayPal). Set PAYMENT_PROVIDER=paddle
+ *   flutterwave — Africa / local currencies (NGN, KES, GHS, ZAR). Set PAYMENT_PROVIDER=flutterwave
+ *
+ * Stripe and Lemon Squeezy have been removed entirely.
+ */
+
 import { PaddleClient, createPaddleClient } from './paddle/client';
 import { FlutterwaveClient, createFlutterwaveClient } from './flutterwave/client';
-import { LemonSqueezyClient, createLemonSqueezyClient } from './lemon-squeezy/client';
 
-/**
- * Payment providers supported by the adapter
- * 'paddle' - Primary provider (Stripe, Visa, Mastercard, etc.) - Global USD payments
- * 'flutterwave' - Secondary provider for local payments (NGN, etc.)
- * 'lemon-squeezy' - Legacy provider (deprecated, being phased out)
- */
-export type PaymentProvider = 'paddle' | 'flutterwave' | 'lemon-squeezy';
-
-export interface PaymentConfig {
-  provider: PaymentProvider;
-  currency?: string;
-  webhookSecret: string;
-}
+export type PaymentProvider = 'paddle' | 'flutterwave';
 
 export interface CheckoutParams {
   userId: string;
@@ -25,272 +22,163 @@ export interface CheckoutParams {
   mode: 'subscription' | 'payment';
   successUrl?: string;
   cancelUrl?: string;
-  metadata?: Record<string, any>;
-}
-
-export interface SubscriptionParams {
-  userId: string;
-  email: string;
-  planId: string;
-  customData?: Record<string, any>;
+  metadata?: Record<string, string | number | boolean | null>;
 }
 
 export interface PaymentSession {
   id: string;
-  url?: string;
+  url: string;
   status: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, string | number | boolean | null>;
 }
 
-/**
- * Unified Payment Adapter - abstracts multiple payment providers
- * Supports Paddle (primary), Flutterwave (local), and Lemon Squeezy (legacy/deprecated)
- */
+// ─── Paddle price map ────────────────────────────────────────────────────────
+const PADDLE_PRICE_IDS: Record<string, string> = {
+  pro_monthly:    process.env.PADDLE_PRO_MONTHLY_PRICE_ID    ?? '',
+  pro_yearly:     process.env.PADDLE_PRO_YEARLY_PRICE_ID     ?? '',
+  agency_monthly: process.env.PADDLE_AGENCY_MONTHLY_PRICE_ID ?? '',
+  agency_yearly:  process.env.PADDLE_AGENCY_YEARLY_PRICE_ID  ?? '',
+  credits_10:     process.env.PADDLE_CREDITS_10_PRICE_ID     ?? '',
+  credits_25:     process.env.PADDLE_CREDITS_25_PRICE_ID     ?? '',
+  credits_50:     process.env.PADDLE_CREDITS_50_PRICE_ID     ?? '',
+};
+
+// ─── PaymentAdapter class ────────────────────────────────────────────────────
+
 export class PaymentAdapter {
-  private paddle: PaddleClient | null = null;
-  private flutterwave: FlutterwaveClient;
-  private lemonSqueezy: LemonSqueezyClient | null = null;
-  private config: PaymentConfig;
+  private readonly provider: PaymentProvider;
+  private paddle: PaddleClient | null  = null;
+  private flutterwave: FlutterwaveClient | null = null;
 
-  constructor(config: PaymentConfig) {
-    this.config = config;
+  constructor(provider: PaymentProvider) {
+    this.provider = provider;
 
-    // Initialize only the configured provider
-    if (config.provider === 'paddle') {
-      try {
-        this.paddle = createPaddleClient();
-      } catch (error) {
-        console.error('Failed to initialize Paddle client:', error);
-        throw error;
-      }
-    } else if (config.provider === 'lemon-squeezy') {
-      try {
-        this.lemonSqueezy = createLemonSqueezyClient();
-      } catch (error) {
-        console.error('Failed to initialize Lemon Squeezy client:', error);
-        throw error;
-      }
+    if (provider === 'paddle') {
+      this.paddle = createPaddleClient();
+    } else {
+      this.flutterwave = createFlutterwaveClient();
     }
-
-    // Always initialize Flutterwave as fallback
-    this.flutterwave = createFlutterwaveClient();
   }
 
-  /**
-   * Create a checkout session with the configured payment provider
-   */
+  /** Create a checkout session with the active provider */
   async createCheckout(params: CheckoutParams): Promise<PaymentSession> {
-    if (this.config.provider === 'paddle') {
-      return this.createPaddleCheckout(params);
-    } else if (this.config.provider === 'lemon-squeezy') {
-      return this.createLemonSqueezyCheckout(params);
-    } else if (this.config.provider === 'flutterwave') {
-      return this.createFlutterwaveCheckout(params);
-    }
-    throw new Error(`Unknown payment provider: ${this.config.provider}`);
+    if (this.provider === 'paddle') return this.paddleCheckout(params);
+    return this.flutterwaveCheckout(params);
   }
 
-  /**
-   * Create Paddle checkout session
-   */
-  private async createPaddleCheckout(params: CheckoutParams): Promise<PaymentSession> {
-    if (!this.paddle) {
-      throw new Error('Paddle client not initialized');
-    }
-
-    try {
-      // Get or create Paddle customer
-      const customer = await this.paddle.getOrCreateCustomer({
-        email: params.email,
-        name: undefined, // Can be enriched from user profile if needed
-      });
-
-      // Map plan type to price ID
-      const priceIdMap: Record<string, string> = {
-        'free': process.env.PADDLE_CREDIT_PRODUCT_ID!,
-        'pro': process.env.PADDLE_PRO_PLAN_ID!,
-        'agency': process.env.PADDLE_AGENCY_PLAN_ID!,
-      };
-
-      const priceId = priceIdMap[params.planType || 'free'];
-
-      if (!priceId) {
-        throw new Error(`No price ID configured for plan type: ${params.planType}`);
-      }
-
-      // Create checkout session
-      const checkout = await this.paddle.createCheckout({
-        items: [{ price_id: priceId, quantity: 1 }],
-        customer_id: customer.id,
-        currency_code: 'USD',
-        custom_data: {
-          user_id: params.userId,
-          credits: params.credits,
-          plan_type: params.planType,
-          mode: params.mode,
-          ...params.metadata,
-        },
-        return_url: params.successUrl,
-      });
-
-      return {
-        id: checkout.id,
-        url: checkout.checkout_url,
-        status: checkout.status,
-        metadata: {
-          provider: 'paddle',
-          user_id: params.userId,
-          customer_id: customer.id,
-          credits: params.credits,
-        },
-      };
-    } catch (error) {
-      console.error('Paddle checkout creation failed:', error);
-      throw error;
-    }
-  }
-
-  private async createLemonSqueezyCheckout(params: CheckoutParams): Promise<PaymentSession> {
-    // Determine product ID based on plan type
-    const productIdMap: Record<string, string> = {
-      'free': process.env.LEMON_SQUEEZY_FREE_PRODUCT_ID!,
-      'pro': process.env.LEMON_SQUEEZY_PRO_VARIANT_ID!,
-      'agency': process.env.LEMON_SQUEEZY_AGENCY_VARIANT_ID!,
-    };
-
-    const variantIdMap: Record<string, string> = {
-      'free': process.env.LEMON_SQUEEZY_FREE_VARIANT_ID!,
-      'pro': params.mode === 'subscription' 
-        ? process.env.LEMON_SQUEEZY_PRO_MONTHLY_VARIANT_ID! 
-        : process.env.LEMON_SQUEEZY_CREDIT_PACK_VARIANT_ID!,
-      'agency': params.mode === 'subscription'
-        ? process.env.LEMON_SQUEEZY_AGENCY_MONTHLY_VARIANT_ID!
-        : process.env.LEMON_SQUEEZY_CREDIT_PACK_VARIANT_ID!,
-    };
-
-    const response = await this.lemonSqueezy.createCheckout({
-      productId: productIdMap[params.planType || 'free'],
-      variantId: variantIdMap[params.planType || 'free'],
-      customerEmail: params.email,
-      customData: {
-        user_id: params.userId,
-        credits: params.credits,
-        plan_type: params.planType,
-        mode: params.mode,
-        ...params.metadata,
-      },
-      successUrl: params.successUrl,
-      cancelUrl: params.cancelUrl,
-    });
-
-    return {
-      id: response.data.id,
-      url: response.data.attributes.url,
-      status: 'pending',
-      metadata: {
-        provider: 'lemon-squeezy',
-        user_id: params.userId,
-        credits: params.credits,
-      },
-    };
-  }
-
-  private async createFlutterwaveCheckout(params: CheckoutParams): Promise<PaymentSession> {
-    const amountInKobo = Math.round(params.amount * 100);
-    const txRef = `${params.userId}-${Date.now()}`;
-
-    const response = await this.flutterwave.initializePayment({
-      amount: amountInKobo,
-      email: params.email,
-      currency: this.config.currency || 'NGN',
-      txRef,
-      customData: {
-        user_id: params.userId,
-        credits: params.credits,
-        plan_type: params.planType,
-        mode: params.mode,
-        ...params.metadata,
-      },
-      redirectUrl: params.successUrl,
-      meta: {
-        userId: params.userId,
-      },
-    });
-
-    if (response.status !== 'success') {
-      throw new Error(`Failed to initialize Flutterwave payment: ${response.message}`);
-    }
-
-    return {
-      id: response.data.link,
-      url: response.data.link,
-      status: 'pending',
-      metadata: {
-        provider: 'flutterwave',
-        user_id: params.userId,
-        tx_ref: txRef,
-        credits: params.credits,
-      },
-    };
-  }
-
-  /**
-   * Verify webhook signature
-   */
+  /** Verify webhook signature */
   verifyWebhookSignature(payload: string, signature: string): boolean {
-    if (this.config.provider === 'paddle') {
-      if (!this.paddle) {
-        console.error('Paddle client not initialized for signature verification');
-        return false;
-      }
+    if (this.provider === 'paddle' && this.paddle) {
       return this.paddle.verifyWebhookSignature(payload, signature);
-    } else if (this.config.provider === 'lemon-squeezy') {
-      if (!this.lemonSqueezy) {
-        console.error('Lemon Squeezy client not initialized for signature verification');
-        return false;
-      }
-      return this.lemonSqueezy.verifyWebhookSignature(
-        process.env.LEMON_SQUEEZY_WEBHOOK_SECRET!,
-        payload,
-        signature
-      );
-    } else if (this.config.provider === 'flutterwave') {
+    }
+    if (this.provider === 'flutterwave' && this.flutterwave) {
       return this.flutterwave.verifyWebhookSignature(payload, signature);
     }
     return false;
   }
 
-  /**
-   * Get the payment provider client
-   */
-  getProvider() {
-    if (this.config.provider === 'lemon-squeezy') {
-      return this.lemonSqueezy;
-    } else if (this.config.provider === 'flutterwave') {
-      return this.flutterwave;
+  /** Expose the underlying provider client (used by auto-topup) */
+  getProvider(): PaddleClient | FlutterwaveClient {
+    if (this.provider === 'paddle' && this.paddle) return this.paddle;
+    if (this.provider === 'flutterwave' && this.flutterwave) return this.flutterwave;
+    throw new Error(`Provider client not initialized: ${this.provider}`);
+  }
+
+  // ── Paddle ────────────────────────────────────────────────────────────────
+
+  private async paddleCheckout(params: CheckoutParams): Promise<PaymentSession> {
+    if (!this.paddle) throw new Error('Paddle client not initialized');
+
+    const priceKey =
+      params.mode === 'payment'
+        ? `credits_${params.credits ?? 25}`
+        : `${params.planType ?? 'pro'}_monthly`;
+
+    const priceId = PADDLE_PRICE_IDS[priceKey];
+    if (!priceId) throw new Error(`No Paddle price ID for key: ${priceKey}`);
+
+    const customer = await this.paddle.getOrCreateCustomer({ email: params.email });
+
+    const checkout = await this.paddle.createCheckout({
+      items: [{ price_id: priceId, quantity: 1 }],
+      customer_id: customer.id,
+      currency_code: 'USD',
+      custom_data: {
+        user_id:   params.userId,
+        credits:   params.credits  ?? null,
+        plan_type: params.planType ?? null,
+        mode:      params.mode,
+        ...params.metadata,
+      },
+      return_url: params.successUrl,
+    });
+
+    return {
+      id:       checkout.id,
+      url:      checkout.checkout_url,
+      status:   checkout.status ?? 'pending',
+      metadata: {
+        provider:    'paddle',
+        user_id:     params.userId,
+        customer_id: customer.id,
+        credits:     params.credits ?? null,
+      },
+    };
+  }
+
+  // ── Flutterwave ───────────────────────────────────────────────────────────
+
+  private async flutterwaveCheckout(params: CheckoutParams): Promise<PaymentSession> {
+    if (!this.flutterwave) throw new Error('Flutterwave client not initialized');
+
+    // Amount in Naira kobo (×100) — Flutterwave's base unit for NGN
+    const amountInKobo = Math.round(params.amount * 100);
+    const txRef = `voxara-${params.userId}-${Date.now()}`;
+
+    const response = await this.flutterwave.initializePayment({
+      amount:      amountInKobo,
+      email:       params.email,
+      currency:    'NGN',
+      txRef,
+      redirectUrl: params.successUrl,
+      customData: {
+        user_id:   params.userId,
+        credits:   params.credits  ?? null,
+        plan_type: params.planType ?? null,
+        mode:      params.mode,
+        ...params.metadata,
+      },
+      meta: { userId: params.userId },
+    });
+
+    if (response.status !== 'success') {
+      throw new Error(`Flutterwave error: ${response.message ?? 'unknown'}`);
     }
-    throw new Error(`Unknown payment provider: ${this.config.provider}`);
+
+    return {
+      id:     txRef,
+      url:    response.data.link,
+      status: 'pending',
+      metadata: {
+        provider: 'flutterwave',
+        user_id:  params.userId,
+        tx_ref:   txRef,
+        credits:  params.credits ?? null,
+      },
+    };
   }
 }
 
-/**
- * Create a payment adapter instance with the default configured provider
- * Defaults to 'paddle' if PAYMENT_PROVIDER is not set
- */
-export const createPaymentAdapter = () => {
-  const provider = (process.env.PAYMENT_PROVIDER || 'paddle') as PaymentProvider;
+// ─── Factory ─────────────────────────────────────────────────────────────────
 
-  if (!['paddle', 'flutterwave', 'lemon-squeezy'].includes(provider)) {
-    throw new Error(`Invalid PAYMENT_PROVIDER: ${provider}. Must be 'paddle', 'flutterwave', or 'lemon-squeezy'`);
+export function createPaymentAdapter(): PaymentAdapter {
+  const raw = (process.env.PAYMENT_PROVIDER ?? 'paddle').toLowerCase();
+
+  if (raw !== 'paddle' && raw !== 'flutterwave') {
+    throw new Error(
+      `Invalid PAYMENT_PROVIDER="${raw}". Must be "paddle" or "flutterwave".`
+    );
   }
 
-  return new PaymentAdapter({
-    provider,
-    currency: provider === 'flutterwave' ? 'NGN' : 'USD',
-    webhookSecret: provider === 'paddle'
-      ? process.env.PADDLE_WEBHOOK_SECRET!
-      : provider === 'lemon-squeezy'
-      ? process.env.LEMON_SQUEEZY_WEBHOOK_SECRET!
-      : process.env.FLUTTERWAVE_WEBHOOK_SECRET!,
-  });
-};
+  return new PaymentAdapter(raw as PaymentProvider);
+}

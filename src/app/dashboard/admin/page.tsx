@@ -189,7 +189,7 @@ export default function AdminDashboard() {
             <div>
               <div className="flex items-center gap-2">
                 <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                <span className="text-gray-600">Stripe Integration</span>
+                <span className="text-gray-600">Payment Integration</span>
                 <span className="ml-auto text-sm font-semibold text-green-600">
                   Connected
                 </span>

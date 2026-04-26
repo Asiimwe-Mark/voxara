@@ -164,7 +164,7 @@ export default function CookiePolicy() {
               behavior analysis
             </li>
             <li>
-              <strong>Stripe:</strong> Payment processing
+              <strong>Paddle:</strong> Payment processing (global) / Flutterwave (Africa)
             </li>
             <li>
               <strong>Facebook:</strong> Social login and advertising

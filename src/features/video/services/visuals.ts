@@ -1,6 +1,10 @@
+import logger from '@/lib/logger';
 import { createClient as createPexelsClient } from "pexels";
 
-const pexelsClient = createPexelsClient(process.env.PEXELS_API_KEY!);
+function getPexelsClient() {
+  if (!process.env.PEXELS_API_KEY) throw new Error("PEXELS_API_KEY is not set");
+  return createPexelsClient(process.env.PEXELS_API_KEY);
+}
 
 export interface FootageOptions {
   count?: number;
@@ -21,7 +25,7 @@ export async function fetchStockFootage(
   } = options;
 
   try {
-    const response = await pexelsClient.videos.search({
+    const response = await getPexelsClient().videos.search({
       query,
       per_page: count * 2,
       orientation,
@@ -41,7 +45,7 @@ export async function fetchStockFootage(
         .filter(Boolean) as string[];
     }
   } catch (error) {
-    console.error("Pexels API error:", error);
+    logger.error("Pexels API error:", { detail: error });
   }
 
   // Fallback to curated free footage

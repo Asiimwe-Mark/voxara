@@ -16,7 +16,7 @@ interface BillingRecord {
   currency: string;
   status: string;
   payment_method: string;
-  stripe_charge_id: string;
+  payment_charge_id: string;
   created_at: string;
 }
 

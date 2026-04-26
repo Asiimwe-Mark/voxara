@@ -12,7 +12,7 @@ const clipSchema = z.object({
   end: z.number().int().positive(),
   type: z.enum(['video', 'audio', 'text', 'image']),
   url: z.string().optional(),
-  properties: z.record(z.string(), z.unknown()).optional(),
+  properties: z.record(z.unknown()).optional(),
 });
 
 const trackSchema = z.object({
@@ -30,7 +30,7 @@ const timelineSchema = z.object({
 
 export async function GET(request: NextRequest, context: RouteContext) {
   const { id } = await context.params;
-   const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
 export async function PUT(request: NextRequest, context: RouteContext) {
   const { id } = await context.params;
-   const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

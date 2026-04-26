@@ -1,3 +1,5 @@
+import { supabaseAdmin } from '@/lib/supabase/admin';
+import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -8,9 +10,11 @@ export async function GET(request: NextRequest) {
   const error = searchParams.get("error");
   const errorDescription = searchParams.get("error_description");
 
+  const supabase = await createClient();
+
   // Handle OAuth error from Instagram
   if (error) {
-    console.error("Instagram OAuth error:", error, errorDescription);
+    logger.error("Instagram OAuth error:", error, errorDescription);
     return NextResponse.redirect(
       new URL("/dashboard/settings?error=instagram_auth_failed", request.url)
     );
@@ -48,8 +52,8 @@ export async function GET(request: NextRequest) {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
-        client_id: process.env.INSTAGRAM_CLIENT_ID!,
-        client_secret: process.env.INSTAGRAM_CLIENT_SECRET!,
+        client_id: (process.env.INSTAGRAM_CLIENT_ID ?? (() => { throw new Error('INSTAGRAM_CLIENT_ID is required for Instagram OAuth'); })()),
+        client_secret: (process.env.INSTAGRAM_CLIENT_SECRET ?? (() => { throw new Error('INSTAGRAM_CLIENT_SECRET is required for Instagram OAuth'); })()),
         grant_type: "authorization_code",
         redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/instagram/callback`,
         code,
@@ -59,7 +63,7 @@ export async function GET(request: NextRequest) {
     const tokenData = await tokenResponse.json();
 
     if (!tokenResponse.ok) {
-      console.error("Instagram token exchange failed:", tokenData);
+      logger.error("Instagram token exchange failed:", { detail: tokenData });
       return NextResponse.redirect(
         new URL("/dashboard/settings?error=token_exchange_failed", request.url)
       );
@@ -74,11 +78,7 @@ export async function GET(request: NextRequest) {
     const profileData = await profileResponse.json();
 
     // Store in database using service role client
-    const supabaseAdmin = await createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
+    
     const { error: dbError } = await supabaseAdmin.from("social_accounts").upsert(
       {
         user_id: userId,
@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
     );
 
     if (dbError) {
-      console.error("Failed to store Instagram account:", dbError);
+      logger.error("Failed to store Instagram account:", { detail: dbError });
       return NextResponse.redirect(
         new URL("/dashboard/settings?error=database_error", request.url)
       );
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
       new URL("/dashboard/settings?success=instagram_connected", request.url)
     );
   } catch (error) {
-    console.error("Instagram callback error:", error);
+    logger.error("Instagram callback error:", { detail: error });
     return NextResponse.redirect(
       new URL("/dashboard/settings?error=internal_error", request.url)
     );

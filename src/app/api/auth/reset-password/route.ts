@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { ratelimit } from '@/lib/rate-limit';
@@ -10,7 +11,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Too many reset requests. Please try again later.' }, { status: 429 });
   }
 
-  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const supabase = await createClient();
 
   let body: { email?: string };
   try {
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
   });
 
   if (error) {
-    console.error('Password reset error:', error);
+    logger.error('Password reset error:'', { detail: error instanceof Error ? error.message : String(error) });
     // Don't expose whether the email exists — always return success
   }
 

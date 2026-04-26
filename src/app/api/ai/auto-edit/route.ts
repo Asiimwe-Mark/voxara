@@ -1,11 +1,16 @@
+import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { GoogleGenAI } from "@google/genai";
 
-const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+function getGenAI() {
+  const key = process.env.GEMINI_API_KEY ?? process.env.GOOGLE_GENAI_API_KEY ?? process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  if (!key) throw new Error("GEMINI_API_KEY is not set");
+  return new GoogleGenAI({ apiKey: key });
+}
 
 export async function POST(request: NextRequest) {
-   const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -65,7 +70,7 @@ Guidelines:
 - Generate unique clip IDs using a prefix like "ai-clip-{timestamp}-{index}".
 - Do not include any explanatory text outside the JSON.`;
 
-    const result = await genAI.models.generateContent({
+    const result = await getGenAI().models.generateContent({
       model: "gemini-2.0-flash",
       contents: systemPrompt,
     });
@@ -86,7 +91,7 @@ Guidelines:
 
     return NextResponse.json({ tracks: parsedResponse.tracks });
   } catch (error) {
-    console.error("AI auto-edit error:", error);
+    logger.error("AI auto-edit error:", { detail: error });
     return NextResponse.json(
       { error: "Failed to generate AI edit suggestions" },
       { status: 500 }

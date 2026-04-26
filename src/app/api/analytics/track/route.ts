@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error('Track event error:', error);
+    logger.error('Track event error:'', { detail: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }

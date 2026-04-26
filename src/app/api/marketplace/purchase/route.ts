@@ -1,9 +1,10 @@
+import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createPaymentAdapter } from '@/lib/payment-adapter';
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
-    console.error('Marketplace purchase error:', error);
+    logger.error('Marketplace purchase error:'', { detail: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 });
   }
 }

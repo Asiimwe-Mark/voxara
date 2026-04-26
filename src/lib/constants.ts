@@ -25,18 +25,26 @@ export const VIDEO_CONFIG = {
 
 // Credit Configuration
 export const CREDITS_CONFIG = {
-  FREE_TIER_MONTHLY_CREDITS: 1, // Reduced from 3 to 1 to prevent abuse
+  FREE_TIER_MONTHLY_CREDITS: 1,   // Reduced from 3 to cut HeyGen/ElevenLabs costs
   CREDITS_PER_VIDEO: 1,
   FREE_TRIAL_DURATION_DAYS: 7,
-  // Social sharing rewards
-  SOCIAL_SHARE_CREDITS: 2, // Credits earned per social share
-  SOCIAL_SHARE_MAX_PER_MONTH: 5, // Max social share credits per month
+  // Bonus credits earned via sharing (costs nothing, turns users into marketers)
+  SHARING_BONUS: {
+    TIKTOK: 1,
+    INSTAGRAM: 1,
+    FACEBOOK: 1,
+    X: 1,
+    YOUTUBE: 2,
+  },
+  REFERRAL_BONUS_REFERRER: 3,     // Credits awarded to person who referred
+  REFERRAL_BONUS_NEW_USER: 1,     // Extra credit for new user who was referred
+  MAX_SHARING_CREDITS_PER_MONTH: 5, // Cap so users can't farm unlimited credits
 };
 
 // Pricing Configuration
 export const PRICING_CONFIG = {
   PLANS: {
-    FREE: { name: 'Free', monthlyCredits: 3, price: 0 },
+    FREE: { name: 'Free', monthlyCredits: 1, price: 0 },
     PRO: { name: 'Pro', monthlyCredits: 30, price: 2900 }, // $29.00 in cents
     AGENCY: { name: 'Agency', monthlyCredits: 100, price: 9900 }, // $99.00 in cents
   },
@@ -45,6 +53,32 @@ export const PRICING_CONFIG = {
     PACK_25: { credits: 25, price: 1900 }, // $19.00
     PACK_50: { credits: 50, price: 2900 }, // $29.00
   },
+};
+
+// Voice routing — free tier uses Edge-TTS (free), paid tiers use ElevenLabs
+export const VOICE_ROUTING_CONFIG = {
+  FREE_PROVIDER: 'edge-tts',          // Microsoft Edge TTS — completely free
+  PAID_PROVIDER: 'elevenlabs',        // ElevenLabs — costs ~$0.09/video
+  // Free tier users never get an ElevenLabs voiceId passed to HeyGen
+  // This saves ~$0.09 per video × all free videos
+  DEFAULT_EDGE_TTS_VOICES: {
+    'en': 'en-US-AriaNeural',
+    'es': 'es-ES-ElviraNeural',
+    'fr': 'fr-FR-DeniseNeural',
+    'de': 'de-DE-KatjaNeural',
+    'it': 'it-IT-ElsaNeural',
+    'pt': 'pt-BR-FranciscaNeural',
+    'ja': 'ja-JP-NanamiNeural',
+    'zh': 'zh-CN-XiaoxiaoNeural',
+  },
+};
+
+// Mux streaming — only for paid tiers; free users get Supabase direct URLs
+// This defers the $89/month Mux bill until you're profitable
+export const MUX_CONFIG = {
+  ENABLE_FOR_FREE_TIER: false,  // Free videos served from Supabase storage
+  ENABLE_FOR_PRO: true,
+  ENABLE_FOR_AGENCY: true,
 };
 
 // Rate Limiting Configuration
@@ -96,7 +130,7 @@ export const AUTH_CONFIG = {
 
 // Email Configuration
 export const EMAIL_CONFIG = {
-  FROM_EMAIL: process.env.SENDGRID_FROM_EMAIL || 'noreply@voxara.app',
+  FROM_EMAIL: process.env.RESEND_FROM_EMAIL || 'noreply@voxara.app',
   FROM_NAME: 'voxara',
   REPLY_TO: 'support@voxara.app',
   MAX_RECIPIENTS_PER_BATCH: 1000,
@@ -160,7 +194,6 @@ export const EXTERNAL_SERVICES = {
   SYNTHESIA_API_BASE: 'https://api.synthesia.io',
   ELEVENLABS_API_BASE: 'https://api.elevenlabs.io',
   PEXELS_API_BASE: 'https://api.pexels.com',
-  STRIPE_API_BASE: 'https://api.stripe.com',
   MUX_API_BASE: 'https://api.mux.com',
 };
 

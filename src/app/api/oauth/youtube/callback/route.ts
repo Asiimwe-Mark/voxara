@@ -1,3 +1,5 @@
+import { supabaseAdmin } from '@/lib/supabase/admin';
+import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { google } from "googleapis";
@@ -8,21 +10,10 @@ export async function GET(request: NextRequest) {
   const state = searchParams.get("state");
   const error = searchParams.get("error");
 
- const supabaseUrl = process.env.SUPABASE_URL;
-   const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
- 
-   if (!supabaseUrl || !supabaseAnonKey) {
-     console.error("SUPABASE_URL or SUPABASE_ANON_KEY is not set");
-     return NextResponse.json(
-       { error: "Supabase integration is not configured" },
-       { status: 500 }
-     );
-   }
- 
-   const supabase = await createClient(supabaseUrl, supabaseAnonKey);
+  const supabase = await createClient();
 
   if (error) {
-    console.error("YouTube OAuth error:", error);
+    logger.error("YouTube OAuth error:", { detail: error });
     return NextResponse.redirect(
       new URL("/dashboard/settings?error=youtube_auth_failed", request.url)
     );
@@ -54,8 +45,8 @@ export async function GET(request: NextRequest) {
 
   try {
     const oauth2Client = new google.auth.OAuth2(
-      process.env.YOUTUBE_CLIENT_ID!,
-      process.env.YOUTUBE_CLIENT_SECRET!,
+      (process.env.YOUTUBE_CLIENT_ID ?? (() => { throw new Error('YOUTUBE_CLIENT_ID is required for YouTube OAuth'); })()),
+      (process.env.YOUTUBE_CLIENT_SECRET ?? (() => { throw new Error('YOUTUBE_CLIENT_SECRET is required for YouTube OAuth'); })()),
       `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/youtube/callback`
     );
 
@@ -77,14 +68,10 @@ export async function GET(request: NextRequest) {
       throw new Error("No YouTube channel found for this account");
     }
 
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
+    
     // Store tokens in Supabase Vault (recommended) or encrypted column
     // For simplicity, we store in social_accounts with tokens
-    const { error: dbError } = await (await supabaseAdmin).from("social_accounts").upsert(
+    const { error: dbError } = await supabaseAdmin.from("social_accounts").upsert(
       {
         user_id: userId,
         platform: "youtube",
@@ -101,7 +88,7 @@ export async function GET(request: NextRequest) {
     );
 
     if (dbError) {
-      console.error("Failed to store YouTube account:", dbError);
+      logger.error("Failed to store YouTube account:", { detail: dbError });
       return NextResponse.redirect(
         new URL("/dashboard/settings?error=database_error", request.url)
       );
@@ -111,7 +98,7 @@ export async function GET(request: NextRequest) {
       new URL("/dashboard/settings?success=youtube_connected", request.url)
     );
   } catch (error) {
-    console.error("YouTube callback error:", error);
+    logger.error("YouTube callback error:", { detail: error });
     return NextResponse.redirect(
       new URL("/dashboard/settings?error=token_exchange_failed", request.url)
     );

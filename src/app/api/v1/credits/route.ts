@@ -1,52 +1,53 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import crypto from "crypto";
+/**
+ * POST /api/v1/credits
+ * Server-side atomic credit operations via Supabase RPC.
+ * Used by the useCredits hook to safely deduct/add credits
+ * without race conditions from direct client-side DB updates.
+ */
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { createClient } from '@/lib/supabase/server';
 
-async function validateApiKey(request: NextRequest): Promise<string | null> {
-  const apiKey = request.headers.get("x-api-key");
-  if (!apiKey) return null;
+const bodySchema = z.object({
+  action: z.enum(['deduct', 'add']),
+  amount: z.number().int().positive().max(10000),
+});
 
-  const keyHash = crypto.createHash("sha256").update(apiKey).digest("hex");
-  const { data } = await supabaseAdmin
-    .from("api_keys")
-    .select("user_id, status, expires_at")
-    .eq("key_hash", keyHash)
-    .single();
+export async function POST(request: NextRequest) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  if (!data || data.status !== "active") return null;
-  if (data.expires_at && new Date(data.expires_at) < new Date()) return null;
-
-  await supabaseAdmin
-    .from("api_keys")
-    .update({ last_used_at: new Date().toISOString() })
-    .eq("key_hash", keyHash);
-
-  return data.user_id;
-}
-
-export async function GET(request: NextRequest) {
-  const userId = await validateApiKey(request);
-  if (!userId) {
-    return NextResponse.json({ error: "Invalid or missing API key" }, { status: 401 });
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { data: profile, error } = await supabaseAdmin
-    .from("profiles")
-    .select("credits, plan")
-    .eq("id", userId)
-    .single();
-
-  if (error || !profile) {
-    return NextResponse.json({ error: "User profile not found" }, { status: 404 });
+  const parsed = bodySchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  return NextResponse.json({
-    credits: profile.credits,
-    plan: profile.plan,
+  const { action, amount } = parsed.data;
+
+  if (action === 'deduct') {
+    const { data: success, error } = await supabase.rpc('deduct_credits', {
+      p_user_id: user.id,
+      p_credits: amount,
+    });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!success) return NextResponse.json({ error: 'Insufficient credits' }, { status: 402 });
+    return NextResponse.json({ ok: true });
+  }
+
+  // action === 'add'
+  const { error } = await supabase.rpc('add_credits', {
+    p_user_id: user.id,
+    p_credits: amount,
   });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
 }

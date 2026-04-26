@@ -1,35 +1,33 @@
+import { supabaseAdmin } from '@/lib/supabase/admin';
+import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import  Webhook  from "@mux/mux-node";
+import Mux from "@mux/mux-node";
 
-// ✅ Supabase admin (server-only)
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
-// ✅ Verify Mux webhook signature
+function getMux() {
+  return new Mux({
+    tokenId: process.env.MUX_TOKEN_ID ?? '',
+    tokenSecret: process.env.MUX_TOKEN_SECRET ?? '',
+  });
+}
+
 function verifyMuxSignature(request: NextRequest, rawBody: string): boolean {
   const signature = request.headers.get("mux-signature");
   if (!signature) return false;
 
-  const secret =
-    process.env.MUX_WEBHOOK_SECRET ||
-    process.env.MUX_WEBHOOK_SIGNING_SECRET;
-
+  // Mux webhook verification requires the signing secret
+  const secret = process.env.MUX_WEBHOOK_SECRET ?? process.env.MUX_WEBHOOK_SIGNING_SECRET;
   if (!secret) {
-    console.warn(
-      "MUX_WEBHOOK_SECRET not set — skipping verification in development"
-    );
+    logger.warn("MUX_WEBHOOK_SECRET not set — skipping signature verification in development");
     return process.env.NODE_ENV === "development";
   }
 
   try {
-    // ⚠️ Some versions have typing issues → cast fallback
-    (Webhook as any).verifyHeader(rawBody, signature, secret);
+    const webhook = getMux().webhooks;
+    webhook.verifyHeader(rawBody, signature, secret);
     return true;
-  } catch (err) {
-    console.error("Mux signature verification failed:", err);
+  } catch {
     return false;
   }
 }
@@ -37,60 +35,38 @@ function verifyMuxSignature(request: NextRequest, rawBody: string): boolean {
 export async function POST(request: NextRequest) {
   const rawBody = await request.text();
 
-  // ✅ Verify webhook signature
   if (!verifyMuxSignature(request, rawBody)) {
-    return NextResponse.json(
-      { error: "Invalid signature" },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 
-  let body: any;
-  try {
-    body = JSON.parse(rawBody);
-  } catch {
-    return NextResponse.json(
-      { error: "Invalid JSON body" },
-      { status: 400 }
-    );
-  }
-
+  const body = JSON.parse(rawBody);
   const { type, data } = body;
 
-  console.log("🎬 Mux webhook received:", type);
+  logger.info("Mux webhook received", { type });
 
   try {
-    // =========================
-    // 🎥 VIDEO READY
-    // =========================
     if (type === "video.asset.ready") {
-      const assetId = data?.id;
-      const playbackId = data?.playback_ids?.[0]?.id;
+      const assetId = data.id;
+      const playbackId = data.playback_ids?.[0]?.id;
 
-      if (!assetId || !playbackId) {
-        return NextResponse.json(
-          { error: "Missing assetId or playbackId" },
-          { status: 400 }
-        );
+      if (!playbackId) {
+        return NextResponse.json({ error: "No playback ID found" }, { status: 400 });
       }
 
       // Find video by mux_asset_id
-      const { data: video, error: findError } = await supabaseAdmin
+      const { data: video, error } = await supabaseAdmin
         .from("videos")
         .select("id")
         .eq("mux_asset_id", assetId)
         .single();
 
-      if (findError || !video) {
-        console.error("❌ Video not found for asset:", assetId);
-        return NextResponse.json(
-          { error: "Video not found" },
-          { status: 404 }
-        );
+      if (error || !video) {
+        logger.error("Video not found for asset:", { detail: assetId });
+        return NextResponse.json({ error: "Video not found" }, { status: 404 });
       }
 
-      // Update video record
-      const { error: updateError } = await supabaseAdmin
+      // Update video with playback ID and status
+      await supabaseAdmin
         .from("videos")
         .update({
           status: "ready",
@@ -100,50 +76,20 @@ export async function POST(request: NextRequest) {
         })
         .eq("id", video.id);
 
-      if (updateError) {
-        console.error("❌ Failed to update video:", updateError);
-        return NextResponse.json(
-          { error: "Failed to update video" },
-          { status: 500 }
-        );
-      }
-
       return NextResponse.json({ success: true });
     }
 
-    // =========================
-    // ❌ VIDEO FAILED
-    // =========================
     if (type === "video.asset.errored") {
-      const assetId = data?.id;
-
-      if (!assetId) {
-        return NextResponse.json(
-          { error: "Missing assetId" },
-          { status: 400 }
-        );
-      }
-
+      const assetId = data.id;
       await supabaseAdmin
         .from("videos")
-        .update({
-          status: "failed",
-          updated_at: new Date().toISOString(),
-        })
+        .update({ status: "failed" })
         .eq("mux_asset_id", assetId);
-
-      return NextResponse.json({ success: true });
     }
 
-    // =========================
-    // 🔄 DEFAULT HANDLER
-    // =========================
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("❌ Mux webhook error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    logger.error("Mux webhook error:", { detail: error });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

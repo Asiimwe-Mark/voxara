@@ -2,15 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import {
-  Calendar,
-  Clock,
-  Send,
-  Youtube,
-  Instagram,
-  Linkedin,
-  Music2,
-} from "lucide-react";
+import { Calendar, Clock, Send, Music2 } from "lucide-react";
+import { IconYoutube, IconInstagram, IconLinkedin, IconTiktok } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -105,9 +98,12 @@ export function PublishingScheduler({ videoId }: { videoId: string }) {
 
   const platformIcons: Record<string, React.ReactNode> = {
     tiktok: <Music2 className="h-5 w-5" />,
-    instagram: <Instagram className="h-5 w-5" />,
-    linkedin: <Linkedin className="h-5 w-5" />,
-    youtube: <Youtube className="h-5 w-5" />,
+  const platformIcons: Record<string, React.ReactNode> = {
+    instagram: <IconInstagram className="h-5 w-5" />,
+    linkedin:  <IconLinkedin  className="h-5 w-5" />,
+    youtube:   <IconYoutube   className="h-5 w-5" />,
+    tiktok:    <IconTiktok    className="h-5 w-5" />,
+  };
   };
 
   const platformColors: Record<string, string> = {

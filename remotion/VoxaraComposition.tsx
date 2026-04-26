@@ -88,13 +88,13 @@ const Watermark: React.FC = () => (
       letterSpacing: '0.02em',
     }}
   >
-    voxara.app
+    voxara
   </div>
 )
 
 // ── Main Composition ──────────────────────────────────────────────────────────
 
-export const Voxara: React.FC<VoxaraProps> = ({
+export const VoxaraComposition: React.FC<VoxaraProps> = ({
   script,
   audioUrl,
   footageUrls,

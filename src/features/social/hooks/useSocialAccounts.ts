@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -58,13 +59,13 @@ export function useSocialAccounts(): UseSocialAccountsReturn {
 
       if (error) throw error;
       setAccounts(
-        data.map((acc: any) => ({
+        data.map((acc: Record<string, unknown>) => ({
           ...acc,
           connected_at: acc.created_at,
         }))
       );
     } catch (error) {
-      console.error("Failed to fetch social accounts:", error);
+      logger.error("Failed to fetch social accounts:", { detail: error });
       toast.error("Failed to load connected accounts");
     } finally {
       setIsLoading(false);

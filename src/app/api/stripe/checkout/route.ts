@@ -1,81 +1,101 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createPaymentAdapter } from "@/lib/payment-adapter";
+import logger from '@/lib/logger';
+/**
+ * POST /api/stripe/checkout
+ *
+ * Legacy route name kept for URL compatibility.
+ * Now backed by Paddle (global) or Flutterwave (Africa) — no Stripe.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { createPaymentAdapter } from '@/lib/payment-adapter';
+import type { CheckoutParams } from '@/lib/payment-adapter';
+
+type PlanType = 'free' | 'pro' | 'agency';
+type ModeType = 'subscription' | 'payment';
+
+const SUBSCRIPTION_PRICES: Record<PlanType, number> = {
+  free:   0,
+  pro:    29.00,
+  agency: 99.00,
+};
+
+const CREDIT_PACK_PRICES: Record<number, number> = {
+  10: 9.00,
+  25: 19.00,
+  50: 29.00,
+};
 
 export async function POST(request: NextRequest) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  let body: {
+    planType?: string;
+    mode?: string;
+    credits?: number;
+    successUrl?: string;
+    cancelUrl?: string;
+  };
+
   try {
-    const supabase = await createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_ANON_KEY!
-    );
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
 
-    const body = await request.json();
-    const { planType = "free", mode = "subscription", successUrl, cancelUrl, credits } = body;
+  const planType = (body.planType ?? 'pro') as PlanType;
+  const mode     = (body.mode    ?? 'subscription') as ModeType;
+  const credits  = body.credits;
 
-    // Initialize payment adapter
-    const paymentAdapter = createPaymentAdapter();
-    const provider = process.env.PAYMENT_PROVIDER || 'Paddle';
+  const amount =
+    mode === 'payment' && credits
+      ? (CREDIT_PACK_PRICES[credits] ?? 19.00)
+      : SUBSCRIPTION_PRICES[planType] ?? 29.00;
 
-    // Create checkout session with payment adapter
-    const session = await paymentAdapter.createCheckout({
-      userId: user.id,
-      email: user.email!,
-      amount: getAmountForPlan(planType, mode),
-      credits,
-      planType: planType as any,
-      mode: mode as any,
-      successUrl: successUrl ?? `${request.nextUrl.origin}/dashboard?checkout=success`,
-      cancelUrl: cancelUrl ?? `${request.nextUrl.origin}/pricing?checkout=cancelled`,
-      metadata: {
-        provider,
-        created_at: new Date().toISOString(),
-      },
-    });
+  const origin = request.nextUrl.origin;
 
-    // Store payment session in database for tracking
-    const { error: insertError } = await supabase.from('payment_sessions').insert({
-      user_id: user.id,
+  const params: CheckoutParams = {
+    userId:     user.id,
+    email:      user.email!,
+    amount,
+    credits,
+    planType:   planType as CheckoutParams['planType'],
+    mode,
+    successUrl: body.successUrl ?? `${origin}/dashboard?checkout=success`,
+    cancelUrl:  body.cancelUrl  ?? `${origin}/pricing?checkout=cancelled`,
+    metadata: {
+      created_at: new Date().toISOString(),
+    },
+  };
+
+  try {
+    const adapter  = createPaymentAdapter();
+    const session  = await adapter.createCheckout(params);
+    const provider = process.env.PAYMENT_PROVIDER ?? 'paddle';
+
+    // Store session for reconciliation (non-fatal if it fails)
+    await supabase.from('payment_sessions').insert({
+      user_id:    user.id,
       provider,
       session_id: session.id,
-      plan_type: planType,
-      credits,
-      metadata: session.metadata,
-      status: 'pending',
+      plan_type:  planType,
+      credits:    credits ?? null,
+      status:     'pending',
+      metadata:   session.metadata,
+    }).then(({ error }) => {
+      if (error) logger.warn('[checkout] Session log failed', { error: error.message });
     });
 
-    if (insertError) {
-      console.warn('Failed to store payment session:', insertError);
-      // Don't fail checkout if DB insert fails
-    }
-
     return NextResponse.json({ url: session.url });
-  } catch (error) {
-    console.error("Checkout error:", error);
+  } catch (err) {
+    logger.error('[checkout] Failed', { detail: err instanceof Error ? err.message : String(err) });
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to create checkout session" },
+      { error: err instanceof Error ? err.message : 'Checkout creation failed' },
       { status: 500 }
     );
   }
-}
-
-function getAmountForPlan(planType: string, mode: string): number {
-  // For credit packs
-  if (mode === 'payment') {
-    const creditMap: Record<string, number> = {
-      '10': 9.99,
-      '25': 19.99,
-      '50': 29.99,
-    };
-    return creditMap[planType] || 19.99;
-  }
-
-  // For subscriptions
-  const subscriptionMap: Record<string, number> = {
-    'pro': 19.99, // monthly
-    'agency': 49.99, // monthly
-    'free': 0,
-  };
-  return subscriptionMap[planType] || 0;
 }

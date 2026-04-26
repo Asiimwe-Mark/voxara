@@ -1,3 +1,5 @@
+import { supabaseAdmin } from '@/lib/supabase/admin';
+import { logger } from '@/lib/logger';
 /**
  * Paddle Webhook Event Handlers
  * Processes different Paddle webhook events and updates database state
@@ -12,20 +14,16 @@ import {
   getCreditsForPlan,
 } from './webhook-utils';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 /**
  * Handle transaction.completed event
  * Adds credits to user account after successful payment
  */
-export async function handleTransactionCompleted(data: Record<string, any>): Promise<void> {
+export async function handleTransactionCompleted(data: Record<string, unknown>): Promise<void> {
   const userId = extractUserIdFromWebhook(data);
 
   if (!userId) {
-    console.warn('Transaction completed but no user_id found in webhook data');
+    logger.warn('Transaction completed but no user_id found in webhook data');
     return;
   }
 
@@ -37,7 +35,7 @@ export async function handleTransactionCompleted(data: Record<string, any>): Pro
 
     // Only process if credits are specified
     if (credits <= 0) {
-      console.warn(`No credits specified for transaction ${transactionId}`);
+      logger.warn(`No credits specified for transaction ${transactionId}`);
       return;
     }
 
@@ -73,7 +71,7 @@ export async function handleTransactionCompleted(data: Record<string, any>): Pro
       .maybeSingle();
 
     if (profileError) {
-      console.error('Failed to fetch profile for email:', profileError);
+      logger.error('Failed to fetch profile for email:'', { detail: profileError instanceof Error ? profileError.message : String(profileError) });
     }
 
     // Send success email
@@ -88,13 +86,13 @@ export async function handleTransactionCompleted(data: Record<string, any>): Pro
           new Date().toLocaleDateString()
         );
       } catch (emailError) {
-        console.error('Failed to send success email:', emailError);
+        logger.error('Failed to send success email:'', { detail: emailError instanceof Error ? emailError.message : String(emailError) });
       }
     }
 
-    console.log(`✓ Transaction ${transactionId} processed: +${credits} credits for user ${userId}`);
+    logger.info(`✓ Transaction ${transactionId} processed: +${credits} credits for user ${userId}`);
   } catch (error) {
-    console.error('Error handling transaction.completed:', error);
+    logger.error('Error handling transaction.completed:'', { detail: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }
@@ -103,11 +101,11 @@ export async function handleTransactionCompleted(data: Record<string, any>): Pro
  * Handle subscription.created event
  * Creates subscription record and updates user plan
  */
-export async function handleSubscriptionCreated(data: Record<string, any>): Promise<void> {
+export async function handleSubscriptionCreated(data: Record<string, unknown>): Promise<void> {
   const userId = extractUserIdFromWebhook(data);
 
   if (!userId) {
-    console.warn('Subscription created but no user_id found in webhook data');
+    logger.warn('Subscription created but no user_id found in webhook data');
     return;
   }
 
@@ -156,7 +154,7 @@ export async function handleSubscriptionCreated(data: Record<string, any>): Prom
       .maybeSingle();
 
     if (profileError) {
-      console.error('Failed to fetch profile for email:', profileError);
+      logger.error('Failed to fetch profile for email:'', { detail: profileError instanceof Error ? profileError.message : String(profileError) });
     }
 
     // Send welcome/confirmation email
@@ -177,13 +175,13 @@ export async function handleSubscriptionCreated(data: Record<string, any>): Prom
           new Date().toLocaleDateString()
         );
       } catch (emailError) {
-        console.error('Failed to send subscription email:', emailError);
+        logger.error('Failed to send subscription email:'', { detail: emailError instanceof Error ? emailError.message : String(emailError) });
       }
     }
 
-    console.log(`✓ Subscription ${subscriptionId} created for user ${userId} (${planType})`);
+    logger.info(`✓ Subscription ${subscriptionId} created for user ${userId} (${planType})`);
   } catch (error) {
-    console.error('Error handling subscription.created:', error);
+    logger.error('Error handling subscription.created:'', { detail: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }
@@ -192,11 +190,11 @@ export async function handleSubscriptionCreated(data: Record<string, any>): Prom
  * Handle subscription.updated event
  * Updates subscription status and user plan
  */
-export async function handleSubscriptionUpdated(data: Record<string, any>): Promise<void> {
+export async function handleSubscriptionUpdated(data: Record<string, unknown>): Promise<void> {
   const userId = extractUserIdFromWebhook(data);
 
   if (!userId) {
-    console.warn('Subscription updated but no user_id found in webhook data');
+    logger.warn('Subscription updated but no user_id found in webhook data');
     return;
   }
 
@@ -219,9 +217,9 @@ export async function handleSubscriptionUpdated(data: Record<string, any>): Prom
       throw new Error(`Failed to update subscription: ${updateError.message}`);
     }
 
-    console.log(`✓ Subscription ${subscriptionId} updated: status=${status}`);
+    logger.info(`✓ Subscription ${subscriptionId} updated: status=${status}`);
   } catch (error) {
-    console.error('Error handling subscription.updated:', error);
+    logger.error('Error handling subscription.updated:'', { detail: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }
@@ -230,11 +228,11 @@ export async function handleSubscriptionUpdated(data: Record<string, any>): Prom
  * Handle subscription.paused event
  * Updates subscription status to paused
  */
-export async function handleSubscriptionPaused(data: Record<string, any>): Promise<void> {
+export async function handleSubscriptionPaused(data: Record<string, unknown>): Promise<void> {
   const userId = extractUserIdFromWebhook(data);
 
   if (!userId) {
-    console.warn('Subscription paused but no user_id found in webhook data');
+    logger.warn('Subscription paused but no user_id found in webhook data');
     return;
   }
 
@@ -254,9 +252,9 @@ export async function handleSubscriptionPaused(data: Record<string, any>): Promi
       throw new Error(`Failed to pause subscription: ${updateError.message}`);
     }
 
-    console.log(`✓ Subscription ${subscriptionId} paused`);
+    logger.info(`✓ Subscription ${subscriptionId} paused`);
   } catch (error) {
-    console.error('Error handling subscription.paused:', error);
+    logger.error('Error handling subscription.paused:'', { detail: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }
@@ -265,11 +263,11 @@ export async function handleSubscriptionPaused(data: Record<string, any>): Promi
  * Handle subscription.resumed event
  * Updates subscription status to active
  */
-export async function handleSubscriptionResumed(data: Record<string, any>): Promise<void> {
+export async function handleSubscriptionResumed(data: Record<string, unknown>): Promise<void> {
   const userId = extractUserIdFromWebhook(data);
 
   if (!userId) {
-    console.warn('Subscription resumed but no user_id found in webhook data');
+    logger.warn('Subscription resumed but no user_id found in webhook data');
     return;
   }
 
@@ -289,9 +287,9 @@ export async function handleSubscriptionResumed(data: Record<string, any>): Prom
       throw new Error(`Failed to resume subscription: ${updateError.message}`);
     }
 
-    console.log(`✓ Subscription ${subscriptionId} resumed`);
+    logger.info(`✓ Subscription ${subscriptionId} resumed`);
   } catch (error) {
-    console.error('Error handling subscription.resumed:', error);
+    logger.error('Error handling subscription.resumed:'', { detail: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }
@@ -300,11 +298,11 @@ export async function handleSubscriptionResumed(data: Record<string, any>): Prom
  * Handle subscription.canceled event
  * Downgrades user to free plan
  */
-export async function handleSubscriptionCanceled(data: Record<string, any>): Promise<void> {
+export async function handleSubscriptionCanceled(data: Record<string, unknown>): Promise<void> {
   const userId = extractUserIdFromWebhook(data);
 
   if (!userId) {
-    console.warn('Subscription canceled but no user_id found in webhook data');
+    logger.warn('Subscription canceled but no user_id found in webhook data');
     return;
   }
 
@@ -327,7 +325,7 @@ export async function handleSubscriptionCanceled(data: Record<string, any>): Pro
     // Downgrade user to free plan
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
-      .update({ plan: 'free', credits: 3 })
+      .update({ plan: 'free', credits: 1 })
       .eq('id', userId);
 
     if (profileError) {
@@ -344,15 +342,15 @@ export async function handleSubscriptionCanceled(data: Record<string, any>): Pro
     if (profile?.email) {
       try {
         // Send cancellation email (you may want to create a specific email template for this)
-        console.log(`Subscription canceled for ${profile.email}`);
+        logger.info(`Subscription canceled for ${profile.email}`);
       } catch (emailError) {
-        console.error('Failed to send cancellation email:', emailError);
+        logger.error('Failed to send cancellation email:'', { detail: emailError instanceof Error ? emailError.message : String(emailError) });
       }
     }
 
-    console.log(`✓ Subscription ${subscriptionId} canceled, user ${userId} downgraded to free`);
+    logger.info(`✓ Subscription ${subscriptionId} canceled, user ${userId} downgraded to free`);
   } catch (error) {
-    console.error('Error handling subscription.canceled:', error);
+    logger.error('Error handling subscription.canceled:'', { detail: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }
@@ -361,11 +359,11 @@ export async function handleSubscriptionCanceled(data: Record<string, any>): Pro
  * Handle customer.created event
  * Records Paddle customer ID in database
  */
-export async function handleCustomerCreated(data: Record<string, any>): Promise<void> {
+export async function handleCustomerCreated(data: Record<string, unknown>): Promise<void> {
   const userId = extractUserIdFromWebhook(data);
 
   if (!userId) {
-    console.warn('Customer created but no user_id found in webhook data');
+    logger.warn('Customer created but no user_id found in webhook data');
     return;
   }
 
@@ -391,9 +389,9 @@ export async function handleCustomerCreated(data: Record<string, any>): Promise<
       throw new Error(`Failed to record customer: ${upsertError.message}`);
     }
 
-    console.log(`✓ Customer ${customerId} created for user ${userId}`);
+    logger.info(`✓ Customer ${customerId} created for user ${userId}`);
   } catch (error) {
-    console.error('Error handling customer.created:', error);
+    logger.error('Error handling customer.created:'', { detail: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }
@@ -403,7 +401,7 @@ export async function handleCustomerCreated(data: Record<string, any>): Promise<
  */
 export async function logWebhookEvent(
   eventType: string,
-  data: Record<string, any>,
+  data: Record<string, unknown>,
   status: 'success' | 'error',
   error?: Error
 ): Promise<void> {
@@ -417,6 +415,6 @@ export async function logWebhookEvent(
       created_at: new Date().toISOString(),
     });
   } catch (logError) {
-    console.error('Failed to log webhook event:', logError);
+    logger.error('Failed to log webhook event:'', { detail: logError instanceof Error ? logError.message : String(logError) });
   }
 }

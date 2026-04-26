@@ -1,16 +1,13 @@
-import { createPaymentAdapter } from '@/lib/payment-adapter';
-
 /**
- * Payment adapter instance for handling both Lemon Squeezy and Flutterwave
- * Usage: const paymentAdapter = createPaymentAdapter();
- * 
- * Provider is determined by PAYMENT_PROVIDER env var:
- * - 'lemon-squeezy' (default) for global payments
- * - 'flutterwave' for local NGN payments
+ * @deprecated This module exists only for backward-compatibility.
+ *
+ * Stripe has been removed from Voxara. All payments are now handled by:
+ *   - Paddle   (global, USD)     → PAYMENT_PROVIDER=paddle
+ *   - Flutterwave (Africa, NGN)  → PAYMENT_PROVIDER=flutterwave
+ *
+ * Any new code must import from '@/lib/payment-adapter' directly.
+ * This file will be deleted in a future cleanup migration.
  */
-export const paymentAdapter = createPaymentAdapter();
 
-export const getPaymentProvider = () => {
-  return process.env.PAYMENT_PROVIDER || 'lemon-squeezy';
-};
-
+export { createPaymentAdapter as paymentAdapter } from '@/lib/payment-adapter';
+export { createPaymentAdapter } from '@/lib/payment-adapter';

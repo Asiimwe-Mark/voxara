@@ -47,7 +47,7 @@ export function CreditsBadge({
 
         setCredits(profile?.credits ?? 0);
       } catch (error) {
-        console.error("Failed to fetch credits:", error);
+        process.env.NODE_ENV !== 'production' && console.error("Failed to fetch credits:", error);
         setCredits(0);
       } finally {
         setIsLoading(false);

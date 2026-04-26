@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Too many render requests. Please try again later." }, { status: 429 });
   }
 
-  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -27,12 +27,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "videoId is required in the request body" }, { status: 400 });
   }
 
-  const { data: video, error: fetchError } = await supabase
-    .from("videos")
-    .select("id, user_id, title, script, status, avatar_id, voice_id")
-    .eq("id", videoId)
-    .eq("user_id", user.id)
-    .single();
+  // Fetch video and user plan together
+  const [{ data: video, error: fetchError }, { data: profile }] = await Promise.all([
+    supabase
+      .from("videos")
+      .select("id, user_id, title, script, status, avatar_id, voice_id")
+      .eq("id", videoId)
+      .eq("user_id", user.id)
+      .single(),
+    supabase
+      .from("profiles")
+      .select("plan")
+      .eq("id", user.id)
+      .single(),
+  ]);
 
   if (fetchError || !video) {
     return NextResponse.json({ error: "Video not found or access denied" }, { status: 404 });
@@ -44,6 +52,10 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   }
+
+  const userPlan = profile?.plan ?? "free";
+  // Free users get a watermark — it's a free ad for Voxara and upgrade incentive
+  const applyWatermark = userPlan === "free";
 
   const { error: updateError } = await supabase
     .from("videos")
@@ -64,6 +76,8 @@ export async function POST(request: NextRequest) {
         script: video.script,
         avatarId: video.avatar_id,
         voiceId: video.voice_id,
+        watermark: applyWatermark,
+        userPlan,
       },
     });
   } catch {
@@ -74,5 +88,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Failed to queue video generation job" }, { status: 500 });
   }
 
-  return NextResponse.json({ success: true, message: "Video rendering started", videoId });
+  return NextResponse.json({
+    success: true,
+    message: "Video rendering started",
+    videoId,
+    watermark: applyWatermark,
+  });
 }
+

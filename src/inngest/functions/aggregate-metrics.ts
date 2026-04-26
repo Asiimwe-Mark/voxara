@@ -1,10 +1,7 @@
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { inngest } from '@/inngest/client';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export const aggregateVideoMetrics = inngest.createFunction(
   { id: 'aggregate-metrics', name: 'Aggregate Video Metrics' },
@@ -40,7 +37,7 @@ export const aggregateVideoMetrics = inngest.createFunction(
         const views = sessions.length;
         const totalWatchTime = sessions.reduce((sum, s) => sum + (s.watch_duration || 0), 0);
         const avgPercentage = sessions.reduce((sum, s) => sum + (s.watch_percentage || 0), 0) / views;
-        const clicks = sessions.filter(s => s.playback_events?.some((e: any) => e.type === 'click')).length;
+        const clicks = sessions.filter(s => s.playback_events?.some((e: { type: string }) => e.type === 'click')).length;
         const ctr = views > 0 ? (clicks / views) * 100 : 0;
 
         await supabaseAdmin.from('video_metrics').upsert({

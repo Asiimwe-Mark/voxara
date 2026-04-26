@@ -3,6 +3,7 @@
  * Implements security best practices and hardening measures
  */
 
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
@@ -30,26 +31,43 @@ export function applySecurityHeaders(response: NextResponse): NextResponse {
 }
 
 /**
- * Verify request origin
+ * Verify request origin.
+ * Allows server-to-server requests (no Origin header) and configured origins.
  */
 export function isValidOrigin(request: NextRequest): boolean {
   const origin = request.headers.get('origin');
-  const host = request.headers.get('host');
 
-  if (!origin) return true; // Non-browser requests
-  if (!host) return false;
+  // Server-to-server requests (curl, internal Next.js calls, webhooks) have no Origin header
+  if (!origin) return true;
 
-  const allowedOrigins = [
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+
+  const allowedOrigins: string[] = [
     'https://voxara.app',
     'https://www.voxara.app',
-    process.env.NEXT_PUBLIC_APP_URL,
-  ].filter(Boolean);
+  ];
 
-  if (process.env.NODE_ENV === 'development') {
-    allowedOrigins.push('http://localhost:3000', 'http://127.0.0.1:3000');
+  if (appUrl) allowedOrigins.push(appUrl);
+
+  if (process.env.NODE_ENV !== 'production') {
+    allowedOrigins.push(
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+      'http://localhost:3001',
+    );
   }
 
-  return allowedOrigins.some((allowed) => origin === allowed || origin === new URL(allowed).origin);
+  try {
+    return allowedOrigins.some((allowed) => {
+      try {
+        return origin === allowed || origin === new URL(allowed).origin;
+      } catch {
+        return false;
+      }
+    });
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -67,48 +85,43 @@ export function isValidApiKey(key: string): boolean {
 }
 
 /**
- * Validate webhook signature (HMAC-SHA256)
+ * Validate webhook signature (HMAC-SHA256) using timing-safe comparison
  */
 export function validateWebhookSignature(
   payload: string,
   signature: string,
   secret: string
 ): boolean {
-  const crypto = require('crypto');
-  const computed = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+  const computed = crypto
+    .createHmac('sha256', secret)
+    .update(payload)
+    .digest('hex');
   const normalizedSig = signature.trim();
+
   if (normalizedSig.length !== computed.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(computed, 'utf8'), Buffer.from(normalizedSig, 'utf8'));
+
+  return crypto.timingSafeEqual(
+    Buffer.from(computed, 'utf8'),
+    Buffer.from(normalizedSig, 'utf8')
+  );
 }
 
 /**
- * Generate CSRF token
+ * Generate a cryptographically secure CSRF token
  */
 export function generateCsrfToken(): string {
-  const crypto = require('crypto');
   return crypto.randomBytes(32).toString('hex');
 }
 
 /**
- * Sanitize SQL to prevent injection (basic protection)
- */
-export function sanitizeSql(input: string): string {
-  return input
-    .replace(/'/g, "''") // Escape single quotes
-    .replace(/"/g, '""') // Escape double quotes
-    .replace(/\\/g, '\\\\') // Escape backslashes
-    .substring(0, 5000); // Limit length
-}
-
-/**
- * Validate URL is safe
+ * Validate URL is safe (no SSRF risk)
  */
 export function isSafeUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
     return (
       ['http:', 'https:'].includes(parsed.protocol) &&
-      !['localhost', '127.0.0.1', '0.0.0.0'].includes(parsed.hostname)
+      !['localhost', '127.0.0.1', '0.0.0.0', '::1'].includes(parsed.hostname)
     );
   } catch {
     return false;
@@ -123,38 +136,47 @@ export function getClientIp(request: NextRequest): string {
   if (forwarded) {
     return forwarded.split(',')[0].trim();
   }
-  return request.headers.get('x-real-ip') || request.ip || 'unknown';
+  return (
+    request.headers.get('x-real-ip') ||
+    // @ts-expect-error — NextRequest.ip exists at runtime on Vercel
+    request.ip ||
+    'unknown'
+  );
 }
 
 /**
- * Rate limit key with exponential backoff
+ * Rate limit key with scope
  */
 export function getRateLimitKey(identifier: string, scope: string): string {
   return `ratelimit:${scope}:${identifier}`;
 }
 
 /**
- * Check if user is admin (example)
+ * Check if user ID is an admin
  */
 export function isAdmin(userId: string): boolean {
-  const adminIds = (process.env.ADMIN_USER_IDS || '').split(',');
+  const adminIds = (process.env.ADMIN_USER_IDS || '').split(',').filter(Boolean);
   return adminIds.includes(userId);
 }
 
 /**
- * Mask sensitive data in logs
+ * Mask sensitive data in objects for safe logging
  */
-export function maskSensitiveData(obj: any): any {
+export function maskSensitiveData(obj: unknown): unknown {
   if (typeof obj !== 'object' || obj === null) return obj;
 
-  const sensitiveKeys = ['password', 'token', 'secret', 'apiKey', 'stripe_key', 'supabase_key'];
-  const masked = Array.isArray(obj) ? [...obj] : { ...obj };
+  const sensitiveKeys = ['password', 'token', 'secret', 'apiKey', 'api_key', 'authorization'];
+  const masked = Array.isArray(obj)
+    ? ([...obj] as unknown[])
+    : ({ ...(obj as Record<string, unknown>) } as Record<string, unknown>);
 
-  for (const key in masked) {
+  for (const key in masked as Record<string, unknown>) {
     if (sensitiveKeys.some((k) => key.toLowerCase().includes(k))) {
-      masked[key] = '***REDACTED***';
-    } else if (typeof masked[key] === 'object') {
-      masked[key] = maskSensitiveData(masked[key]);
+      (masked as Record<string, unknown>)[key] = '***REDACTED***';
+    } else {
+      (masked as Record<string, unknown>)[key] = maskSensitiveData(
+        (masked as Record<string, unknown>)[key]
+      );
     }
   }
 

@@ -6,26 +6,21 @@ import { createClient } from "@/lib/supabase/client";
 interface UseCreditsOptions {
   /** Optional user ID. If not provided, fetches the current authenticated user. */
   userId?: string;
-  /** Whether to subscribe to real‑time updates (default: true). */
+  /** Whether to subscribe to real-time updates (default: true). */
   realtime?: boolean;
   /** Polling interval in milliseconds (default: 30000). Set to 0 to disable polling. */
   pollInterval?: number;
 }
 
 interface UseCreditsReturn {
-  /** Current credit balance, or null while loading. */
   credits: number | null;
-  /** Whether the initial fetch is in progress. */
   isLoading: boolean;
-  /** Whether a real‑time subscription is active. */
   isSubscribed: boolean;
-  /** Manually refresh the credit balance. */
   refresh: () => Promise<void>;
-  /** Deduct credits (optimistic update). */
+  /** Deduct credits via server-side atomic RPC — prevents race conditions. */
   deduct: (amount: number) => Promise<boolean>;
-  /** Add credits (optimistic update). */
+  /** Add credits via server-side atomic RPC. */
   add: (amount: number) => Promise<void>;
-  /** Error message, if any. */
   error: string | null;
 }
 
@@ -61,7 +56,6 @@ export function useCredits(options: UseCreditsOptions = {}): UseCreditsReturn {
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch credits");
-      console.error("useCredits fetch error:", err);
     } finally {
       setIsLoading(false);
     }
@@ -72,7 +66,7 @@ export function useCredits(options: UseCreditsOptions = {}): UseCreditsReturn {
     fetchCredits();
   }, [fetchCredits]);
 
-  // Real‑time subscription
+  // Real-time subscription
   useEffect(() => {
     if (!realtime) return;
 
@@ -98,96 +92,68 @@ export function useCredits(options: UseCreditsOptions = {}): UseCreditsReturn {
             filter: `id=eq.${targetUserId}`,
           },
           (payload) => {
-            if (mounted) {
-              setCredits(payload.new.credits);
-            }
+            if (mounted) setCredits(payload.new.credits);
           }
         )
         .subscribe((status) => {
-          if (mounted) {
-            setIsSubscribed(status === "SUBSCRIBED");
-          }
+          if (mounted) setIsSubscribed(status === "SUBSCRIBED");
         });
     };
 
     setupSubscription();
-
     return () => {
       mounted = false;
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
+      if (channel) supabase.removeChannel(channel);
     };
   }, [supabase, userId, realtime]);
 
-  // Fallback polling (if realtime is disabled)
+  // Fallback polling
   useEffect(() => {
     if (realtime || pollInterval <= 0) return;
-
     const interval = setInterval(fetchCredits, pollInterval);
     return () => clearInterval(interval);
   }, [realtime, pollInterval, fetchCredits]);
 
-  // Optimistic update helpers
+  /**
+   * Deduct credits using the server-side atomic RPC.
+   * This is the ONLY correct way — direct DB updates bypass RLS and
+   * create race conditions when multiple tabs/requests run concurrently.
+   */
   const deduct = useCallback(
     async (amount: number): Promise<boolean> => {
-      if (!credits || credits < amount) return false;
-
-      const previousCredits = credits;
-      setCredits(credits - amount);
-
       try {
-        const targetUserId = userId || (await supabase.auth.getUser()).data.user?.id;
-        if (!targetUserId) throw new Error("User not found");
-
-        const { error: updateError } = await supabase
-          .from("profiles")
-          .update({ credits: previousCredits - amount })
-          .eq("id", targetUserId);
-
-        if (updateError) throw updateError;
+        const res = await fetch("/api/v1/credits", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "deduct", amount }),
+        });
+        if (!res.ok) return false;
+        // Let real-time subscription update the display;
+        // optimistically update for instant feedback
+        setCredits((c) => (c !== null ? Math.max(0, c - amount) : null));
         return true;
-      } catch (err) {
-        setCredits(previousCredits);
-        setError(err instanceof Error ? err.message : "Failed to deduct credits");
+      } catch {
         return false;
       }
     },
-    [credits, supabase, userId]
+    []
   );
 
-  const add = useCallback(
-    async (amount: number): Promise<void> => {
-      if (!credits && credits !== 0) return;
+  /**
+   * Add credits using the server-side atomic RPC.
+   */
+  const add = useCallback(async (amount: number): Promise<void> => {
+    try {
+      await fetch("/api/v1/credits", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "add", amount }),
+      });
+      setCredits((c) => (c !== null ? c + amount : null));
+    } catch {
+      // Silently fail; real-time subscription will reconcile
+    }
+  }, []);
 
-      const previousCredits = credits ?? 0;
-      setCredits(previousCredits + amount);
-
-      try {
-        const targetUserId = userId || (await supabase.auth.getUser()).data.user?.id;
-        if (!targetUserId) throw new Error("User not found");
-
-        const { error: updateError } = await supabase
-          .from("profiles")
-          .update({ credits: previousCredits + amount })
-          .eq("id", targetUserId);
-
-        if (updateError) throw updateError;
-      } catch (err) {
-        setCredits(previousCredits);
-        setError(err instanceof Error ? err.message : "Failed to add credits");
-      }
-    },
-    [credits, supabase, userId]
-  );
-
-  return {
-    credits,
-    isLoading,
-    isSubscribed,
-    refresh: fetchCredits,
-    deduct,
-    add,
-    error,
-  };
+  return { credits, isLoading, isSubscribed, refresh: fetchCredits, deduct, add, error };
 }

@@ -1,10 +1,8 @@
+import { supabaseAdmin } from '@/lib/supabase/admin';
+import logger from '@/lib/logger';
 import { inngest } from "@/inngest/client";
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export const cancelAvatarPolling = inngest.createFunction(
   {
@@ -30,7 +28,7 @@ export const cancelAvatarPolling = inngest.createFunction(
         .eq("id", avatarId);
 
       if (error) {
-        console.error("Failed to mark polling canceled:", error);
+        logger.error("Failed to mark polling canceled:", { detail: error });
         throw error;
       }
     });

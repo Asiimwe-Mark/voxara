@@ -1,333 +1,181 @@
-# voxara Enterprise - Deployment Guide
+# Voxara — Production Deployment Guide
 
 ## Prerequisites
+- Node.js 20+ (LTS)
+- npm 10+
+- Vercel CLI: `npm i -g vercel`
+- Supabase CLI: `npm i -g supabase`
 
-- Node.js 20.x or higher
-- npm 10.x or higher
-- Docker & Docker Compose
-- Git
-- A domain name
-- SSL certificate
+---
 
-## Pre-Deployment Checklist
+## Step 1 — Environment Variables
 
-- [ ] All environment variables configured
-- [ ] Database migrations completed
-- [ ] SSL certificates obtained
-- [ ] CDN configured (optional)
-- [ ] Monitoring setup complete
-- [ ] Backup strategy in place
-- [ ] Security audit completed
-
-## Installation & Setup
-
-### 1. Environment Setup
-
+Copy `.env.example` to `.env.local` for local dev:
 ```bash
-# Clone the repository
-git clone https://github.com/voxara/voxara-enterprise.git
-cd faceless-video-enterprise
-
-# Install dependencies
-npm install
-
-# Create environment file
 cp .env.example .env.local
-# Edit .env.local with your configuration
+# Fill in your values
 ```
 
-### 2. Local Development
+In Vercel dashboard: **Project → Settings → Environment Variables**  
+Add every variable from `.env.example`. Required minimums:
+
+| Variable | Required | Notes |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | ✅ | From Supabase project settings |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | From Supabase project settings |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | From Supabase project settings |
+| `NEXT_PUBLIC_APP_URL` | ✅ | Your production domain |
+| `GEMINI_API_KEY` | ✅ | Script generation |
+| `RESEND_API_KEY` | ✅ | Email delivery |
+| `INNGEST_EVENT_KEY` | ✅ | Background jobs |
+| `INNGEST_SIGNING_KEY` | ✅ | Background jobs |
+| `PAYMENT_PROVIDER` | ✅ | `paddle` or `flutterwave` |
+| `PADDLE_API_KEY` | ⚡ If using Paddle | |
+| `FLUTTERWAVE_SECRET_KEY` | ⚡ If using Flutterwave | |
+| `NEXT_PUBLIC_SENTRY_DSN` | Recommended | Error monitoring |
+
+---
+
+## Step 2 — Database Setup
 
 ```bash
-# Start development server with turbopack
-npm run dev
+# Login to Supabase CLI
+npx supabase login
 
-# Run tests
-npm run test
-npm run test:e2e
+# Link your project
+npx supabase link --project-ref YOUR_PROJECT_REF
 
-# Type checking
-npm run type-check
+# Run all migrations in order
+npx supabase db push
 
-# Linting
-npm run lint
+# Verify migrations
+npx supabase migration list
 ```
 
-### 3. Database Setup
+Expected: migrations 001–020 all applied successfully.
+
+---
+
+## Step 3 — Deploy to Vercel
 
 ```bash
-# Push migrations to Supabase
-npm run db:migrate
-
-# (Optional) Reset database
-npm run db:reset
-```
-
-## Production Deployment
-
-### Docker Deployment
-
-```bash
-# Build Docker image
-docker build \
-  --build-arg NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL \
-  --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY \
-  -t voxara:latest .
-
-# Run container
-docker run \
-  -e SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY \
-  -e STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY \
-  -e INNGEST_EVENT_KEY=$INNGEST_EVENT_KEY \
-  -e INNGEST_SIGNING_KEY=$INNGEST_SIGNING_KEY \
-  -p 3000:3000 \
-  voxara:latest
-```
-
-### Docker Compose Deployment
-
-```bash
-# Start services
-docker-compose -f docker/docker-compose.yml up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop services
-docker-compose down
-```
-
-### Vercel Deployment
-
-```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Deploy
+# First time
 vercel --prod
 
-# Set environment variables in Vercel dashboard
+# Subsequent deploys
+git push origin main  # Auto-deploys via Vercel Git integration
 ```
 
-### AWS Deployment
+---
 
-#### Using EC2
+## Step 4 — Configure Webhooks
+
+After your Vercel URL is live, configure each webhook:
+
+### Paddle
+```
+Webhook URL: https://YOUR_DOMAIN/api/stripe/webhook
+Events: transaction.completed, subscription.created, subscription.updated, subscription.canceled
+```
+
+### Mux
+```
+Webhook URL: https://YOUR_DOMAIN/api/v1/webhooks/mux
+Events: video.asset.ready, video.upload.created
+Signing secret: Copy to MUX_WEBHOOK_SECRET
+```
+
+### HeyGen
+```
+Webhook URL: https://YOUR_DOMAIN/api/v1/webhooks/heygen
+Events: avatar_video.success, avatar_video.fail
+```
+
+### Inngest
+```bash
+# Point Inngest to your Vercel deployment
+npx inngest-cli@latest sync https://YOUR_DOMAIN/api/inngest
+```
+
+---
+
+## Step 5 — (Optional) Remotion Lambda for Video Rendering
+
+Without this, the renderer runs in "passthrough" mode (stores raw URLs).
+With it, full MP4 video composition works on Vercel.
 
 ```bash
-# Connect to instance
-ssh -i your-key.pem ec2-user@your-instance-ip
+# Install AWS CLI and configure credentials
+aws configure
 
-# Install Node.js
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt-get install -y nodejs
+# Deploy Remotion Lambda function
+npx remotion lambda policies validate
+npx remotion lambda functions deploy \
+  --memory=2048 \
+  --disk=2048 \
+  --timeout=120 \
+  --region=us-east-1
 
-# Clone and setup
-git clone <repo>
-cd faceless-video-enterprise
-npm install
-npm run build
+# Deploy Remotion site to S3
+npx remotion lambda sites create \
+  --site-name=voxara \
+  --region=us-east-1
 
-# Start with PM2
-npm install -g pm2
-pm2 start npm --name "voxara" -- start
-pm2 save
+# Set the outputs in Vercel env vars:
+# REMOTION_LAMBDA_FUNCTION_NAME = (output from functions deploy)
+# REMOTION_SERVE_URL = (output from sites create)
+# RENDER_BACKEND = lambda
 ```
 
-#### Using ECS (Elastic Container Service)
+---
+
+## Step 6 — Verify Deployment
 
 ```bash
-# Build and push to ECR
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin YOUR_ECR_URL
-docker build -t voxara .
-docker tag voxara:latest YOUR_ECR_URL/voxara:latest
-docker push YOUR_ECR_URL/voxara:latest
+# Check health endpoint
+curl https://YOUR_DOMAIN/api/health
+
+# Check admin access
+curl -H "Authorization: Bearer YOUR_SESSION_TOKEN" \
+  https://YOUR_DOMAIN/api/admin/check-access
+
+# Trigger a test Inngest event
+curl -X POST https://YOUR_DOMAIN/api/inngest \
+  -H "Content-Type: application/json" \
+  -d '{"name":"test/ping","data":{}}'
 ```
 
-### Heroku Deployment
+---
+
+## Monitoring
+
+- **Sentry**: https://sentry.io → Your Org → voxara project
+- **Vercel Logs**: Dashboard → Project → Functions tab
+- **Inngest**: https://app.inngest.com → Your app → Events
+- **Supabase**: Dashboard → Database → Logs
+
+---
+
+## Rollback
 
 ```bash
-# Create app
-heroku create voxara
+# Vercel — instantly roll back to previous deployment
+vercel rollback
 
-# Set environment variables
-heroku config:set NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
-
-# Deploy
-git push heroku main
+# Database — Supabase migrations are forward-only.
+# To undo: write a new migration that reverses the change.
 ```
 
-## Post-Deployment
-
-### Health Checks
-
-```bash
-# Test API health
-curl https://your-domain.com/api/health
-
-# Test database
-curl https://your-domain.com/api/health/db
-
-# Test external services
-curl https://your-domain.com/api/health/services
-```
-
-### Monitoring Setup
-
-1. **Sentry**: Configure error tracking
-2. **New Relic**: Monitor performance
-3. **DataDog**: Infrastructure monitoring
-4. **CloudWatch**: AWS logging
-
-### Backup Strategy
-
-```bash
-# Daily backups
-0 2 * * * /backup-script.sh
-
-# Weekly archives
-0 3 * * 0 /archive-script.sh
-
-# Monthly snapshots
-0 4 1 * * /snapshot-script.sh
-```
-
-## Scaling
-
-### Horizontal Scaling
-
-```bash
-# Load balancer configuration (example for AWS)
-- Create auto-scaling group
-- Set minimum instances: 2
-- Set maximum instances: 10
-- CPU target: 70%
-```
-
-### Database Scaling
-
-```bash
-# Supabase scaling
-- Enable connection pooling
-- Increase compute size if needed
-- Enable read replicas for high traffic
-```
-
-### Cache Layer
-
-```bash
-# Redis caching (optional)
-- Use Upstash for rate limiting (already configured)
-- Add Redis for session storage if needed
-```
+---
 
 ## Troubleshooting
 
-### Common Issues
-
-#### Port Already in Use
-```bash
-# Find process
-lsof -i :3000
-# Kill process
-kill -9 <PID>
-```
-
-#### Database Connection Errors
-```bash
-# Check connection string
-echo $NEXT_PUBLIC_SUPABASE_URL
-# Test connection
-psql "postgresql://user:password@host:5432/db"
-```
-
-#### Out of Memory
-```bash
-# Increase Node.js heap
-NODE_OPTIONS="--max-old-space-size=4096" npm start
-```
-
-#### API Rate Limiting Issues
-```bash
-# Check Upstash Redis connection
-redis-cli -u $UPSTASH_REDIS_REST_URL ping
-```
-
-## Performance Optimization
-
-### Next.js Optimization
-- ✅ Image optimization
-- ✅ Code splitting
-- ✅ Lazy loading
-- ✅ Static generation where possible
-- ✅ API route optimization
-
-### Database Optimization
-- Enable connection pooling
-- Add database indexes
-- Archive old data
-- Regular VACUUM
-
-### CDN Setup
-- CloudFlare or AWS CloudFront
-- Cache static assets
-- Compress responses
-- Enable HTTP/2 PUSH
-
-## Maintenance
-
-### Regular Tasks
-
-- [ ] Review logs daily
-- [ ] Monitor error rates
-- [ ] Check disk space
-- [ ] Update dependencies weekly
-- [ ] Review security alerts
-- [ ] Backup database daily
-- [ ] Check API response times
-
-### Scheduled Maintenance
-
-```bash
-# Weekly
-- npm audit
-- Check for security updates
-- Review performance metrics
-
-# Monthly
-- Full system check
-- Database maintenance
-- Update documentation
-
-# Quarterly
-- Security audit
-- Performance review
-- Dependency updates
-
-# Annually
-- Penetration testing
-- Disaster recovery drill
-- Compliance audit
-```
-
-## Rollback Procedures
-
-```bash
-# If deployment fails, rollback
-git revert <commit-hash>
-npm run build
-# Redeploy
-```
-
-## Support
-
-For deployment issues:
-- Check logs: `docker logs <container-id>`
-- Monitor health: `https://your-domain/api/health`
-- Contact: `support@voxara.app`
-
-## Additional Resources
-
-- [Next.js Deployment](https://nextjs.org/docs/deployment)
-- [Vercel Docs](https://vercel.com/docs)
-- [Docker Docs](https://docs.docker.com)
-- [AWS Best Practices](https://aws.amazon.com/architecture/best-practices/)
+| Symptom | Likely Cause | Fix |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL is required` | Missing env var | Set in Vercel dashboard |
+| Inngest jobs not running | Inngest not synced | Run `npx inngest-cli sync` |
+| Videos stuck in "processing" | Mux webhook not configured | Set webhook URL in Mux dashboard |
+| Stripe/Paddle checkout fails | Wrong price IDs | Verify `PADDLE_*_PRICE_ID` vars |
+| Sentry not capturing errors | Missing DSN | Set `NEXT_PUBLIC_SENTRY_DSN` |
+| Rate limiting disabled | No Redis | Set `UPSTASH_REDIS_*` vars |
+| Video render = passthrough mode | No Lambda config | Follow Step 5 above |

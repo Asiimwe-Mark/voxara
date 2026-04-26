@@ -1,10 +1,13 @@
+import { supabaseAdmin } from '@/lib/supabase/admin';
+import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { google } from "googleapis";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-  const { data: { user } } = await supabase.auth.getUser();
+  const supabase = await createServerClient();
+  const { data: { user } } = await supabaseAdmin.auth.getUser();
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -36,11 +39,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Use service role to fetch tokens securely
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-
+  
   // Fetch YouTube OAuth tokens
   const { data: socialAccount, error: socialError } = await supabaseAdmin
     .from("social_accounts")
@@ -60,8 +59,8 @@ export async function POST(request: NextRequest) {
 
   // Create OAuth2 client
   const oauth2Client = new google.auth.OAuth2(
-    process.env.YOUTUBE_CLIENT_ID!,
-    process.env.YOUTUBE_CLIENT_SECRET!,
+    (process.env.YOUTUBE_CLIENT_ID ?? (() => { throw new Error('YOUTUBE_CLIENT_ID is required for YouTube OAuth'); })()),
+    (process.env.YOUTUBE_CLIENT_SECRET ?? (() => { throw new Error('YOUTUBE_CLIENT_SECRET is required for YouTube OAuth'); })()),
     `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/youtube/callback`
   );
 
@@ -93,7 +92,7 @@ export async function POST(request: NextRequest) {
         
       oauth2Client.setCredentials(credentials);
     } catch (refreshError) {
-      console.error("Failed to refresh YouTube token:", refreshError);
+      logger.error("Failed to refresh YouTube token:", { detail: refreshError });
       return NextResponse.json(
         { error: "YouTube authentication expired. Please reconnect your account." },
         { status: 401 }
@@ -152,7 +151,7 @@ export async function POST(request: NextRequest) {
       youtubeUrl: `https://www.youtube.com/watch?v=${youtubeVideoId}`,
     });
   } catch (error) {
-    console.error("YouTube upload error:", error);
+    logger.error("YouTube upload error:", { detail: error });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to upload to YouTube" },
       { status: 500 }

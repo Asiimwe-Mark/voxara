@@ -29,7 +29,7 @@ export interface TimelineClip {
   type: "video" | "image" | "text" | "audio";
   url?: string;
   content?: string;
-  properties: Record<string, any>;
+  properties: Record<string, unknown>;
 }
 
 export interface TimelineTrack {
@@ -99,7 +99,7 @@ export interface VideoTemplate {
   category: string | null;
   price: number;
   preview_url: string | null;
-  template_data: Record<string, any> | null;
+  template_data: Record<string, unknown> | null;
   downloads: number;
   rating: number | null;
   status: "pending" | "approved" | "rejected";
@@ -113,6 +113,6 @@ export interface TemplatePurchase {
   amount_paid: number;
   platform_fee: number;
   creator_payout: number;
-  stripe_payment_intent_id: string | null;
+  payment_intent_id: string | null;
   created_at: string;
 }

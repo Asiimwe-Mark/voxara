@@ -1,9 +1,10 @@
+import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { google } from "googleapis";
 
 export async function GET(request: NextRequest) {
-  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
   const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/youtube/callback`;
 
   if (!clientId || !clientSecret) {
-    console.error("YouTube OAuth credentials are not configured");
+    logger.error("YouTube OAuth credentials are not configured");
     return NextResponse.json(
       { error: "YouTube integration is not configured" },
       { status: 500 }

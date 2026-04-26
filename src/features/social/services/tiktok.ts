@@ -1,9 +1,6 @@
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 interface TikTokTokens {
   access_token: string;
@@ -27,8 +24,8 @@ async function getRefreshedTokens(userId: string): Promise<TikTokTokens> {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        client_key: process.env.TIKTOK_CLIENT_KEY!,
-        client_secret: process.env.TIKTOK_CLIENT_SECRET!,
+        client_key: (process.env.TIKTOK_CLIENT_KEY ?? (() => { throw new Error('TIKTOK_CLIENT_KEY is required for TikTok OAuth'); })()),
+        client_secret: (process.env.TIKTOK_CLIENT_SECRET ?? (() => { throw new Error('TIKTOK_CLIENT_SECRET is required for TikTok OAuth'); })()),
         refresh_token: account.refresh_token,
         grant_type: "refresh_token",
       }),

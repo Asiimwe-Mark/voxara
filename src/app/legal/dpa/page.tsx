@@ -199,7 +199,7 @@ export default function DataProcessingAgreement() {
               <strong>Supabase:</strong> Database and authentication services
             </li>
             <li>
-              <strong>Stripe:</strong> Payment processing
+              <strong>Paddle:</strong> Payment processing (global) / Flutterwave (Africa)
             </li>
             <li>
               <strong>Amazon Web Services (AWS):</strong> Cloud infrastructure

@@ -1,14 +1,11 @@
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { EdgeTTS } from "@travisvn/edge-tts";
 import { createClient } from "@supabase/supabase-js";
 
 // Use the service-role admin client: this service is called from Inngest background
 // jobs where there is no HTTP request / cookie context for the SSR client.
 function getStorageClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+  return }
 
 export interface VoiceoverOptions {
   voice?: string;
@@ -32,7 +29,7 @@ export async function generateVoiceover(
   const audioBuffer = Buffer.from(await result.audio.arrayBuffer());
 
   const storagePath = `${userId}/${videoId}/voiceover.mp3`;
-  const { error } = await supabase.storage.from("videos").upload(storagePath, audioBuffer, {
+  const { error } = await supabaseAdmin.storage.from("videos").upload(storagePath, audioBuffer, {
     contentType: "audio/mpeg",
     cacheControl: "3600",
     upsert: true,
@@ -42,7 +39,7 @@ export async function generateVoiceover(
     throw new Error(`Failed to upload voiceover: ${error.message}`);
   }
 
-  const { data } = supabase.storage.from("videos").getPublicUrl(storagePath);
+  const { data } = supabaseAdmin.storage.from("videos").getPublicUrl(storagePath);
   return data.publicUrl;
 }
 

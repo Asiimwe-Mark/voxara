@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { PlayCircle, Camera, Music2, Briefcase, Link2, Loader2, Trash2 } from "lucide-react";
+import { PlayCircle, Music2, Briefcase, Link2, Loader2, Trash2 } from "lucide-react";
+import { IconYoutube, IconInstagram, IconFacebook, IconLinkedin, IconTiktok } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,27 +23,33 @@ interface ConnectedAccountsProps {
 const platformConfig = {
   youtube: {
     name: "YouTube",
-    icon: PlayCircle,
+    icon: IconYoutube,
     color: "bg-red-500",
     oauthUrl: "/api/oauth/youtube",
   },
   tiktok: {
     name: "TikTok",
-    icon: Music2,
+    icon: IconTiktok,
     color: "bg-black",
     oauthUrl: "/api/oauth/tiktok",
   },
   instagram: {
     name: "Instagram",
-    icon: Camera,
+    icon: IconInstagram,
     color: "bg-pink-500",
     oauthUrl: "/api/oauth/instagram",
   },
   linkedin: {
     name: "LinkedIn",
-    icon: Briefcase,
+    icon: IconLinkedin,
     color: "bg-blue-600",
     oauthUrl: "/api/oauth/linkedin",
+  },
+  facebook: {
+    name: "Facebook",
+    icon: IconFacebook,
+    color: "bg-blue-700",
+    oauthUrl: "/api/oauth/facebook",
   },
 };
 

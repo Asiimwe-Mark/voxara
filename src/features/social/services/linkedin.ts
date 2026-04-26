@@ -1,9 +1,6 @@
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 interface LinkedInTokens {
   access_token: string;
@@ -28,8 +25,8 @@ async function getRefreshedTokens(userId: string): Promise<LinkedInTokens> {
       body: new URLSearchParams({
         grant_type: "refresh_token",
         refresh_token: account.refresh_token,
-        client_id: process.env.LINKEDIN_CLIENT_ID!,
-        client_secret: process.env.LINKEDIN_CLIENT_SECRET!,
+        client_id: (process.env.LINKEDIN_CLIENT_ID ?? (() => { throw new Error('LINKEDIN_CLIENT_ID is required for LinkedIn OAuth'); })()),
+        client_secret: (process.env.LINKEDIN_CLIENT_SECRET ?? (() => { throw new Error('LINKEDIN_CLIENT_SECRET is required for LinkedIn OAuth'); })()),
       }),
     });
 

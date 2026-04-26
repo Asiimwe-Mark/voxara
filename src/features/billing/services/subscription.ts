@@ -1,10 +1,16 @@
-import { createClient } from "@/lib/supabase/server";
+/**
+ * Subscription & billing service — Paddle + Flutterwave only.
+ * All Stripe and Lemon Squeezy code has been removed.
+ */
 
-export type PlanType = "free" | "pro" | "agency";
+import { createClient } from '@/lib/supabase/server';
+import { createPaymentAdapter } from '@/lib/payment-adapter';
+
+export type PlanType = 'free' | 'pro' | 'agency';
 
 export interface SubscriptionDetails {
   plan: PlanType;
-  status: "active" | "canceled" | "past_due" | "trialing" | null;
+  status: 'active' | 'cancelled' | 'past_due' | 'trialing' | 'paused' | null;
   currentPeriodEnd: Date | null;
   cancelAtPeriodEnd: boolean;
   credits: number;
@@ -13,377 +19,174 @@ export interface SubscriptionDetails {
   provider: string;
 }
 
-/**
- * Get the current user's subscription details
- */
-export async function getCurrentSubscription(): Promise<SubscriptionDetails | null> {
-  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);;
-  const { data: { user } } = await supabase.auth.getUser();
+const PLAN_CREDITS: Record<PlanType, number> = {
+  free:   1,
+  pro:    30,
+  agency: 100,
+};
 
+const PLAN_FEATURES: Record<PlanType, string[]> = {
+  free: [
+    'basic_script_generation',
+    'watermarked_export',
+    '720p_quality',
+    'edge_tts_voices',
+  ],
+  pro: [
+    'basic_script_generation',
+    'no_watermark',
+    '1080p_quality',
+    'elevenlabs_voices',
+    'voice_cloning',
+    'mux_streaming',
+    'priority_support',
+  ],
+  agency: [
+    'basic_script_generation',
+    'no_watermark',
+    '4k_quality',
+    'elevenlabs_voices',
+    'voice_cloning',
+    'mux_streaming',
+    'api_access',
+    'team_management',
+    'custom_branding',
+    'white_label',
+    'priority_rendering',
+    'priority_support',
+  ],
+};
+
+/** Get the current user's subscription details from payment_* tables */
+export async function getCurrentSubscription(): Promise<SubscriptionDetails | null> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  // Get profile with credits and plan
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("credits, plan")
-    .eq("id", user.id)
-    .single();
+  const [{ data: profile }, { data: customer }, { data: sub }] = await Promise.all([
+    supabase.from('profiles').select('credits, plan').eq('id', user.id).single(),
+    supabase.from('payment_customers').select('payment_customer_id, provider')
+      .eq('user_id', user.id).maybeSingle(),
+    supabase.from('payment_subscriptions')
+      .select('subscription_id, status, renews_at, provider')
+      .eq('user_id', user.id)
+      .in('status', ['active', 'trialing', 'paused'])
+      .order('created_at', { ascending: false })
+      .limit(1).maybeSingle(),
+  ]);
 
-  // Get payment customer info
-  const { data: paymentCustomer } = await supabase
-    .from("payment_customers")
-    .select("payment_customer_id, provider")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  // Get payment subscription
-  const { data: subscription } = await supabase
-    .from("payment_subscriptions")
-    .select("subscription_id, status, renews_at, provider")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const plan = (profile?.plan ?? 'free') as PlanType;
 
   return {
-    plan: (profile?.plan as PlanType) || "free",
-    status: subscription?.status || null,
-    currentPeriodEnd: subscription?.renews_at
-      ? new Date(subscription.renews_at)
-      : null,
-    cancelAtPeriodEnd: false,
-    credits: profile?.credits ?? 3,
-    paymentCustomerId: paymentCustomer?.payment_customer_id || null,
-    paymentSubscriptionId: subscription?.subscription_id || null,
-    provider: subscription?.provider || paymentCustomer?.provider || process.env.PAYMENT_PROVIDER || 'lemon-squeezy',
-  };
-}
-
-/**
- * Check if the current user has access to a specific feature based on their plan
- */
-export async function hasFeatureAccess(feature: string): Promise<boolean> {
-  const subscription = await getCurrentSubscription();
-  if (!subscription) return false;
-
-  const planFeatures: Record<PlanType, string[]> = {
-    free: [
-      "basic_script_generation",
-      "watermarked_export",
-      "720p_quality",
-    ],
-    pro: [
-      "basic_script_generation",
-      "no_watermark",
-      "1080p_quality",
-      "premium_voices",
-      "voice_cloning",
-      "priority_support",
-    ],
-    agency: [
-      "basic_script_generation",
-      "no_watermark",
-      "4k_quality",
-      "premium_voices",
-      "voice_cloning",
-      "api_access",
-      "team_management",
-      "priority_support",
-      "custom_branding",
-    ],
-  };
-
-  return planFeatures[subscription.plan]?.includes(feature) ?? false;
-}
-
-/**
- * Get or create a payment customer
- */
-export async function getOrCreatePaymentCustomer(userId: string) {
-  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);;
-  const provider = process.env.PAYMENT_PROVIDER || 'lemon-squeezy';
-
-  // Check if payment customer exists
-  const { data: existing } = await supabase
-    .from("payment_customers")
-    .select("payment_customer_id")
-    .eq("user_id", userId)
-    .eq("provider", provider)
-    .maybeSingle();
-
-  if (existing) {
-    return existing.payment_customer_id;
-  }
-
-  // Get user email
-  const { data: { user } } = await supabase.auth.admin.getUserById(userId);
-  if (!user?.email) throw new Error('User email not found');
-
-  // For new customers, they'll be created automatically during checkout
-  // Just return null to signal that checkout needs to be initiated
-  return null;
-}
-
-/**
- * Update user's plan and credits after successful payment
- */
-export async function updateUserPlan(
-  userId: string,
-  plan: PlanType,
-  credits: number
-) {
-  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);;
-
-  return supabase
-    .from("profiles")
-    .update({
-      plan,
-      credits,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", userId);
-}
-
-/**
- * Add payment subscription record
- */
-export async function addPaymentSubscription(
-  userId: string,
-  subscriptionId: string,
-  plan: PlanType,
-  provider: string,
-  status: string,
-  renewsAt?: Date
-) {
-  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);;
-
-  return supabase.from("payment_subscriptions").insert({
-    user_id: userId,
-    subscription_id: subscriptionId,
-    provider,
     plan,
-    status,
-    renews_at: renewsAt?.toISOString(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  });
-}
-
-/**
- * Cancel a user's subscription
- */
-export async function cancelSubscription(userId: string) {
-  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);;
-
-  // Update subscription status
-  await supabase
-    .from("payment_subscriptions")
-    .update({
-      status: "canceled",
-      updated_at: new Date().toISOString(),
-    })
-    .eq("user_id", userId);
-
-  // Downgrade to free plan
-  await updateUserPlan(userId, "free", 3);
-}
-    agency: [
-      "basic_script_generation",
-      "no_watermark",
-      "4k_quality",
-      "premium_voices",
-      "voice_cloning",
-      "custom_avatars",
-      "team_workspaces",
-      "api_access",
-      "white_label",
-      "priority_rendering",
-      "priority_support",
-    ],
+    status:                sub?.status ?? null,
+    currentPeriodEnd:      sub?.renews_at ? new Date(sub.renews_at) : null,
+    cancelAtPeriodEnd:     false,
+    credits:               profile?.credits ?? PLAN_CREDITS[plan],
+    paymentCustomerId:     customer?.payment_customer_id ?? null,
+    paymentSubscriptionId: sub?.subscription_id ?? null,
+    provider:              sub?.provider ?? customer?.provider ?? (process.env.PAYMENT_PROVIDER ?? 'paddle'),
   };
-
-  return planFeatures[subscription.plan]?.includes(feature) || false;
 }
 
-/**
- * Get the credit cost for a specific action
- */
+/** Returns true if the user's current plan includes the named feature */
+export async function hasFeatureAccess(feature: string): Promise<boolean> {
+  const sub = await getCurrentSubscription();
+  return PLAN_FEATURES[sub?.plan ?? 'free']?.includes(feature) ?? false;
+}
+
+/** Returns the feature list for a given plan — used by pricing UI */
+export function getPlanFeatures(plan: PlanType): string[] {
+  return PLAN_FEATURES[plan] ?? [];
+}
+
+/** Returns credits included per billing cycle for a plan */
+export function getPlanCredits(plan: PlanType): number {
+  return PLAN_CREDITS[plan];
+}
+
+/** Cost in credits for platform actions */
 export function getCreditCost(action: string): number {
   const costs: Record<string, number> = {
-    generate_video: 1,
-    create_avatar: 3,
-    clone_voice: 2,
+    generate_video:   1,
+    create_avatar:    3,
+    clone_voice:      2,
     use_premium_voice: 1,
-    export_4k: 2,
+    export_4k:        2,
   };
-  return costs[action] || 1;
+  return costs[action] ?? 1;
 }
 
-/**
- * Check if user has sufficient credits for an action
- */
+/** Returns true if user has enough credits for the given action */
 export async function hasCreditsForAction(action: string): Promise<boolean> {
-  const subscription = await getCurrentSubscription();
-  if (!subscription) return false;
-
-  const required = getCreditCost(action);
-  return subscription.credits >= required;
+  const sub = await getCurrentSubscription();
+  return (sub?.credits ?? 0) >= getCreditCost(action);
 }
 
-/**
- * Get the Stripe price ID for a given plan and interval
- */
-export function getPriceId(plan: Exclude<PlanType, "free">, interval: "month" | "year"): string {
-  const priceMap: Record<string, Record<string, string>> = {
-    pro: {
-      month: process.env.STRIPE_PRO_MONTHLY_PRICE_ID!,
-      year: process.env.STRIPE_PRO_YEARLY_PRICE_ID!,
+/** Persist a new subscription record after webhook confirmation */
+export async function upsertPaymentSubscription(params: {
+  userId: string;
+  subscriptionId: string;
+  plan: PlanType;
+  provider: string;
+  status: string;
+  renewsAt?: Date;
+}): Promise<void> {
+  const supabase = await createClient();
+
+  await supabase.from('payment_subscriptions').upsert(
+    {
+      user_id:         params.userId,
+      subscription_id: params.subscriptionId,
+      provider:        params.provider,
+      plan:            params.plan,
+      status:          params.status,
+      renews_at:       params.renewsAt?.toISOString() ?? null,
+      updated_at:      new Date().toISOString(),
     },
-    agency: {
-      month: process.env.STRIPE_AGENCY_MONTHLY_PRICE_ID!,
-      year: process.env.STRIPE_AGENCY_YEARLY_PRICE_ID!,
-    },
-  };
-  return priceMap[plan]?.[interval] || "";
+    { onConflict: 'subscription_id' }
+  );
+
+  await supabase
+    .from('profiles')
+    .update({ plan: params.plan, credits: PLAN_CREDITS[params.plan], updated_at: new Date().toISOString() })
+    .eq('id', params.userId);
 }
 
-/**
- * Create a Stripe Checkout session for subscription
- */
-export async function createCheckoutSession(
-  plan: Exclude<PlanType, "free">,
-  interval: "month" | "year",
-  successUrl: string,
-  cancelUrl: string
-): Promise<string> {
-  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);;
-  const { data: { user } } = await supabase.auth.getUser();
+/** Downgrade user to free plan on cancellation */
+export async function downgradeToFree(userId: string): Promise<void> {
+  const supabase = await createClient();
 
-  if (!user) throw new Error("User not authenticated");
+  await Promise.all([
+    supabase.from('payment_subscriptions')
+      .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+      .eq('user_id', userId).in('status', ['active', 'trialing', 'paused']),
+    supabase.from('profiles')
+      .update({ plan: 'free', credits: PLAN_CREDITS.free, updated_at: new Date().toISOString() })
+      .eq('id', userId),
+  ]);
+}
 
-  const priceId = getPriceId(plan, interval);
-  if (!priceId) throw new Error("Invalid plan or interval");
+/** Create a portal / management URL for the active provider */
+export async function getBillingPortalUrl(userId: string, returnUrl: string): Promise<string> {
+  const provider = process.env.PAYMENT_PROVIDER ?? 'paddle';
 
-  // Get or create Stripe customer
-  let { data: stripeCustomer } = await supabase
-    .from("stripe_customers")
-    .select("stripe_customer_id")
-    .eq("user_id", user.id)
-    .single();
+  if (provider === 'paddle') {
+    // Paddle has a customer portal — construct link from customer ID
+    const supabase = await createClient();
+    const { data: customer } = await supabase
+      .from('payment_customers')
+      .select('payment_customer_id')
+      .eq('user_id', userId)
+      .eq('provider', 'paddle')
+      .maybeSingle();
 
-  let customerId = stripeCustomer?.stripe_customer_id;
-
-  if (!customerId) {
-    const customer = await stripe.customers.create({
-      email: user.email,
-      metadata: { user_id: user.id },
-    });
-    customerId = customer.id;
-    await supabase.from("stripe_customers").insert({
-      user_id: user.id,
-      stripe_customer_id: customerId,
-    });
+    if (customer?.payment_customer_id) {
+      return `https://customer-portal.paddle.com/${customer.payment_customer_id}`;
+    }
+    return returnUrl;
   }
 
-  const session = await stripe.checkout.sessions.create({
-    customer: customerId,
-    mode: "subscription",
-    line_items: [{ price: priceId, quantity: 1 }],
-    success_url: successUrl,
-    cancel_url: cancelUrl,
-    allow_promotion_codes: true,
-    billing_address_collection: "required",
-    automatic_tax: { enabled: true },
-    metadata: { user_id: user.id, plan, interval },
-  });
-
-  return session.url!;
-}
-
-/**
- * Create a Stripe Customer Portal session
- */
-export async function createPortalSession(returnUrl: string): Promise<string> {
-  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);;
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) throw new Error("User not authenticated");
-
-  const { data: stripeCustomer } = await supabase
-    .from("stripe_customers")
-    .select("stripe_customer_id")
-    .eq("user_id", user.id)
-    .single();
-
-  if (!stripeCustomer) throw new Error("No Stripe customer found");
-
-  const portalSession = await stripe.billingPortal.sessions.create({
-    customer: stripeCustomer.stripe_customer_id,
-    return_url: returnUrl,
-    configuration: process.env.STRIPE_PORTAL_CONFIGURATION_ID,
-  });
-
-  return portalSession.url;
-}
-
-/**
- * Cancel a subscription at period end
- */
-export async function cancelSubscription(): Promise<void> {
-  const subscription = await getCurrentSubscription();
-  if (!subscription?.stripeSubscriptionId) {
-    throw new Error("No active subscription found");
-  }
-
-  await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
-    cancel_at_period_end: true,
-  });
-}
-
-/**
- * Reactivate a canceled subscription
- */
-export async function reactivateSubscription(): Promise<void> {
-  const subscription = await getCurrentSubscription();
-  if (!subscription?.stripeSubscriptionId) {
-    throw new Error("No subscription found");
-  }
-
-  await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
-    cancel_at_period_end: false,
-  });
-}
-
-/**
- * Get the features available for a given plan
- */
-export function getPlanFeatures(plan: PlanType): string[] {
-  const features: Record<PlanType, string[]> = {
-    free: [
-      "3 videos per month",
-      "720p quality",
-      "Watermark included",
-      "Basic AI voices",
-      "Community support",
-    ],
-    pro: [
-      "30 videos per month",
-      "1080p quality",
-      "No watermark",
-      "Premium AI voices",
-      "Voice cloning",
-      "Priority email support",
-    ],
-    agency: [
-      "100 videos per month",
-      "4K quality",
-      "White-label exports",
-      "Custom AI avatars",
-      "Team workspaces",
-      "API access",
-      "Priority rendering",
-      "Dedicated support",
-    ],
-  };
-  return features[plan] || [];
+  // Flutterwave has no built-in portal — redirect to Voxara billing page
+  return `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/billing`;
 }

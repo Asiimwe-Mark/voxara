@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 /**
  * Admin Dashboard Layout
  * Protected admin-only layout with sidebar and header
@@ -42,7 +43,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         setIsAdmin(data.isAdmin);
         setLoading(false);
       } catch (error) {
-        console.error('Failed to verify admin access:', error);
+        logger.error('Failed to verify admin access:', error);
         router.push('/dashboard');
       }
     };

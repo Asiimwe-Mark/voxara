@@ -54,7 +54,7 @@ interface TimelineClip {
   type: 'video' | 'image' | 'text' | 'audio'
   url?: string
   content?: string
-  properties: Record<string, any>
+  properties: Record<string, unknown>
 }
 
 interface TimelineTrack {
@@ -127,13 +127,13 @@ export function AdvancedTimelineEditor({
       }
     } catch (error) {
       toast.error('Failed to load video data')
-      console.error(error)
+      process.env.NODE_ENV !== 'production' && console.error(error)
     } finally {
       setIsLoading(false)
     }
   }
 
-  function initializeDefaultTracks(data: any) {
+  function initializeDefaultTracks(data: Record<string, unknown>) {
     const defaultTracks: TimelineTrack[] = [
       {
         id: 'video-track',

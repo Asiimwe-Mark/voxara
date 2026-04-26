@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+import crypto from 'crypto';
 
 export interface FlutterwaveConfig {
   apiKey: string;
@@ -23,7 +23,7 @@ export class FlutterwaveClient {
       headers: {
         'Authorization': `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
-        ...options.headers,
+        ...(options.headers as Record<string, string> ?? {}),
       },
     });
 
@@ -45,9 +45,9 @@ export class FlutterwaveClient {
     phoneNumber?: string;
     currency?: string;
     txRef: string;
-    customData?: Record<string, any>;
+    customData?: Record<string, unknown>;
     redirectUrl?: string;
-    meta?: Record<string, any>;
+    meta?: Record<string, unknown>;
   }) {
     const payload = {
       tx_ref: params.txRef,
@@ -58,15 +58,11 @@ export class FlutterwaveClient {
         email: params.email,
         phonenumber: params.phoneNumber,
       },
-      meta: {
-        ...params.customData,
-        ...params.meta,
-      },
       customizations: {
-        title: 'voxara Payment',
-        description: 'Pay for credits and subscriptions',
-        logo: 'https://voxara.app/logo.png',
+        title: 'Voxara',
+        description: 'Credit Purchase',
       },
+      meta: params.customData,
     };
 
     return this.request('/payments', {
@@ -76,47 +72,18 @@ export class FlutterwaveClient {
   }
 
   /**
-   * Verify a payment transaction
+   * Verify a transaction by ID
    */
-  async verifyPayment(transactionId: string) {
+  async verifyTransaction(transactionId: number) {
     return this.request(`/transactions/${transactionId}/verify`);
-  }
-
-  /**
-   * Get transaction details by reference
-   */
-  async getTransactionByRef(txRef: string) {
-    return this.request(`/transactions/verify_by_reference?tx_ref=${txRef}`);
   }
 
   /**
    * Create a subscription plan
    */
-  async createPlan(params: {
-    name: string;
-    amount: number;
-    interval: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
-    duration: number;
-  }) {
-    const payload = {
-      amount: params.amount,
-      name: params.name,
-      interval: params.interval,
-      duration: params.duration,
-    };
-
-    return this.request('/plans', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
-  }
-
-  /**
-   * Create a subscription for a customer
-   */
   async createSubscription(params: {
-    planId: number;
     customerId: number;
+    planId: number;
     txRef: string;
   }) {
     const payload = {
@@ -160,21 +127,23 @@ export class FlutterwaveClient {
   }
 
   /**
-   * Verify webhook signature
+   * Verify webhook signature using HMAC-SHA256
    */
   verifyWebhookSignature(payload: string, signature: string): boolean {
-    const crypto = require('crypto');
     const hash = crypto
       .createHmac('sha256', this.webhookSecret)
       .update(payload)
       .digest('hex');
-    return hash === signature;
+    return crypto.timingSafeEqual(
+      Buffer.from(hash, 'utf8'),
+      Buffer.from(signature.trim(), 'utf8')
+    );
   }
 }
 
 export const createFlutterwaveClient = () => {
   return new FlutterwaveClient({
-    apiKey: process.env.FLUTTERWAVE_SECRET_KEY!,
-    webhookSecret: process.env.FLUTTERWAVE_WEBHOOK_SECRET!,
+    apiKey: (process.env.FLUTTERWAVE_SECRET_KEY ?? (() => { throw new Error('FLUTTERWAVE_SECRET_KEY is required for Flutterwave payments'); })()),
+    webhookSecret: (process.env.FLUTTERWAVE_WEBHOOK_SECRET ?? (() => { throw new Error('FLUTTERWAVE_WEBHOOK_SECRET is required for Flutterwave webhooks'); })()),
   });
 };

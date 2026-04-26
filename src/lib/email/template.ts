@@ -22,7 +22,7 @@ export {
  */
 export async function renderEmailTemplate(
   Template: React.ComponentType<any>,
-  props: any
+  props: Record<string, unknown>
 ): Promise<string> {
   return await render(<Template {...props} />);
 }

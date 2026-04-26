@@ -1,8 +1,9 @@
+import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
     if (insertError) throw insertError;
     return NextResponse.json({ success: true, voice });
   } catch (error) {
-    console.error("Voice clone error:", error);
+    logger.error("Voice clone error:", { detail: error });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Voice cloning failed" },
       { status: 500 }

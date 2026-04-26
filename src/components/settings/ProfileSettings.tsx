@@ -21,9 +21,22 @@ const profileSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
+interface VoxaraUser {
+  id: string;
+  email: string;
+  user_metadata?: Record<string, string>;
+}
+
+interface VoxaraProfile {
+  full_name?: string | null;
+  avatar_url?: string | null;
+  plan?: string;
+  credits?: number;
+}
+
 interface ProfileSettingsProps {
-  user: any;
-  profile: any;
+  user: VoxaraUser;
+  profile: VoxaraProfile;
 }
 
 export function ProfileSettings({ user, profile }: ProfileSettingsProps) {
