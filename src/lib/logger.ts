@@ -58,7 +58,7 @@ export const logger = {
   debug: (message: string, ctx?: LogContext) => emit('debug', message, ctx),
   info:  (message: string, ctx?: LogContext) => emit('info',  message, ctx),
   warn:  (message: string, ctx?: LogContext) => emit('warn',  message, ctx),
-  error: (message: string, ctx?: LogContext) => emit('error', message, ctx),
+  error: (message: string, error: string, errorDescription: string | null, ctx?: LogContext) => emit('error', message, ctx),
 };
 
 export default logger;
