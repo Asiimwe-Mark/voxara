@@ -89,26 +89,6 @@ export async function validateWebhookSignature(
   }
 }
 
-/**
- * Synchronous HMAC verification using Node.js crypto.
- * Use this ONLY in Node.js runtime routes (not middleware or edge routes).
- * Import crypto lazily to avoid Edge Runtime crashes.
- */
-export async function validateWebhookSignatureNode(
-  payload: string,
-  signature: string,
-  secret: string,
-): Promise<boolean> {
-  try {
-    const { createHmac, timingSafeEqual } = await import('crypto');
-    const expected = createHmac('sha256', secret).update(payload, 'utf8').digest('hex');
-    const sig = signature.trim();
-    if (sig.length !== expected.length) return false;
-    return timingSafeEqual(Buffer.from(sig, 'utf8'), Buffer.from(expected, 'utf8'));
-  } catch {
-    return false;
-  }
-}
 
 // ─── CSRF Token (Web Crypto — Edge compatible) ────────────────────────────────
 

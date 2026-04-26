@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbo",
     "dev:turbo": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
@@ -41,7 +41,19 @@
     "clean": "rm -rf .next dist build coverage",
     "clean:node_modules": "rm -rf node_modules && npm install",
     "analyze": "ANALYZE=true npm run build",
-    "analyze:bundle": "npm run build -- --profile"
+    "analyze:bundle": "npm run build -- --profile",
+    "precheck": "ts-node --transpile-only scripts/precheck.ts",
+    "precheck:quick": "ts-node --transpile-only scripts/precheck.ts --quick",
+    "precheck:full": "ts-node --transpile-only scripts/precheck.ts --build",
+    "check:edge": "ts-node --transpile-only scripts/check-edge-imports.ts",
+    "check:types": "tsc --noEmit",
+    "check:lint": "next lint",
+    "check:all": "npm run check:edge && npm run check:types && npm run check:lint",
+    "db:types": "supabase gen types typescript --local > src/types/supabase.ts",
+    "predeploy": "npm run check:all",
+    "deploy": "vercel --prod",
+    "inngest:dev": "npx inngest-cli@latest dev",
+    "inngest:sync": "npx inngest-cli@latest sync"
   },
   "dependencies": {
     "@elevenlabs/elevenlabs-js": "^2.44.0",

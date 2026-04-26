@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { createClient } from "@supabase/supabase-js";
+import { verifyWebhookSignatureHmac, signPayload } from '@/lib/security.node';
 
 
 export interface WebhookPayload {
@@ -16,12 +16,6 @@ interface DeliveryResult {
   error?: string;
 }
 
-/**
- * Generate HMAC-SHA256 signature for webhook payload.
- */
-function generateSignature(payload: string, secret: string): string {
-  return crypto.createHmac("sha256", secret).update(payload).digest("hex");
-}
 
 /**
  * Deliver a webhook to a single endpoint with retries.
@@ -36,7 +30,7 @@ async function deliverToEndpoint(
   maxRetries: number = 3
 ): Promise<DeliveryResult> {
   const payloadString = JSON.stringify(payload);
-  const signature = generateSignature(payloadString, endpoint.secret);
+  const signature = signPayload(payloadString, endpoint.secret);
 
   let lastError: Error | null = null;
   let lastStatus: number | undefined;
@@ -176,27 +170,14 @@ export async function deliverAdHocWebhook(
 /**
  * Verify an incoming webhook signature (for receiving webhooks).
  */
+/**
+ * Verify an incoming webhook signature.
+ * deliver.ts runs in Node.js runtime only (imported via Inngest, not middleware).
+ */
 export function verifyWebhookSignature(
   payload: string,
   signature: string,
-  secret: string
+  secret: string,
 ): boolean {
-  const expected = generateSignature(payload, secret);
-  // Use Web Crypto for Edge Runtime compatibility
-  try {
-    const enc = new TextEncoder();
-    const key = await globalThis.crypto.subtle.importKey(
-      'raw', enc.encode(expected),
-      { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']
-    );
-    const sigHex = signature.trim();
-    if (sigHex.length % 2 !== 0) return false;
-    const sigBytes = new Uint8Array(sigHex.length / 2);
-    for (let i = 0; i < sigHex.length; i += 2) {
-      sigBytes[i / 2] = parseInt(sigHex.slice(i, i + 2), 16);
-    }
-    return await globalThis.crypto.subtle.verify('HMAC', key, sigBytes, enc.encode(expected));
-  } catch {
-    return false;
-  }
+  return verifyWebhookSignatureHmac(payload, signature, secret);
 }
