@@ -8,6 +8,7 @@ import {
   Video,
   interpolate,
   spring,
+  Composition,
 } from 'remotion'
 import { z } from 'zod'
 
