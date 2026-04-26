@@ -1,6 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { createClient } from "@supabase/supabase-js";
-import crypto from "crypto";
 
 
 export interface WebhookPayload {
@@ -183,8 +182,21 @@ export function verifyWebhookSignature(
   secret: string
 ): boolean {
   const expected = generateSignature(payload, secret);
-  const sigBuf = Buffer.from(signature.trim(), 'utf8');
-  const expBuf = Buffer.from(expected, 'utf8');
-  if (sigBuf.length !== expBuf.length) return false;
-  return crypto.timingSafeEqual(sigBuf, expBuf);
+  // Use Web Crypto for Edge Runtime compatibility
+  try {
+    const enc = new TextEncoder();
+    const key = await globalThis.crypto.subtle.importKey(
+      'raw', enc.encode(expected),
+      { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']
+    );
+    const sigHex = signature.trim();
+    if (sigHex.length % 2 !== 0) return false;
+    const sigBytes = new Uint8Array(sigHex.length / 2);
+    for (let i = 0; i < sigHex.length; i += 2) {
+      sigBytes[i / 2] = parseInt(sigHex.slice(i, i + 2), 16);
+    }
+    return await globalThis.crypto.subtle.verify('HMAC', key, sigBytes, enc.encode(expected));
+  } catch {
+    return false;
+  }
 }

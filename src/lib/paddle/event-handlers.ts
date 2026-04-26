@@ -71,7 +71,7 @@ export async function handleTransactionCompleted(data: Record<string, unknown>):
       .maybeSingle();
 
     if (profileError) {
-      logger.error('Failed to fetch profile for email:'', { detail: profileError instanceof Error ? profileError.message : String(profileError) });
+      logger.error('Failed to fetch profile for email', { detail: profileError instanceof Error ? profileError.message : String(profileError) });
     }
 
     // Send success email
@@ -86,13 +86,13 @@ export async function handleTransactionCompleted(data: Record<string, unknown>):
           new Date().toLocaleDateString()
         );
       } catch (emailError) {
-        logger.error('Failed to send success email:'', { detail: emailError instanceof Error ? emailError.message : String(emailError) });
+        logger.error('Failed to send success email', { detail: emailError instanceof Error ? emailError.message : String(emailError) });
       }
     }
 
     logger.info(`✓ Transaction ${transactionId} processed: +${credits} credits for user ${userId}`);
   } catch (error) {
-    logger.error('Error handling transaction.completed:'', { detail: error instanceof Error ? error.message : String(error) });
+    logger.error('Error handling transaction.completed', { detail: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }
@@ -154,7 +154,7 @@ export async function handleSubscriptionCreated(data: Record<string, unknown>): 
       .maybeSingle();
 
     if (profileError) {
-      logger.error('Failed to fetch profile for email:'', { detail: profileError instanceof Error ? profileError.message : String(profileError) });
+      logger.error('Failed to fetch profile for email', { detail: profileError instanceof Error ? profileError.message : String(profileError) });
     }
 
     // Send welcome/confirmation email
@@ -175,13 +175,13 @@ export async function handleSubscriptionCreated(data: Record<string, unknown>): 
           new Date().toLocaleDateString()
         );
       } catch (emailError) {
-        logger.error('Failed to send subscription email:'', { detail: emailError instanceof Error ? emailError.message : String(emailError) });
+        logger.error('Failed to send subscription email', { detail: emailError instanceof Error ? emailError.message : String(emailError) });
       }
     }
 
     logger.info(`✓ Subscription ${subscriptionId} created for user ${userId} (${planType})`);
   } catch (error) {
-    logger.error('Error handling subscription.created:'', { detail: error instanceof Error ? error.message : String(error) });
+    logger.error('Error handling subscription.created', { detail: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }
@@ -219,7 +219,7 @@ export async function handleSubscriptionUpdated(data: Record<string, unknown>): 
 
     logger.info(`✓ Subscription ${subscriptionId} updated: status=${status}`);
   } catch (error) {
-    logger.error('Error handling subscription.updated:'', { detail: error instanceof Error ? error.message : String(error) });
+    logger.error('Error handling subscription.updated', { detail: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }
@@ -254,7 +254,7 @@ export async function handleSubscriptionPaused(data: Record<string, unknown>): P
 
     logger.info(`✓ Subscription ${subscriptionId} paused`);
   } catch (error) {
-    logger.error('Error handling subscription.paused:'', { detail: error instanceof Error ? error.message : String(error) });
+    logger.error('Error handling subscription.paused', { detail: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }
@@ -289,7 +289,7 @@ export async function handleSubscriptionResumed(data: Record<string, unknown>): 
 
     logger.info(`✓ Subscription ${subscriptionId} resumed`);
   } catch (error) {
-    logger.error('Error handling subscription.resumed:'', { detail: error instanceof Error ? error.message : String(error) });
+    logger.error('Error handling subscription.resumed', { detail: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }
@@ -344,13 +344,13 @@ export async function handleSubscriptionCanceled(data: Record<string, unknown>):
         // Send cancellation email (you may want to create a specific email template for this)
         logger.info(`Subscription canceled for ${profile.email}`);
       } catch (emailError) {
-        logger.error('Failed to send cancellation email:'', { detail: emailError instanceof Error ? emailError.message : String(emailError) });
+        logger.error('Failed to send cancellation email', { detail: emailError instanceof Error ? emailError.message : String(emailError) });
       }
     }
 
     logger.info(`✓ Subscription ${subscriptionId} canceled, user ${userId} downgraded to free`);
   } catch (error) {
-    logger.error('Error handling subscription.canceled:'', { detail: error instanceof Error ? error.message : String(error) });
+    logger.error('Error handling subscription.canceled', { detail: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }
@@ -391,7 +391,7 @@ export async function handleCustomerCreated(data: Record<string, unknown>): Prom
 
     logger.info(`✓ Customer ${customerId} created for user ${userId}`);
   } catch (error) {
-    logger.error('Error handling customer.created:'', { detail: error instanceof Error ? error.message : String(error) });
+    logger.error('Error handling customer.created', { detail: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }
@@ -415,6 +415,6 @@ export async function logWebhookEvent(
       created_at: new Date().toISOString(),
     });
   } catch (logError) {
-    logger.error('Failed to log webhook event:'', { detail: logError instanceof Error ? logError.message : String(logError) });
+    logger.error('Failed to log webhook event', { detail: logError instanceof Error ? logError.message : String(logError) });
   }
 }

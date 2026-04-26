@@ -1,8 +1,9 @@
+'use client';
+
 /**
  * Admin - Users Management Page
  */
 
-'use client';
 
 import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';

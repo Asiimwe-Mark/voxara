@@ -1,121 +1,125 @@
 /**
- * Enterprise-grade security utilities
- * Implements security best practices and hardening measures
+ * Enterprise-grade security utilities — Edge Runtime compatible.
+ *
+ * Uses the Web Crypto API (globalThis.crypto) which is available in:
+ *   - Edge Runtime (Vercel middleware, edge routes)
+ *   - Node.js 19+ (native Web Crypto)
+ *   - All modern browsers
+ *
+ * IMPORTANT: Do NOT import the Node.js 'crypto' module here.
+ * This file is imported by middleware.ts which runs in the Edge Runtime.
  */
 
-import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 
-/**
- * Security headers configuration
- */
-export const SECURITY_HEADERS = {
-  'Content-Security-Policy':
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https:",
-  'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY',
-  'X-XSS-Protection': '1; mode=block',
-  'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
-  'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
+// ─── Security Headers ─────────────────────────────────────────────────────────
+
+export const SECURITY_HEADERS: Record<string, string> = {
+  'X-Content-Type-Options':    'nosniff',
+  'X-Frame-Options':            'DENY',
+  'X-XSS-Protection':           '1; mode=block',
+  'Referrer-Policy':            'strict-origin-when-cross-origin',
+  'Permissions-Policy':         'geolocation=(), microphone=(), camera=()',
+  'Strict-Transport-Security':  'max-age=63072000; includeSubDomains; preload',
 };
 
-/**
- * Apply security headers to response
- */
 export function applySecurityHeaders(response: NextResponse): NextResponse {
-  Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
+  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
     response.headers.set(key, value);
-  });
+  }
   return response;
 }
 
-/**
- * Verify request origin.
- * Allows server-to-server requests (no Origin header) and configured origins.
- */
+// ─── Origin Validation ────────────────────────────────────────────────────────
+
 export function isValidOrigin(request: NextRequest): boolean {
   const origin = request.headers.get('origin');
-
-  // Server-to-server requests (curl, internal Next.js calls, webhooks) have no Origin header
+  // Server-to-server / webhook calls have no Origin header — always allow
   if (!origin) return true;
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-
-  const allowedOrigins: string[] = [
-    'https://voxara.app',
-    'https://www.voxara.app',
-  ];
-
-  if (appUrl) allowedOrigins.push(appUrl);
-
+  const allowed: string[] = ['https://voxara.app', 'https://www.voxara.app'];
+  if (appUrl) allowed.push(appUrl);
   if (process.env.NODE_ENV !== 'production') {
-    allowedOrigins.push(
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
-      'http://localhost:3001',
-    );
+    allowed.push('http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:3001');
   }
 
+  return allowed.some((a) => {
+    try { return origin === a || origin === new URL(a).origin; }
+    catch { return false; }
+  });
+}
+
+// ─── HMAC-SHA256 Webhook Verification (Web Crypto — Edge compatible) ──────────
+
+/**
+ * Verify a HMAC-SHA256 webhook signature.
+ * Uses the Web Crypto API — compatible with Edge Runtime, Node.js 19+, browsers.
+ *
+ * @param payload    Raw request body string (must be the exact bytes signed)
+ * @param signature  Hex-encoded HMAC-SHA256 from the provider's header
+ * @param secret     Your webhook secret
+ */
+export async function validateWebhookSignature(
+  payload: string,
+  signature: string,
+  secret: string,
+): Promise<boolean> {
   try {
-    return allowedOrigins.some((allowed) => {
-      try {
-        return origin === allowed || origin === new URL(allowed).origin;
-      } catch {
-        return false;
-      }
-    });
+    const enc = new TextEncoder();
+    const key = await globalThis.crypto.subtle.importKey(
+      'raw',
+      enc.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['verify'],
+    );
+
+    // Convert hex signature to Uint8Array
+    const sigHex = signature.trim();
+    if (sigHex.length % 2 !== 0) return false;
+    const sigBytes = new Uint8Array(sigHex.length / 2);
+    for (let i = 0; i < sigHex.length; i += 2) {
+      sigBytes[i / 2] = parseInt(sigHex.slice(i, i + 2), 16);
+    }
+
+    return await globalThis.crypto.subtle.verify('HMAC', key, sigBytes, enc.encode(payload));
   } catch {
     return false;
   }
 }
 
 /**
- * Hash sensitive data for logging
+ * Synchronous HMAC verification using Node.js crypto.
+ * Use this ONLY in Node.js runtime routes (not middleware or edge routes).
+ * Import crypto lazily to avoid Edge Runtime crashes.
  */
-export function hashForLogging(str: string): string {
-  return str.substring(0, 4) + '***' + str.substring(str.length - 4);
-}
-
-/**
- * Validate API key format
- */
-export function isValidApiKey(key: string): boolean {
-  return key.startsWith('fv_') && key.length > 20;
-}
-
-/**
- * Validate webhook signature (HMAC-SHA256) using timing-safe comparison
- */
-export function validateWebhookSignature(
+export async function validateWebhookSignatureNode(
   payload: string,
   signature: string,
-  secret: string
-): boolean {
-  const computed = crypto
-    .createHmac('sha256', secret)
-    .update(payload)
-    .digest('hex');
-  const normalizedSig = signature.trim();
-
-  if (normalizedSig.length !== computed.length) return false;
-
-  return crypto.timingSafeEqual(
-    Buffer.from(computed, 'utf8'),
-    Buffer.from(normalizedSig, 'utf8')
-  );
+  secret: string,
+): Promise<boolean> {
+  try {
+    const { createHmac, timingSafeEqual } = await import('crypto');
+    const expected = createHmac('sha256', secret).update(payload, 'utf8').digest('hex');
+    const sig = signature.trim();
+    if (sig.length !== expected.length) return false;
+    return timingSafeEqual(Buffer.from(sig, 'utf8'), Buffer.from(expected, 'utf8'));
+  } catch {
+    return false;
+  }
 }
 
-/**
- * Generate a cryptographically secure CSRF token
- */
+// ─── CSRF Token (Web Crypto — Edge compatible) ────────────────────────────────
+
 export function generateCsrfToken(): string {
-  return crypto.randomBytes(32).toString('hex');
+  const bytes = new Uint8Array(32);
+  globalThis.crypto.getRandomValues(bytes);
+  return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-/**
- * Validate URL is safe (no SSRF risk)
- */
+// ─── URL Safety ───────────────────────────────────────────────────────────────
+
 export function isSafeUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
@@ -123,62 +127,50 @@ export function isSafeUrl(url: string): boolean {
       ['http:', 'https:'].includes(parsed.protocol) &&
       !['localhost', '127.0.0.1', '0.0.0.0', '::1'].includes(parsed.hostname)
     );
-  } catch {
-    return false;
-  }
+  } catch { return false; }
 }
 
-/**
- * Get client IP address (considering proxies)
- */
+// ─── Client IP ────────────────────────────────────────────────────────────────
+
 export function getClientIp(request: NextRequest): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  if (forwarded) {
-    return forwarded.split(',')[0].trim();
-  }
   return (
-    request.headers.get('x-real-ip') ||
-    // @ts-expect-error — NextRequest.ip exists at runtime on Vercel
-    request.ip ||
+    request.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
+    request.headers.get('x-real-ip') ??
     'unknown'
   );
 }
 
-/**
- * Rate limit key with scope
- */
+// ─── Admin Check ──────────────────────────────────────────────────────────────
+
+export function isAdmin(userId: string): boolean {
+  const ids = (process.env.ADMIN_USER_IDS ?? '').split(',').filter(Boolean);
+  return ids.includes(userId);
+}
+
+// ─── Misc ─────────────────────────────────────────────────────────────────────
+
 export function getRateLimitKey(identifier: string, scope: string): string {
   return `ratelimit:${scope}:${identifier}`;
 }
 
-/**
- * Check if user ID is an admin
- */
-export function isAdmin(userId: string): boolean {
-  const adminIds = (process.env.ADMIN_USER_IDS || '').split(',').filter(Boolean);
-  return adminIds.includes(userId);
+export function hashForLogging(str: string): string {
+  return str.substring(0, 4) + '***' + str.substring(str.length - 4);
 }
 
-/**
- * Mask sensitive data in objects for safe logging
- */
+export function sanitizeInput(input: string): string {
+  return input.trim().replace(/[<>]/g, '').substring(0, 10000);
+}
+
 export function maskSensitiveData(obj: unknown): unknown {
   if (typeof obj !== 'object' || obj === null) return obj;
-
-  const sensitiveKeys = ['password', 'token', 'secret', 'apiKey', 'api_key', 'authorization'];
-  const masked = Array.isArray(obj)
-    ? ([...obj] as unknown[])
-    : ({ ...(obj as Record<string, unknown>) } as Record<string, unknown>);
-
-  for (const key in masked as Record<string, unknown>) {
-    if (sensitiveKeys.some((k) => key.toLowerCase().includes(k))) {
-      (masked as Record<string, unknown>)[key] = '***REDACTED***';
+  const sensitive = ['password', 'token', 'secret', 'apiKey', 'api_key', 'authorization'];
+  const copy = Array.isArray(obj) ? [...obj] as unknown[] : { ...(obj as Record<string, unknown>) };
+  for (const key in copy as Record<string, unknown>) {
+    if (sensitive.some((k) => key.toLowerCase().includes(k))) {
+      (copy as Record<string, unknown>)[key] = '***REDACTED***';
     } else {
-      (masked as Record<string, unknown>)[key] = maskSensitiveData(
-        (masked as Record<string, unknown>)[key]
-      );
+      (copy as Record<string, unknown>)[key] = maskSensitiveData((copy as Record<string, unknown>)[key]);
     }
   }
-
-  return masked;
+  return copy;
 }

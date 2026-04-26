@@ -16,7 +16,7 @@ export async function deductCredits(userId: string, amount: number = 1): Promise
   });
 
   if (error) {
-    logger.error('deductCredits RPC error:'', { detail: error instanceof Error ? error.message : String(error) });
+    logger.error('deductCredits RPC error', { detail: error instanceof Error ? error.message : String(error) });
     return false;
   }
 
@@ -25,7 +25,7 @@ export async function deductCredits(userId: string, amount: number = 1): Promise
   if (success) {
     // Fire auto-top-up check in background (non-blocking)
     triggerAutoTopUpCheck(userId).catch((err) =>
-      logger.error('Auto top-up check failed silently:'', { detail: err instanceof Error ? err.message : String(err) })
+      logger.error('Auto top-up check failed silently', { detail: err instanceof Error ? err.message : String(err) })
     );
   }
 

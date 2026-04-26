@@ -1,8 +1,9 @@
+'use client';
+
 /**
  * Admin - Analytics Page
  */
 
-'use client';
 
 import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';

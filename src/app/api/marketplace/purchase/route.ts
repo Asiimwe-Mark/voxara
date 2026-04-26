@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
-    logger.error('Marketplace purchase error:'', { detail: error instanceof Error ? error.message : String(error) });
+    logger.error('Marketplace purchase error', { detail: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 });
   }
 }

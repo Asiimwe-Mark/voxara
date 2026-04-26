@@ -30,7 +30,7 @@ export async function logWebhookEvent(entry: WebhookLogEntry) {
     });
   } catch (err) {
     // If logging fails, just log to console to avoid throwing
-    logger.error('[WebhookLogger] Failed to log webhook event:'', { detail: err instanceof Error ? err.message : String(err) });
+    logger.error('[WebhookLogger] Failed to log webhook event', { detail: err instanceof Error ? err.message : String(err) });
   }
 }
 
@@ -68,7 +68,7 @@ export async function getWebhookLogs(
     if (error) throw error;
     return data || [];
   } catch (err) {
-    logger.error('[WebhookLogger] Failed to fetch logs:'', { detail: err instanceof Error ? err.message : String(err) });
+    logger.error('[WebhookLogger] Failed to fetch logs', { detail: err instanceof Error ? err.message : String(err) });
     return [];
   }
 }
@@ -104,7 +104,7 @@ export async function getWebhookStats(hours: number = 24) {
 
     return stats;
   } catch (err) {
-    logger.error('[WebhookLogger] Failed to get stats:'', { detail: err instanceof Error ? err.message : String(err) });
+    logger.error('[WebhookLogger] Failed to get stats', { detail: err instanceof Error ? err.message : String(err) });
     return null;
   }
 }

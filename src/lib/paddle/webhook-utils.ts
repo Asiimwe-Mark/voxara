@@ -157,7 +157,7 @@ export function verifyPaddleWebhookSignature(
     // Use constant-time comparison to prevent timing attacks
     return timingSafeCompare(hash, signature);
   } catch (error) {
-    logger.error('Webhook signature verification failed:'', { detail: error instanceof Error ? error.message : String(error) });
+    logger.error('Webhook signature verification failed', { detail: error instanceof Error ? error.message : String(error) });
     return false;
   }
 }

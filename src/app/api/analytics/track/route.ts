@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json({ ok: true });
   } catch (error) {
-    logger.error('Track event error:'', { detail: error instanceof Error ? error.message : String(error) });
+    logger.error('Track event error', { detail: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }

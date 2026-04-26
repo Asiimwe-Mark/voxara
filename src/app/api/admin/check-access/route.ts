@@ -34,7 +34,7 @@ export async function GET() {
 
     return NextResponse.json({ isAdmin: profile?.role === 'admin' });
   } catch (error) {
-    logger.error('[check-access] Error:'', { detail: error instanceof Error ? error.message : String(error) });
+    logger.error('[check-access] Error', { detail: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ isAdmin: false }, { status: 500 });
   }
 }

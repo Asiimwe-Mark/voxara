@@ -134,7 +134,7 @@ export class PaddleClient {
     } catch (error) {
       // If customer already exists, retrieve by email
       // For now, we'll retry with a get approach
-      logger.warn('Error creating customer, attempting retrieval:'', { detail: error instanceof Error ? error.message : String(error) });
+      logger.warn('Error creating customer, attempting retrieval', { detail: error instanceof Error ? error.message : String(error) });
       throw error;
     }
   }
@@ -313,7 +313,7 @@ export class PaddleClient {
 
       return hash === signature;
     } catch (error) {
-      logger.error('Webhook signature verification failed:'', { detail: error instanceof Error ? error.message : String(error) });
+      logger.error('Webhook signature verification failed', { detail: error instanceof Error ? error.message : String(error) });
       return false;
     }
   }

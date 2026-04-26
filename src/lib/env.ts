@@ -132,7 +132,9 @@ export function validateEnv(): void {
       error: err instanceof Error ? err.message : String(err),
     });
     if (process.env.NODE_ENV === 'production') {
-      process.exit(1);
+      // process.exit() is not available in Edge Runtime — throw instead.
+      // This surfaces as a 500 at the first request, with a clear error message.
+      throw new Error('Server misconfigured: required environment variables are missing. Check deployment logs.');
     }
   }
 }

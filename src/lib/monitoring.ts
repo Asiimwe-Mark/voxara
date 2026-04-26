@@ -12,7 +12,7 @@ export function captureException(error: Error, context?: Record<string, unknown>
   if (process.env.NODE_ENV === 'production') {
     Sentry.captureException(error, context ? { contexts: { custom: context } } : undefined);
   } else {
-    if (typeof process !== 'undefined') process.stderr.write(JSON.stringify({ level: 'error', error: String(error), context }) + '\n');
+    console.error(JSON.stringify({ level: 'error', error: String(error), context }));
   }
 }
 
@@ -23,7 +23,7 @@ export function captureMessage(message: string, level: 'info' | 'warning' | 'err
   if (process.env.NODE_ENV === 'production') {
     Sentry.captureMessage(message, level);
   } else {
-    if (typeof process !== 'undefined') process.stderr.write(`[${level.toUpperCase()}] ${message}\n`);
+    console.warn(`[${level.toUpperCase()}] ${message}`);
   }
 }
 

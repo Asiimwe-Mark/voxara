@@ -144,7 +144,7 @@ async function handleFlutterwaveAutoTopup(
 
     return { success: true, provider: 'flutterwave' };
   } catch (error) {
-    logger.error('[auto-topup] Flutterwave failed:'', { detail: error instanceof Error ? error.message : String(error) });
+    logger.error('[auto-topup] Flutterwave failed', { detail: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }

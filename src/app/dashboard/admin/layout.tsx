@@ -1,10 +1,9 @@
-import logger from '@/lib/logger';
+'use client';
+
 /**
  * Admin Dashboard Layout
  * Protected admin-only layout with sidebar and header
  */
-
-'use client';
 
 import React from 'react';
 import { useRouter } from 'next/navigation';

@@ -38,6 +38,7 @@ export {
   ExternalLink,
   Eye,
   FileText,
+  Gift,
   Globe,
   HelpCircle,
   Layers,

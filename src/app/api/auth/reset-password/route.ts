@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
   });
 
   if (error) {
-    logger.error('Password reset error:'', { detail: error instanceof Error ? error.message : String(error) });
+    logger.error('Password reset error', { detail: error instanceof Error ? error.message : String(error) });
     // Don't expose whether the email exists — always return success
   }
 
