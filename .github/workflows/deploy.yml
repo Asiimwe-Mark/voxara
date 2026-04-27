@@ -11,23 +11,66 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
-      - run: npm ci
-      - run: npm run build
+      - name: Install dependencies
+        run: npm ci
 
-      # Add your deployment step here:
+      - name: Run type-check
+        run: npm run type-check
+
+      - name: Build
+        run: npm run build
+        env:
+          # All env vars come from the GitHub Environment "production"
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+
+      # ── Deployment step ──────────────────────────────────────────────────────
+      # Uncomment ONE of the following blocks for your hosting provider.
+      # Add the corresponding secret to GitHub → Settings → Environments → production.
+
+      # ── Option A: Vercel (recommended for Next.js) ───────────────────────────
+      - name: Deploy to Vercel
+        if: ${{ vars.DEPLOY_TARGET == 'vercel' || vars.DEPLOY_TARGET == '' }}
+        run: |
+          npm install -g vercel@latest
+          vercel --prod --token=${{ secrets.VERCEL_TOKEN }} \
+            --yes \
+            --env NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      # ── Option B: Fly.io ─────────────────────────────────────────────────────
       # - name: Deploy to Fly.io
-      #   run: flyctl deploy --remote-only
-      # OR
-      # - name: Deploy to Railway
-      #   run: railway up
-      # OR push the Docker image to your registry
-      - name: Build Docker image
-        run: docker build -t faceless-video:${{ github.sha }} .
+      #   if: ${{ vars.DEPLOY_TARGET == 'fly' }}
+      #   uses: superfly/flyctl-actions/setup-flyctl@master
+      # - run: flyctl deploy --remote-only
+      #   env:
+      #     FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
-      - name: Echo deploy info
-        run: echo "Image faceless-video:${{ github.sha }} built. Add your deployment provider step here."
+      # ── Option C: Docker + Registry push ─────────────────────────────────────
+      # - name: Log in to registry
+      #   if: ${{ vars.DEPLOY_TARGET == 'docker' }}
+      #   uses: docker/login-action@v3
+      #   with:
+      #     registry: ghcr.io
+      #     username: ${{ github.actor }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Build and push Docker image
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     push: true
+      #     tags: ghcr.io/${{ github.repository }}:${{ github.sha }},ghcr.io/${{ github.repository }}:latest
+
+      - name: Notify deployment success
+        if: success()
+        run: echo "✅ Deployed SHA ${{ github.sha }} to production"

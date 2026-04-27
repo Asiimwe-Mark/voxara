@@ -1,10 +1,10 @@
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { headers } from 'next/headers';
 import { sendPaymentSuccessEmail, sendPaymentFailedEmail } from '@/lib/email/service';
 import { createPaymentAdapter } from '@/lib/payment-adapter';
+import { env } from '@/lib/env';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -56,7 +56,7 @@ interface AutoTopUpSettings {
 
 
 const paymentAdapter = createPaymentAdapter();
-const provider = process.env.PAYMENT_PROVIDER ?? 'paddle';
+const provider = env.PAYMENT_PROVIDER;
 
 // ─── Route handler ────────────────────────────────────────────────────────────
 

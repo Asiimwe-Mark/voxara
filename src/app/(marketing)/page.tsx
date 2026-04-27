@@ -2,576 +2,445 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
-  Sparkles,
-  Video,
-  Wand2,
-  Mic,
-  Share2,
-  BarChart3,
-  CheckCircle2,
-  ArrowRight,
-  Play,
-  Zap,
-  Globe,
-  Lock,
-  Users,
-  Zap as ZapIcon,
-  Shield,
-  Clock,
-  TrendingUp,
-  Code,
-  Layers,
-  Cpu,
-  Lightbulb,
-  DollarSign,
-  Trophy,
+  Sparkles, Video, Wand2, Mic, Share2, BarChart3,
+  CheckCircle2, ArrowRight, Play, Zap, Globe, Lock,
+  Shield, TrendingUp, Cpu, DollarSign, Trophy, Star,
+  ChevronRight,
 } from 'lucide-react'
 
 const FEATURES = [
   {
     icon: Wand2,
     title: 'AI Script Generation',
-    desc: 'Powered by Google Gemini. Generate engaging, platform-optimized scripts from any topic in seconds with tone and length customization.',
+    desc: 'Google Gemini powers instant, platform-optimized scripts from any topic — with tone and length controls.',
+    color: 'from-violet-500 to-purple-600',
+    bg: 'bg-violet-50 dark:bg-violet-950/30',
   },
   {
     icon: Mic,
     title: 'AI Voice Cloning',
-    desc: 'ElevenLabs voice technology. Clone your voice or choose from 500+ natural-sounding voices in 90+ languages.',
+    desc: 'ElevenLabs voice tech. Clone your voice or choose from 500+ natural voices in 90+ languages.',
+    color: 'from-blue-500 to-cyan-600',
+    bg: 'bg-blue-50 dark:bg-blue-950/30',
   },
   {
     icon: Video,
-    title: 'AI Avatars',
-    desc: 'HeyGen, D-ID & Synthesia. Create photorealistic digital avatars that speak, with facial expressions and gestures.',
+    title: 'Photorealistic Avatars',
+    desc: 'HeyGen, D-ID & Synthesia. Digital presenters with facial expressions, gestures, and perfect lip-sync.',
+    color: 'from-emerald-500 to-teal-600',
+    bg: 'bg-emerald-50 dark:bg-emerald-950/30',
   },
   {
     icon: Share2,
     title: 'One-Click Publishing',
-    desc: 'Auto-publish to YouTube, TikTok, Instagram with scheduling. Built-in metadata optimization and SEO tags.',
+    desc: 'Auto-publish to YouTube, TikTok, Instagram with scheduling and built-in SEO metadata.',
+    color: 'from-orange-500 to-rose-500',
+    bg: 'bg-orange-50 dark:bg-orange-950/30',
   },
   {
     icon: BarChart3,
     title: 'Real-Time Analytics',
-    desc: 'Deep platform analytics. Track views, retention, engagement, CTR across all publishing channels in one dashboard.',
+    desc: 'Track views, retention, CTR and engagement across every platform in one unified dashboard.',
+    color: 'from-pink-500 to-fuchsia-600',
+    bg: 'bg-pink-50 dark:bg-pink-950/30',
   },
   {
     icon: Globe,
     title: 'Template Marketplace',
-    desc: 'Buy and sell templates. Create once, monetize infinitely. Earn from your best-performing video formats.',
-  },
-]
-
-const STATS = [
-  { number: '50K+', label: 'Videos Created' },
-  { number: '500M+', label: 'Total Views' },
-  { number: '95%', label: 'User Satisfaction' },
-  { number: '24/7', label: 'Support' },
-]
-
-const USE_CASES = [
-  {
-    icon: TrendingUp,
-    title: 'Content Creators',
-    desc: 'Scale your channel with daily uploads without filming. Maintain consistency across platforms.',
-  },
-  {
-    icon: Lightbulb,
-    title: 'Marketing Agencies',
-    desc: 'Create client video ads in hours instead of weeks. White-label your services and increase revenue.',
-  },
-  {
-    icon: DollarSign,
-    title: 'E-Commerce Brands',
-    desc: 'Generate product demo videos, testimonials, and marketing content at scale without videographers.',
-  },
-  {
-    icon: Users,
-    title: 'Educators',
-    desc: 'Turn courses into engaging video lectures with your personal avatar. Increase course completion rates.',
+    desc: 'Buy and sell proven templates. Create once, earn infinitely from your best-performing formats.',
+    color: 'from-amber-500 to-yellow-500',
+    bg: 'bg-amber-50 dark:bg-amber-950/30',
   },
 ]
 
 const PLANS = [
   {
     name: 'Free',
-    price: 0,
-    credits: 1,
-    features: [
-      '3 videos/month',
-      '720p quality',
-      'Watermark',
-      'Basic voices',
-      'Email support',
-      'Community access',
-    ],
-    cta: 'Start Free',
+    price: '$0',
+    period: '/month',
+    credits: '3 credits',
+    features: ['3 AI videos/month', 'Basic voices', '720p render', 'Community support'],
+    cta: 'Get started free',
     href: '/signup',
-    highlighted: false,
-    description: 'Perfect for trying out the platform',
+    highlight: false,
   },
   {
     name: 'Pro',
-    price: 29,
-    credits: 30,
-    features: [
-      '30 videos/month',
-      '1080p quality',
-      'No watermark',
-      'Voice cloning',
-      'All avatars',
-      'Priority support',
-      'Scheduling',
-      'Basic API',
-    ],
-    cta: 'Start Pro',
+    price: '$29',
+    period: '/month',
+    credits: '30 credits',
+    features: ['30 AI videos/month', '500+ voices', '4K render', 'AI avatars', 'Analytics', 'Priority support'],
+    cta: 'Start Pro trial',
     href: '/signup?plan=pro',
-    highlighted: true,
-    description: 'Most popular for content creators',
+    highlight: true,
   },
   {
     name: 'Agency',
-    price: 99,
-    credits: 100,
-    features: [
-      '100+ videos/month',
-      '4K quality',
-      'White-label',
-      'Team workspace (5 users)',
-      'Full API access',
-      'Dedicated support',
-      'Custom branding',
-      'Priority rendering',
-    ],
-    cta: 'Start Agency',
+    price: '$99',
+    period: '/month',
+    credits: '100 credits',
+    features: ['100 AI videos/month', 'Voice cloning', '4K render', 'All avatars', 'API access', 'Team seats', 'Dedicated support'],
+    cta: 'Start Agency trial',
     href: '/signup?plan=agency',
-    highlighted: false,
-    description: 'For teams and agencies',
+    highlight: false,
+  },
+]
+
+const STATS = [
+  { value: '50K+', label: 'Videos Created' },
+  { value: '12K+', label: 'Creators' },
+  { value: '90+',  label: 'Languages' },
+  { value: '4.9★', label: 'Avg Rating' },
+]
+
+const TESTIMONIALS = [
+  {
+    name: 'Sarah Chen',
+    role: 'Content Creator · 180K subs',
+    text: 'I went from posting once a week to 5x daily. Voxara does in 3 minutes what took me 6 hours.',
+    avatar: 'SC',
+    color: 'bg-violet-500',
+  },
+  {
+    name: 'Marcus Williams',
+    role: 'Agency Owner',
+    text: 'We manage 40 client channels with a 3-person team. Voxara is literally our entire production pipeline.',
+    avatar: 'MW',
+    color: 'bg-blue-500',
+  },
+  {
+    name: 'Priya Sharma',
+    role: 'EdTech Founder',
+    text: 'Our course completion rate went up 34% since switching to Voxara videos. The avatars are indistinguishable.',
+    avatar: 'PS',
+    color: 'bg-emerald-500',
   },
 ]
 
 export default function LandingPage() {
   return (
-    <div className="bg-linear-to-br from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
-      {/* Hero */}
-      <section className="container mx-auto px-4 pt-20 sm:pt-24 md:pt-32 pb-16 sm:pb-20 md:pb-24 text-center">
-        <Badge
-          variant="secondary"
-          className="mb-4 sm:mb-6 px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800"
-        >
-          <Zap className="mr-1 sm:mr-1.5 h-3 w-3" />
-          Powered by Gemini, ElevenLabs, HeyGen & D-ID
-        </Badge>
-        <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-4 sm:mb-6 leading-tight">
-          <span className="bg-linear-to-r from-slate-900 via-blue-600 to-purple-600 dark:from-white dark:via-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
-            Create Viral AI Videos
-            <br />
-            in Minutes
-          </span>
-        </h1>
-        <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto mb-8 sm:mb-10 md:mb-12 leading-relaxed">
-          Turn any topic into a polished, professional video with AI voiceover,
-          avatars, and stock footage. No camera. No editing experience. No
-          expensive equipment.
-        </p>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-8 sm:mb-12">
-          <Button
-            size="lg"
-            className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-10 text-sm sm:text-base bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all"
-            asChild
-          >
-            <Link href="/signup">
-              Start Creating Free{' '}
-              <Wand2 className="ml-2 h-4 sm:h-5 w-4 sm:w-5" />
-            </Link>
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base border-2 hover:bg-slate-50 dark:hover:bg-slate-900"
-            asChild
-          >
-            <Link href="#features">
-              <Play className="mr-2 h-4 sm:h-5 w-4 sm:w-5" />
-              See How It Works
-            </Link>
-          </Button>
-        </div>
-        <div className="flex flex-col xs:flex-row flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs sm:text-sm text-muted-foreground mb-12 sm:mb-16">
-          <div className="flex items-center gap-2">
-            <Lock className="h-4 w-4 text-green-600" />
-            No credit card required
-          </div>
-          <div className="flex items-center gap-2">
-            <Video className="h-4 w-4 text-blue-600" />3 free videos per month
-          </div>
-          <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4 text-purple-600" />
-            Enterprise security
-          </div>
-        </div>
+    <div className="min-h-screen bg-white dark:bg-slate-950 overflow-hidden">
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-12 sm:mb-16 bg-white/50 dark:bg-slate-900/50 backdrop-blur border border-slate-200 dark:border-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-8">
-          {STATS.map((stat) => (
-            <div key={stat.label}>
-              <div className="text-2xl xs:text-3xl sm:text-3xl md:text-4xl font-bold bg-linear-to-br from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent mb-1">
-                {stat.number}
-              </div>
-              <p className="text-xs xs:text-sm text-muted-foreground">
-                {stat.label}
-              </p>
+      {/* ── Nav ──────────────────────────────────────────────── */}
+      <nav className="fixed top-0 inset-x-0 z-50 border-b border-slate-200/60 dark:border-slate-800/60 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-blue-600 flex items-center justify-center shadow-md">
+              <Sparkles className="w-4 h-4 text-white" />
             </div>
-          ))}
-        </div>
-
-        {/* Hero Video Preview */}
-        <div className="rounded-xl sm:rounded-3xl border-2 border-slate-200 dark:border-slate-800 bg-linear-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 p-1 max-w-5xl mx-auto shadow-2xl">
-          <div className="aspect-video rounded-xl sm:rounded-3xl bg-linear-to-br from-slate-900 to-blue-900 flex items-center justify-center relative overflow-hidden">
-            <div className="absolute inset-0 bg-linear-to-br from-blue-600/10 to-purple-600/10" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border-2 border-white/20 hover:bg-white/20 transition-all cursor-pointer group">
-                <Play className="h-8 sm:h-10 w-8 sm:w-10 text-white ml-1 group-hover:scale-110 transition-transform" />
-              </div>
-            </div>
-            <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 text-white/70 text-xs flex items-center gap-2 bg-black/40 backdrop-blur px-2 sm:px-3 py-1.5 sm:py-2 rounded-full">
-              <span className="inline-flex h-2 w-2 rounded-full bg-green-400 animate-pulse"></span>
-              <span className="hidden xs:inline">
-                Sample video generated with voxara
-              </span>
-              <span className="xs:hidden">Sample video</span>
-            </div>
+            <span className="font-bold text-lg tracking-tight">voxara</span>
+          </div>
+          <div className="hidden md:flex items-center gap-6 text-sm text-slate-600 dark:text-slate-400">
+            <Link href="#features" className="hover:text-slate-900 dark:hover:text-white transition-colors">Features</Link>
+            <Link href="#pricing"  className="hover:text-slate-900 dark:hover:text-white transition-colors">Pricing</Link>
+            <Link href="#testimonials" className="hover:text-slate-900 dark:hover:text-white transition-colors">Reviews</Link>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/login">Sign in</Link>
+            </Button>
+            <Button size="sm" className="btn-shine bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700 text-white border-0 shadow-md" asChild>
+              <Link href="/signup">Start free <ArrowRight className="ml-1 w-3.5 h-3.5" /></Link>
+            </Button>
           </div>
         </div>
-      </section>
+      </nav>
 
-      {/* Features */}
-      <section
-        id="features"
-        className="bg-linear-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 py-16 sm:py-20 md:py-24 border-t"
-      >
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12 sm:mb-16 md:mb-20">
-            <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-6">
-              Everything you need to create professional videos
-            </h2>
-            <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
-              Powered by the latest AI technology and enterprise infrastructure.
-              Used by 50k+ creators worldwide.
-            </p>
+      {/* ── Hero ─────────────────────────────────────────────── */}
+      <section className="relative pt-32 pb-24 px-4 sm:px-6 overflow-hidden">
+        {/* Aurora background */}
+        <div className="aurora" />
+        {/* Dot pattern */}
+        <div className="absolute inset-0 pattern-dots opacity-60" />
+
+        <div className="relative max-w-5xl mx-auto text-center">
+          {/* Badge */}
+          <div className="animate-fade-up inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-violet-50 dark:bg-violet-950/50 border border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-300 text-sm font-medium mb-8">
+            <Zap className="w-3.5 h-3.5" />
+            Powered by Google Gemini · ElevenLabs · HeyGen
+            <ChevronRight className="w-3.5 h-3.5" />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
-            {FEATURES.map((f) => (
-              <div
-                key={f.title}
-                className="group bg-white dark:bg-slate-800/50 rounded-lg sm:rounded-2xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-lg transition-all duration-300"
-              >
-                <div className="h-12 w-12 rounded-lg sm:rounded-xl bg-linear-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center mb-4 sm:mb-6 group-hover:from-blue-500/30 group-hover:to-purple-500/30 transition-colors">
-                  <f.icon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <h3 className="font-bold text-base sm:text-lg mb-2 sm:mb-3 text-foreground">
-                  {f.title}
-                </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {f.desc}
-                </p>
+
+          {/* Headline */}
+          <h1 className="animate-fade-up delay-75 text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.05] mb-6">
+            Create viral videos{' '}
+            <span className="gradient-text-hero">with AI</span>
+            <br />no camera needed
+          </h1>
+
+          <p className="animate-fade-up delay-150 text-lg sm:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+            Script → Voice → Avatar → Published in under 3 minutes.
+            The complete AI video production stack for creators and agencies.
+          </p>
+
+          <div className="animate-fade-up delay-225 flex flex-col sm:flex-row gap-3 justify-center mb-16">
+            <Button size="lg" className="btn-shine h-12 px-8 bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700 text-white border-0 shadow-lg shadow-violet-500/25 text-base" asChild>
+              <Link href="/signup">
+                <Sparkles className="mr-2 w-4 h-4" />
+                Start creating free
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" className="h-12 px-8 text-base hover-lift" asChild>
+              <Link href="#features">
+                <Play className="mr-2 w-4 h-4" />
+                See how it works
+              </Link>
+            </Button>
+          </div>
+
+          {/* Stats row */}
+          <div className="animate-fade-up delay-300 grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-2xl mx-auto">
+            {STATS.map((s, i) => (
+              <div key={i} className={`text-center delay-${75 * i}`}>
+                <div className="text-2xl sm:text-3xl font-bold gradient-text-hero tabular-nums">{s.value}</div>
+                <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">{s.label}</div>
               </div>
             ))}
           </div>
         </div>
+
+        {/* Hero card preview */}
+        <div className="animate-fade-up delay-375 relative max-w-4xl mx-auto mt-16">
+          <div className="gradient-border rounded-2xl overflow-hidden shadow-2xl shadow-violet-500/20">
+            <div className="bg-slate-900 rounded-2xl p-6 sm:p-8">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-3 h-3 rounded-full bg-red-500" />
+                <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                <div className="w-3 h-3 rounded-full bg-green-500" />
+                <span className="ml-3 text-slate-500 text-sm font-mono">voxara studio</span>
+              </div>
+              <div className="grid sm:grid-cols-3 gap-4">
+                {['Script', 'Voice', 'Publish'].map((step, i) => (
+                  <div key={step} className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${i === 0 ? 'bg-violet-600' : i === 1 ? 'bg-blue-600' : 'bg-emerald-600'}`}>{i + 1}</div>
+                      <span className="text-white text-sm font-medium">{step}</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="h-2 bg-slate-700 rounded-full" />
+                      <div className="h-2 bg-slate-700 rounded-full w-4/5" />
+                      <div className="h-2 bg-slate-700 rounded-full w-3/5" />
+                    </div>
+                    {i === 2 && (
+                      <div className="mt-3 flex gap-1.5">
+                        {['YT','TK','IG'].map(p => (
+                          <span key={p} className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-600/20 text-emerald-400 font-mono">{p}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 flex items-center gap-2 text-emerald-400 text-sm">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Video ready in 2m 34s · Published to 3 platforms</span>
+              </div>
+            </div>
+          </div>
+          {/* Floating badges */}
+          <div className="absolute -top-4 -right-4 sm:-right-8 animate-float bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 px-4 py-2.5 hidden sm:flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse-ring" />
+            <span className="text-sm font-medium">3 videos published today</span>
+          </div>
+        </div>
       </section>
 
-      {/* Use Cases */}
-      <section
-        id="use-cases"
-        className="py-16 sm:py-20 md:py-24 bg-white dark:bg-slate-950"
-      >
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12 sm:mb-16 md:mb-20">
-            <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-6">
-              Perfect for any industry
+      {/* ── Features ─────────────────────────────────────────── */}
+      <section id="features" className="relative py-24 px-4 sm:px-6 bg-slate-50/70 dark:bg-slate-900/50">
+        <div className="absolute inset-0 pattern-grid opacity-50" />
+        <div className="relative max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <Badge className="mb-4 bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800">
+              Everything you need
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
+              The complete AI video stack
             </h2>
-            <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
-              Whether you're a creator, marketer, educator or entrepreneur,
-              voxara scales with your needs.
+            <p className="text-slate-600 dark:text-slate-400 text-lg max-w-2xl mx-auto">
+              Every tool from script to published video, powered by the world&apos;s best AI models.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
-            {USE_CASES.map((useCase) => (
-              <div
-                key={useCase.title}
-                className="flex flex-col sm:flex-row gap-4 sm:gap-6 p-6 sm:p-8 bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 rounded-lg sm:rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-purple-400 dark:hover:border-purple-500 transition-all"
-              >
-                <div className="shrink-0">
-                  <div className="flex h-12 sm:h-14 w-12 sm:w-14 items-center justify-center rounded-lg bg-linear-to-br from-purple-500/20 to-pink-500/20">
-                    <useCase.icon className="h-6 sm:h-7 w-6 sm:w-7 text-purple-600 dark:text-purple-400" />
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {FEATURES.map((f, i) => (
+              <div key={f.title} className={`card-premium rounded-2xl p-6 group cursor-default animate-fade-up delay-${75 * (i % 4)}`}>
+                <div className={`w-12 h-12 rounded-xl ${f.bg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200`}>
+                  <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${f.color} flex items-center justify-center`}>
+                    <f.icon className="w-4 h-4 text-white" />
                   </div>
                 </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-bold mb-2">
-                    {useCase.title}
-                  </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    {useCase.desc}
-                  </p>
-                </div>
+                <h3 className="font-semibold text-lg mb-2">{f.title}</h3>
+                <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Social Proof / Testimonials Section */}
-      <section className="py-16 sm:py-20 md:py-24 bg-linear-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 border-t">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-6">
-              Trusted by 50K+ creators
+      {/* ── Social proof ─────────────────────────────────────── */}
+      <section id="testimonials" className="py-24 px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <Badge className="mb-4 bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800">
+              <Star className="w-3 h-3 mr-1 fill-current" />
+              Loved by creators
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+              Real results, real creators
             </h2>
-            <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
-              Join thousands of creators, agencies, and businesses using voxara
-              to grow their audience.
-            </p>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 max-w-5xl mx-auto">
-            {[
-              {
-                name: 'Sarah M.',
-                role: 'YouTube Creator',
-                text: 'I went from 0 to 100k subscribers in 6 months using voxara. The quality is unbelievable.',
-                avatar: 'SM',
-              },
-              {
-                name: 'James D.',
-                role: 'Marketing Agency',
-                text: "We're using it for all our client video ads. The ROI has been incredible and our clients love the turnaround time.",
-                avatar: 'JD',
-              },
-              {
-                name: 'Emma L.',
-                role: 'E-Commerce',
-                text: 'Product demo videos that used to take weeks now take hours. Our conversion rate increased by 35%.',
-                avatar: 'EL',
-              },
-            ].map((testimonial) => (
-              <div
-                key={testimonial.name}
-                className="bg-white dark:bg-slate-800/50 rounded-lg sm:rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-slate-700"
-              >
-                <div className="flex items-center gap-3 sm:gap-4 mb-4">
-                  <div className="h-10 sm:h-12 w-10 sm:w-12 rounded-full bg-linear-to-br from-blue-500 to-purple-500 shrink-0 flex items-center justify-center text-white font-bold text-xs sm:text-sm">
-                    {testimonial.avatar}
+          <div className="grid sm:grid-cols-3 gap-5">
+            {TESTIMONIALS.map((t, i) => (
+              <div key={t.name} className={`card-premium rounded-2xl p-6 animate-fade-up delay-${150 * i}`}>
+                <div className="flex items-center gap-1 mb-4">
+                  {[...Array(5)].map((_, j) => (
+                    <Star key={j} className="w-4 h-4 text-amber-400 fill-amber-400" />
+                  ))}
+                </div>
+                <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed mb-5">
+                  &ldquo;{t.text}&rdquo;
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className={`w-9 h-9 rounded-full ${t.color} flex items-center justify-center text-white text-xs font-bold`}>
+                    {t.avatar}
                   </div>
                   <div>
-                    <p className="font-semibold text-xs sm:text-sm">
-                      {testimonial.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {testimonial.role}
-                    </p>
+                    <div className="font-medium text-sm">{t.name}</div>
+                    <div className="text-xs text-slate-500">{t.role}</div>
                   </div>
                 </div>
-                <p className="text-xs sm:text-sm text-muted-foreground italic leading-relaxed">
-                  "{testimonial.text}"
-                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Pricing */}
-      <section
-        id="pricing"
-        className="py-16 sm:py-20 md:py-24 bg-white dark:bg-slate-950"
-      >
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12 sm:mb-16 md:mb-20">
-            <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-6">
-              Simple, transparent pricing
-            </h2>
-            <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
-              Start free and scale as you grow. No surprises. Cancel anytime.
-            </p>
+      {/* ── Pricing ──────────────────────────────────────────── */}
+      <section id="pricing" className="relative py-24 px-4 sm:px-6 bg-slate-50/70 dark:bg-slate-900/50">
+        <div className="absolute inset-0 pattern-dots opacity-40" />
+        <div className="relative max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <Badge className="mb-4 bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800">
+              Simple pricing
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">Start free, scale up</h2>
+            <p className="text-slate-600 dark:text-slate-400">No contracts. Cancel anytime.</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 max-w-6xl mx-auto">
-            {PLANS.map((plan) => (
+
+          <div className="grid sm:grid-cols-3 gap-5">
+            {PLANS.map((plan, i) => (
               <div
                 key={plan.name}
-                className={`relative rounded-lg sm:rounded-2xl p-6 sm:p-8 flex flex-col transition-all duration-300 ${
-                  plan.highlighted
-                    ? 'bg-linear-to-br from-blue-600 to-purple-600 text-white shadow-2xl sm:scale-105 border-2 border-transparent order-2 sm:order-0'
-                    : 'bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500'
+                className={`relative rounded-2xl p-6 animate-fade-up delay-${150 * i} ${
+                  plan.highlight
+                    ? 'gradient-border bg-white dark:bg-slate-900 shadow-2xl shadow-violet-500/20 scale-[1.02]'
+                    : 'card-premium'
                 }`}
               >
-                {plan.highlighted && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 sm:-top-4">
-                    <Badge className="bg-white text-blue-600 shadow-lg font-semibold px-3 sm:px-4 py-0.5 sm:py-1 text-xs sm:text-sm">
-                      <Trophy className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
-                      Most Popular
-                    </Badge>
+                {plan.highlight && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <span className="bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
+                      Most popular
+                    </span>
                   </div>
                 )}
-                <div className="mb-2">
-                  <h3 className="text-xl sm:text-2xl font-bold">{plan.name}</h3>
-                  <p
-                    className={`text-xs sm:text-sm ${plan.highlighted ? 'text-white/80' : 'text-muted-foreground'} mt-1`}
-                  >
-                    {plan.description}
-                  </p>
+                <div className="mb-5">
+                  <div className="font-semibold text-lg">{plan.name}</div>
+                  <div className="flex items-end gap-1 mt-2">
+                    <span className="text-4xl font-extrabold">{plan.price}</span>
+                    <span className="text-slate-500 pb-1">{plan.period}</span>
+                  </div>
+                  <div className="text-sm text-violet-600 dark:text-violet-400 font-medium mt-1">{plan.credits}</div>
                 </div>
-                <div className="mb-6 sm:mb-8">
-                  <span
-                    className={`text-4xl sm:text-5xl font-bold ${plan.highlighted ? 'text-white' : ''}`}
-                  >
-                    ${plan.price}
-                  </span>
-                  {plan.price > 0 && (
-                    <span
-                      className={`text-xs sm:text-sm ml-2 ${plan.highlighted ? 'text-white/80' : 'text-muted-foreground'}`}
-                    >
-                      /month billed annually
-                    </span>
-                  )}
-                </div>
-                <ul className="space-y-3 sm:space-y-4 mb-6 sm:mb-8 grow">
-                  {plan.features.map((f) => (
-                    <li
-                      key={f}
-                      className={`flex items-start gap-2 sm:gap-3 text-xs sm:text-sm ${plan.highlighted ? 'text-white/90' : ''}`}
-                    >
-                      <CheckCircle2
-                        className={`h-4 w-4 sm:h-5 sm:w-5 shrink-0 mt-0.5 ${
-                          plan.highlighted
-                            ? 'text-white'
-                            : 'text-green-600 dark:text-green-400'
-                        }`}
-                      />
-                      <span>{f}</span>
+                <ul className="space-y-2.5 mb-6">
+                  {plan.features.map((feat) => (
+                    <li key={feat} className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                      <span>{feat}</span>
                     </li>
                   ))}
                 </ul>
                 <Button
-                  className={`w-full font-semibold h-10 sm:h-11 text-sm transition-all ${
-                    plan.highlighted
-                      ? 'bg-white text-blue-600 hover:bg-slate-100 hover:shadow-lg'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
-                  }`}
                   asChild
+                  className={`w-full btn-shine ${
+                    plan.highlight
+                      ? 'bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700 text-white border-0 shadow-lg shadow-violet-500/25'
+                      : ''
+                  }`}
+                  variant={plan.highlight ? 'default' : 'outline'}
                 >
                   <Link href={plan.href}>{plan.cta}</Link>
                 </Button>
               </div>
             ))}
           </div>
-          <div className="mt-12 sm:mt-16 bg-linear-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 rounded-lg sm:rounded-2xl p-6 sm:p-8 border border-blue-200 dark:border-blue-900 text-center">
-            <p className="text-xs sm:text-sm text-muted-foreground mb-2">
-              Questions about pricing?
-            </p>
-            <p className="font-semibold text-sm sm:text-base text-foreground">
-              <Link
-                href="mailto:sales@voxara.app"
-                className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-              >
-                Contact our sales team
-              </Link>{' '}
-              for volume discounts and custom enterprise plans.
-            </p>
-          </div>
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section className="py-16 sm:py-20 md:py-24 bg-slate-50 dark:bg-slate-900 border-t">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto">
-            <div className="text-center mb-12 sm:mb-16">
-              <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-6">
-                Frequently asked questions
-              </h2>
-            </div>
-            <div className="space-y-4 sm:space-y-6">
-              {[
-                {
-                  q: 'How long does it take to generate a video?',
-                  a: "Most videos are generated within 5-15 minutes depending on length and complexity. Longer videos may take up to 30 minutes. You'll receive a notification when your video is ready.",
-                },
-                {
-                  q: 'Can I use these videos commercially?',
-                  a: 'Yes! All videos generated with paid plans are yours to use commercially. Free plan videos have a watermark. You retain full rights to your content.',
-                },
-                {
-                  q: 'What video quality can I get?',
-                  a: 'Free: 720p | Pro: 1080p | Agency: 4K. All videos are optimized for each platform (YouTube, TikTok, Instagram) and include captions.',
-                },
-                {
-                  q: 'Do you offer API access?',
-                  a: 'Yes, Pro and Agency plans include API access. You can programmatically generate videos and integrate voxara into your own applications.',
-                },
-                {
-                  q: 'Is there a monthly commitment?',
-                  a: 'No monthly commitment required. You can cancel anytime. Credits expire after 12 months, and you only pay for what you use.',
-                },
-                {
-                  q: 'What happens if I run out of credits?',
-                  a: 'You can purchase additional credits anytime. Auto-top up is available on Pro and Agency plans to ensure you never run out.',
-                },
-              ].map((faq, i) => (
-                <div
-                  key={i}
-                  className="bg-white dark:bg-slate-800 rounded-lg sm:rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
-                >
-                  <h3 className="font-semibold text-sm sm:text-lg mb-2 sm:mb-3 flex items-start gap-2 sm:gap-3">
-                    <span className="text-blue-600 dark:text-blue-400 font-bold shrink-0">
-                      Q:
-                    </span>
-                    <span>{faq.q}</span>
-                  </h3>
-                  <p className="text-muted-foreground text-xs sm:text-sm ml-6 sm:ml-7">
-                    {faq.a}
-                  </p>
+      {/* ── Trust badges ─────────────────────────────────────── */}
+      <section className="py-16 px-4 sm:px-6 border-t border-slate-200 dark:border-slate-800">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid sm:grid-cols-4 gap-6 text-center">
+            {[
+              { icon: Shield,    label: 'SOC 2 compliant',    sub: 'Enterprise security' },
+              { icon: Lock,      label: 'End-to-end encrypted', sub: 'Your data stays yours' },
+              { icon: TrendingUp,label: '99.9% uptime SLA',   sub: 'Production-grade infra' },
+              { icon: Trophy,    label: '4.9/5 rating',       sub: '2,400+ verified reviews' },
+            ].map((item) => (
+              <div key={item.label} className="flex flex-col items-center gap-2 p-4">
+                <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                  <item.icon className="w-5 h-5 text-slate-600 dark:text-slate-400" />
                 </div>
-              ))}
-            </div>
+                <div className="font-semibold text-sm">{item.label}</div>
+                <div className="text-xs text-slate-500">{item.sub}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="bg-linear-to-r from-blue-600 to-purple-600 dark:from-blue-700 dark:to-purple-700 py-12 sm:py-16 md:py-20 border-t">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6 leading-tight">
-            Ready to start creating?
+      {/* ── CTA ──────────────────────────────────────────────── */}
+      <section className="relative py-24 px-4 sm:px-6 overflow-hidden">
+        <div className="aurora" />
+        <div className="absolute inset-0 pattern-dots opacity-50" />
+        <div className="relative max-w-3xl mx-auto text-center">
+          <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-6">
+            Your first video is{' '}
+            <span className="gradient-text-hero">3 minutes away</span>
           </h2>
-          <p className="text-sm sm:text-base md:text-lg text-blue-50 mb-6 sm:mb-10 max-w-xl mx-auto leading-relaxed">
-            Join 50,000+ creators, agencies, and businesses who are already
-            using voxara to grow their audience and increase revenue.
+          <p className="text-slate-600 dark:text-slate-400 text-lg mb-10">
+            Join 12,000+ creators. No camera, no crew, no editing skills required.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-            <Button
-              size="lg"
-              variant="secondary"
-              className="w-full sm:w-auto h-11 sm:h-13 px-6 sm:px-8 text-sm sm:text-base font-semibold shadow-lg hover:shadow-xl transition-all"
-              asChild
-            >
-              <Link href="/signup">
-                Create your first video free{' '}
-                <Wand2 className="ml-2 h-4 sm:h-5 w-4 sm:w-5" />
-              </Link>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="w-full sm:w-auto h-11 sm:h-13 px-6 sm:px-8 text-sm sm:text-base font-semibold bg-white/10 text-white border-white hover:bg-white/20"
-              asChild
-            >
-              <Link href="mailto:sales@voxara.app">
-                Contact sales{' '}
-                <ArrowRight className="ml-2 h-4 sm:h-5 w-4 sm:w-5" />
-              </Link>
-            </Button>
-          </div>
+          <Button size="lg" className="btn-shine h-14 px-10 text-lg bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700 text-white border-0 shadow-xl shadow-violet-500/30" asChild>
+            <Link href="/signup">
+              <Sparkles className="mr-2 w-5 h-5" />
+              Create your first video free
+            </Link>
+          </Button>
+          <p className="mt-4 text-sm text-slate-500">No credit card required · 3 free videos included</p>
         </div>
       </section>
+
+      {/* ── Footer ───────────────────────────────────────────── */}
+      <footer className="border-t border-slate-200 dark:border-slate-800 py-12 px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-blue-600 flex items-center justify-center">
+                <Sparkles className="w-3.5 h-3.5 text-white" />
+              </div>
+              <span className="font-bold">voxara</span>
+              <span className="text-slate-400 text-sm ml-2">© 2025</span>
+            </div>
+            <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-slate-500">
+              <Link href="/legal/terms"   className="hover:text-slate-900 dark:hover:text-white transition-colors">Terms</Link>
+              <Link href="/legal/privacy" className="hover:text-slate-900 dark:hover:text-white transition-colors">Privacy</Link>
+              <Link href="/legal/dpa"     className="hover:text-slate-900 dark:hover:text-white transition-colors">DPA</Link>
+              <Link href="/legal/aup"     className="hover:text-slate-900 dark:hover:text-white transition-colors">AUP</Link>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

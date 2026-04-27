@@ -7,37 +7,23 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Loader2, Sparkles } from 'lucide-react'
+import { Loader2, Sparkles, ArrowRight, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
 
 const schema = z.object({
-  email: z.string().email('Enter a valid email address'),
+  email:    z.string().email('Enter a valid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 })
-
 type FormValues = z.infer<typeof schema>
 
 export default function LoginPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
+  const router        = useRouter()
+  const searchParams  = useSearchParams()
   const [isLoading, setIsLoading] = useState(false)
   const supabase = createClient()
 
@@ -50,13 +36,9 @@ export default function LoginPage() {
     setIsLoading(true)
     try {
       const { error } = await supabase.auth.signInWithPassword(values)
-      if (error) {
-        toast.error(error.message)
-        return
-      }
+      if (error) { toast.error(error.message); return }
       toast.success('Welcome back!')
-      const redirectTo = searchParams.get('redirect') ?? '/dashboard'
-      router.push(redirectTo)
+      router.push(searchParams.get('redirect') ?? '/dashboard')
       router.refresh()
     } finally {
       setIsLoading(false)
@@ -64,92 +46,107 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md space-y-6">
-        <div className="text-center">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-4">
-            <Sparkles className="h-6 w-6 text-primary" />
+    <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-slate-50 dark:bg-slate-950">
+      {/* Background aurora */}
+      <div className="aurora" />
+      <div className="absolute inset-0 pattern-dots opacity-50" />
+
+      <div className="relative w-full max-w-md animate-fade-up">
+
+        {/* Logo mark */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-600 to-blue-600 flex items-center justify-center shadow-lg shadow-violet-500/30 mb-4 animate-float">
+            <Sparkles className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-2xl font-bold">Welcome back</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
             Sign in to your voxara account
           </p>
         </div>
 
-        <Card>
-          <CardContent className="pt-6">
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
+        {/* Card */}
+        <div className="card-premium rounded-2xl p-8">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">Email address</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="you@example.com"
+                        type="email"
+                        autoComplete="email"
+                        disabled={isLoading}
+                        className="h-11 bg-white/60 dark:bg-slate-800/60 border-slate-200/80 dark:border-slate-700/80 focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="text-sm font-medium">Password</FormLabel>
+                      <Link
+                        href="/reset-password"
+                        className="text-xs text-violet-600 dark:text-violet-400 hover:underline transition-colors"
+                      >
+                        Forgot password?
+                      </Link>
+                    </div>
+                    <FormControl>
+                      <Input
+                        placeholder="••••••••"
+                        type="password"
+                        autoComplete="current-password"
+                        disabled={isLoading}
+                        className="h-11 bg-white/60 dark:bg-slate-800/60 border-slate-200/80 dark:border-slate-700/80 focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button
+                type="submit"
+                className="w-full h-11 btn-shine bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700 text-white border-0 shadow-lg shadow-violet-500/25 font-medium transition-all"
+                disabled={isLoading}
               >
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="you@example.com"
-                          type="email"
-                          autoComplete="email"
-                          disabled={isLoading}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-center justify-between">
-                        <FormLabel>Password</FormLabel>
-                        <Link
-                          href="/reset-password"
-                          className="text-xs text-primary hover:underline"
-                        >
-                          Forgot password?
-                        </Link>
-                      </div>
-                      <FormControl>
-                        <Input
-                          placeholder="••••••••"
-                          type="password"
-                          autoComplete="current-password"
-                          disabled={isLoading}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  {isLoading ? 'Signing in…' : 'Sign in'}
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-          <CardFooter className="justify-center pt-0">
-            <p className="text-sm text-muted-foreground">
+                {isLoading ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Signing in…</>
+                ) : (
+                  <>Sign in <ArrowRight className="ml-2 h-4 w-4" /></>
+                )}
+              </Button>
+            </form>
+          </Form>
+
+          <div className="mt-6 pt-5 border-t border-slate-200/70 dark:border-slate-700/50 text-center">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               Don&apos;t have an account?{' '}
-              <Link
-                href="/signup"
-                className="text-primary font-medium hover:underline"
-              >
+              <Link href="/signup" className="text-violet-600 dark:text-violet-400 font-medium hover:underline">
                 Create one free
               </Link>
             </p>
-          </CardFooter>
-        </Card>
+          </div>
+        </div>
+
+        {/* Trust badge */}
+        <div className="mt-6 flex items-center justify-center gap-2 text-xs text-slate-400 dark:text-slate-500">
+          <Shield className="w-3.5 h-3.5" />
+          <span>256-bit encryption · SOC 2 compliant · Your data stays yours</span>
+        </div>
       </div>
     </div>
   )

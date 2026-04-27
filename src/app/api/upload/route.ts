@@ -52,3 +52,5 @@ export async function POST(request: NextRequest) {
   const { data } = supabaseAdmin.storage.from("voice-samples").getPublicUrl(filename);
   return NextResponse.json({ url: data.publicUrl, filename });
 }
+
+export { OPTIONS } from '@/lib/api/cors';

@@ -44,7 +44,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     }
 
     // Admin gate: env var list OR profiles.role = 'admin'
-    if (!isAdmin(user.id)) {
+    if (!(await isAdmin(user.id, supabase as Parameters<typeof isAdmin>[1]))) {
       const { data: profile } = await supabase
         .from('profiles')
         .select('role')

@@ -1,3 +1,4 @@
+import { env } from '@/lib/env';
 /**
  * Subscription & billing service — Paddle + Flutterwave only.
  * All Stripe and Lemon Squeezy code has been removed.
@@ -85,7 +86,7 @@ export async function getCurrentSubscription(): Promise<SubscriptionDetails | nu
     credits:               profile?.credits ?? PLAN_CREDITS[plan],
     paymentCustomerId:     customer?.payment_customer_id ?? null,
     paymentSubscriptionId: sub?.subscription_id ?? null,
-    provider:              sub?.provider ?? customer?.provider ?? (process.env.PAYMENT_PROVIDER ?? 'paddle'),
+    provider:              sub?.provider ?? customer?.provider ?? (env.PAYMENT_PROVIDER),
   };
 }
 
@@ -169,7 +170,7 @@ export async function downgradeToFree(userId: string): Promise<void> {
 
 /** Create a portal / management URL for the active provider */
 export async function getBillingPortalUrl(userId: string, returnUrl: string): Promise<string> {
-  const provider = process.env.PAYMENT_PROVIDER ?? 'paddle';
+  const provider = env.PAYMENT_PROVIDER;
 
   if (provider === 'paddle') {
     // Paddle has a customer portal — construct link from customer ID

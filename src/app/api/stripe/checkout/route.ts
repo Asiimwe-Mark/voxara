@@ -1,4 +1,3 @@
-import logger from '@/lib/logger';
 /**
  * POST /api/stripe/checkout
  *
@@ -6,9 +5,11 @@ import logger from '@/lib/logger';
  * Now backed by Paddle (global) or Flutterwave (Africa) — no Stripe.
  */
 
+import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createPaymentAdapter } from '@/lib/payment-adapter';
+import { env } from '@/lib/env';
 import type { CheckoutParams } from '@/lib/payment-adapter';
 
 type PlanType = 'free' | 'pro' | 'agency';
@@ -57,6 +58,7 @@ export async function POST(request: NextRequest) {
       : SUBSCRIPTION_PRICES[planType] ?? 29.00;
 
   const origin = request.nextUrl.origin;
+  const provider = env.PAYMENT_PROVIDER;
 
   const params: CheckoutParams = {
     userId:     user.id,
@@ -73,9 +75,8 @@ export async function POST(request: NextRequest) {
   };
 
   try {
-    const adapter  = createPaymentAdapter();
-    const session  = await adapter.createCheckout(params);
-    const provider = process.env.PAYMENT_PROVIDER ?? 'paddle';
+    const adapter = createPaymentAdapter();
+    const session = await adapter.createCheckout(params);
 
     // Store session for reconciliation (non-fatal if it fails)
     await supabase.from('payment_sessions').insert({
@@ -99,3 +100,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export { OPTIONS } from '@/lib/api/cors';

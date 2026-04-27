@@ -26,7 +26,7 @@ export const generateVideo = inngest.createFunction(
     id: "generate-video",
     name: "Generate Video",
     retries: 3,
-    timeouts: { finish: "10m" },
+    timeouts: { finish: "30m" },
     onFailure: async ({ event, error }) => {
       const videoId = event.data.event?.data?.videoId;
       const userId = event.data.event?.data?.userId;

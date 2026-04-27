@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
       .eq('id', user.id)
       .single();
 
-    const adminByEnv = isAdmin(user.id);
+    const admin = await isAdmin(user.id, supabase as Parameters<typeof isAdmin>[1]);
     if (!adminByEnv && profile?.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }

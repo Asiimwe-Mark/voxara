@@ -122,9 +122,41 @@ export function getClientIp(request: NextRequest): string {
 
 // ─── Admin Check ──────────────────────────────────────────────────────────────
 
-export function isAdmin(userId: string): boolean {
+/**
+ * Check if userId appears in the ADMIN_USER_IDS env var.
+ * This is the fast synchronous check — use as the first gate.
+ */
+export function isAdminByEnv(userId: string): boolean {
   const ids = (process.env.ADMIN_USER_IDS ?? '').split(',').filter(Boolean);
   return ids.includes(userId);
+}
+
+/**
+ * Full admin check requiring BOTH the env-var list AND the DB role to pass.
+ * Defence-in-depth: neither source alone is sufficient.
+ *
+ * @param userId   - auth.uid() of the requesting user
+ * @param supabase - server-scoped Supabase client (with cookie context)
+ *
+ * Returns true only when:
+ *   1. userId is in ADMIN_USER_IDS env var, AND
+ *   2. profiles.role = 'admin' in the database
+ */
+export async function isAdmin(
+  userId: string,
+  supabase: { from: (t: string) => { select: (c: string) => { eq: (col: string, val: string) => { maybeSingle: () => Promise<{ data: Record<string,unknown> | null }> } } } }
+): Promise<boolean> {
+  // Gate 1 — env var list (fast, no DB round-trip if it fails)
+  if (!isAdminByEnv(userId)) return false;
+
+  // Gate 2 — DB role column
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .maybeSingle();
+
+  return profile?.['role'] === 'admin';
 }
 
 // ─── Misc ─────────────────────────────────────────────────────────────────────

@@ -48,7 +48,7 @@ CREATE TABLE public.credit_purchases (
 );
 
 -- Auto top-up settings
-CREATE TABLE public.auto_top_up_settings (
+CREATE TABLE IF NOT EXISTS public.auto_top_up_settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL UNIQUE,
   enabled BOOLEAN DEFAULT false,

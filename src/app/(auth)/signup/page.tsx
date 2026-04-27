@@ -7,274 +7,176 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Loader2, Sparkles, CheckCircle2 } from 'lucide-react'
+import { Loader2, Sparkles, ArrowRight, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
 import { createClient } from '@/lib/supabase/client'
 
 const schema = z.object({
-  fullName: z.string().min(2, 'Full name must be at least 2 characters'),
-  email: z.string().email('Enter a valid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  agreedToTerms: z.boolean().refine((val) => val === true, {
-    message: 'You must agree to the Terms of Service',
-  }),
-  agreedToPrivacy: z.boolean().refine((val) => val === true, {
-    message: 'You must agree to the Privacy Policy',
-  }),
+  full_name: z.string().min(2, 'Name must be at least 2 characters'),
+  email:     z.string().email('Enter a valid email address'),
+  password:  z.string().min(8, 'Password must be at least 8 characters'),
 })
-
 type FormValues = z.infer<typeof schema>
 
 const PERKS = [
-  '3 free AI videos per month',
-  'No camera or editing skills required',
-  'Publish to YouTube, TikTok, Instagram',
+  '3 free AI videos — no card required',
+  'Script, voice & avatar in minutes',
+  'Publish to YouTube, TikTok & more',
 ]
 
-export default function SignUpPage() {
-  const router = useRouter()
+export default function SignupPage() {
+  const router       = useRouter()
   const searchParams = useSearchParams()
+  const plan         = searchParams.get('plan') ?? 'free'
   const [isLoading, setIsLoading] = useState(false)
-  const [emailSent, setEmailSent] = useState(false)
   const supabase = createClient()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      fullName: '',
-      email: '',
-      password: '',
-      agreedToTerms: false,
-      agreedToPrivacy: false,
-    },
+    defaultValues: { full_name: '', email: '', password: '' },
   })
 
   async function onSubmit(values: FormValues) {
     setIsLoading(true)
     try {
       const { error } = await supabase.auth.signUp({
-        email: values.email,
+        email:    values.email,
         password: values.password,
-        options: {
-          data: { full_name: values.fullName },
-          emailRedirectTo: `${window.location.origin}/dashboard`,
-        },
+        options:  { data: { full_name: values.full_name, plan } },
       })
-      if (error) {
-        toast.error(error.message)
-        return
-      }
-      setEmailSent(true)
+      if (error) { toast.error(error.message); return }
+      toast.success('Account created! Check your email to verify.')
+      router.push('/dashboard')
+      router.refresh()
     } finally {
       setIsLoading(false)
     }
   }
 
-  if (emailSent) {
-    return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
-        <div className="text-center max-w-md">
-          <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30 mb-6">
-            <CheckCircle2 className="h-8 w-8 text-green-600" />
-          </div>
-          <h1 className="text-2xl font-bold mb-2">Check your email</h1>
-          <p className="text-muted-foreground mb-6">
-            We sent a confirmation link to{' '}
-            <strong>{form.getValues('email')}</strong>. Click the link to
-            activate your account.
-          </p>
-          <Button variant="outline" onClick={() => setEmailSent(false)}>
-            Back to sign up
-          </Button>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md space-y-6">
-        <div className="text-center">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-4">
-            <Sparkles className="h-6 w-6 text-primary" />
+    <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-slate-50 dark:bg-slate-950">
+      <div className="aurora" />
+      <div className="absolute inset-0 pattern-dots opacity-50" />
+
+      <div className="relative w-full max-w-md animate-fade-up">
+        {/* Logo */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-600 to-blue-600 flex items-center justify-center shadow-lg shadow-violet-500/30 mb-4 animate-float">
+            <Sparkles className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-2xl font-bold">Create your free account</h1>
-          <p className="text-muted-foreground mt-1">
-            Start making AI videos in minutes
+          <h1 className="text-2xl font-bold tracking-tight">Create your account</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+            {plan !== 'free' ? `Starting on the ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan` : 'Free — no credit card required'}
           </p>
         </div>
 
-        <ul className="space-y-2">
-          {PERKS.map((p) => (
-            <li
-              key={p}
-              className="flex items-center gap-2 text-sm text-muted-foreground"
-            >
-              <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-              {p}
-            </li>
+        {/* Perks */}
+        <div className="flex flex-col gap-1.5 mb-6">
+          {PERKS.map((perk) => (
+            <div key={perk} className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+              {perk}
+            </div>
           ))}
-        </ul>
+        </div>
 
-        <Card>
-          <CardContent className="pt-6">
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
+        {/* Card */}
+        <div className="card-premium rounded-2xl p-8">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="full_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">Full name</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Jane Smith"
+                        autoComplete="name"
+                        disabled={isLoading}
+                        className="h-11 bg-white/60 dark:bg-slate-800/60 border-slate-200/80 dark:border-slate-700/80 focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">Email address</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="you@example.com"
+                        type="email"
+                        autoComplete="email"
+                        disabled={isLoading}
+                        className="h-11 bg-white/60 dark:bg-slate-800/60 border-slate-200/80 dark:border-slate-700/80 focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Min 8 characters"
+                        type="password"
+                        autoComplete="new-password"
+                        disabled={isLoading}
+                        className="h-11 bg-white/60 dark:bg-slate-800/60 border-slate-200/80 dark:border-slate-700/80 focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="submit"
+                className="w-full h-11 btn-shine bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700 text-white border-0 shadow-lg shadow-violet-500/25 font-medium"
+                disabled={isLoading}
               >
-                <FormField
-                  control={form.control}
-                  name="fullName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Jane Doe"
-                          autoComplete="name"
-                          disabled={isLoading}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="you@example.com"
-                          type="email"
-                          autoComplete="email"
-                          disabled={isLoading}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Min. 8 characters"
-                          type="password"
-                          autoComplete="new-password"
-                          disabled={isLoading}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="agreedToTerms"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          disabled={isLoading}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel className="text-sm font-normal cursor-pointer">
-                          I agree to the{' '}
-                          <Link
-                            href="/legal/terms"
-                            className="underline hover:text-foreground"
-                            target="_blank"
-                          >
-                            Terms of Service
-                          </Link>
-                        </FormLabel>
-                        <FormMessage />
-                      </div>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="agreedToPrivacy"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          disabled={isLoading}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel className="text-sm font-normal cursor-pointer">
-                          I agree to the{' '}
-                          <Link
-                            href="/legal/privacy"
-                            className="underline hover:text-foreground"
-                            target="_blank"
-                          >
-                            Privacy Policy
-                          </Link>
-                        </FormLabel>
-                        <FormMessage />
-                      </div>
-                    </FormItem>
-                  )}
-                />
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={
-                    isLoading ||
-                    !form.watch('agreedToTerms') ||
-                    !form.watch('agreedToPrivacy')
-                  }
-                >
-                  {isLoading && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  {isLoading ? 'Creating account…' : 'Create free account'}
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-          <CardFooter className="justify-center pt-0">
-            <p className="text-sm text-muted-foreground">
+                {isLoading ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating account…</>
+                ) : (
+                  <>Create free account <ArrowRight className="ml-2 h-4 w-4" /></>
+                )}
+              </Button>
+            </form>
+          </Form>
+
+          <p className="mt-4 text-xs text-slate-400 dark:text-slate-500 text-center">
+            By creating an account you agree to our{' '}
+            <Link href="/legal/terms" className="underline hover:text-slate-600 dark:hover:text-slate-300">Terms</Link>
+            {' '}and{' '}
+            <Link href="/legal/privacy" className="underline hover:text-slate-600 dark:hover:text-slate-300">Privacy Policy</Link>.
+          </p>
+
+          <div className="mt-5 pt-5 border-t border-slate-200/70 dark:border-slate-700/50 text-center">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               Already have an account?{' '}
-              <Link
-                href="/login"
-                className="text-primary font-medium hover:underline"
-              >
+              <Link href="/login" className="text-violet-600 dark:text-violet-400 font-medium hover:underline">
                 Sign in
               </Link>
             </p>
-          </CardFooter>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   )
