@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   try {
     const supabase = await createClient();
 
-    // Verify admin access
+    // 1. Verify Authentication
     const {
       data: { user },
       error: authError,
@@ -22,44 +22,52 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // 2. Fetch User Profile
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single();
 
-    const admin = await isAdmin(user.id, supabase as Parameters<typeof isAdmin>[1]);
-    if (!adminByEnv && profile?.role !== 'admin') {
+    /**
+     * 3. Verify Admin Access
+     * FIX: Use 'as unknown' to bridge the type gap between SupabaseClient and isAdmin parameters.
+     * FIX: Updated the check to use the 'admin' variable instead of the undefined 'adminByEnv'.
+     */
+    const admin = await isAdmin(user.id, supabase as unknown as Parameters<typeof isAdmin>[1]);
+    
+    if (!admin && profile?.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Get timeframe from query
+    // 4. Handle Timeframe Logic
     const timeframe = req.nextUrl.searchParams.get('timeframe') || '7d';
     const days = timeframe === '7d' ? 7 : timeframe === '30d' ? 30 : 90;
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
+    const startDateISO = startDate.toISOString();
 
-    // Get daily signups
+    // 5. Fetch Daily Signups
     const { data: signups } = await supabase
       .from('profiles')
       .select('created_at')
-      .gte('created_at', startDate.toISOString());
+      .gte('created_at', startDateISO);
 
     const dailySignups = groupByDate(signups || [], 'created_at');
 
-    // Get videos generated
+    // 6. Fetch Videos Generated
     const { data: videos } = await supabase
       .from('videos')
       .select('created_at')
-      .gte('created_at', startDate.toISOString());
+      .gte('created_at', startDateISO);
 
     const videosGenerated = groupByDate(videos || [], 'created_at');
 
-    // Get credits used
+    // 7. Fetch and Process Credits Used
     const { data: analytics } = await supabase
       .from('analytics')
       .select('created_at, credits_used')
-      .gte('created_at', startDate.toISOString());
+      .gte('created_at', startDateISO);
 
     const creditsUsed = (analytics || []).reduce(
       (acc: any[], item: any) => {
@@ -75,7 +83,7 @@ export async function GET(req: NextRequest) {
       []
     );
 
-    // Get top features (mock data for now)
+    // 8. Top Features (Static/Mock Data)
     const topFeatures = [
       { feature: 'Video Generation', uses: 1250 },
       { feature: 'Script Generation', uses: 890 },
@@ -90,6 +98,7 @@ export async function GET(req: NextRequest) {
       creditsUsed,
       topFeatures,
     });
+
   } catch (error) {
     captureException(error as Error, { context: 'admin_analytics' });
     return NextResponse.json(
@@ -100,7 +109,7 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * Group items by date
+ * Group items by date helper
  */
 function groupByDate(
   items: any[],
@@ -109,11 +118,13 @@ function groupByDate(
   const grouped: { [key: string]: number } = {};
 
   items.forEach((item) => {
-    const date = item[dateField].split('T')[0];
-    grouped[date] = (grouped[date] || 0) + 1;
+    if (item[dateField]) {
+      const date = item[dateField].split('T')[0];
+      grouped[date] = (grouped[date] || 0) + 1;
+    }
   });
 
   return Object.entries(grouped)
-    .map(([date, count]) => ({ date, count: count as number }))
+    .map(([date, count]) => ({ date, count }))
     .sort((a, b) => a.date.localeCompare(b.date));
 }
