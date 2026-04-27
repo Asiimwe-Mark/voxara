@@ -6,6 +6,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
   Video,
+  Composition,
   interpolate,
   spring,
 } from 'remotion'
