@@ -7,11 +7,11 @@
  * Falls back to plain string equality only if HeyGen API docs update signature scheme.
  */
 
-import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { inngest } from '@/inngest/client';
 import logger from '@/lib/logger';
+import { createHmac, timingSafeEqual } from 'crypto';
 
 export const runtime = 'nodejs';
 
@@ -19,8 +19,7 @@ export const runtime = 'nodejs';
 
 function verifyHeyGenSignature(rawBody: string, signature: string, secret: string): boolean {
   // HeyGen sends HMAC-SHA256 hex digest of the raw request body
-  const expected = crypto
-    .createHmac('sha256', secret)
+  const expected = createHmac('sha256', secret)
     .update(rawBody, 'utf8')
     .digest('hex');
 
@@ -28,8 +27,8 @@ function verifyHeyGenSignature(rawBody: string, signature: string, secret: strin
 
   // Timing-safe comparison — prevent timing oracle attacks
   if (sig.length !== expected.length) return false;
-  return crypto.timingSafeEqual(
-    Buffer.from(sig,      'utf8'),
+  return timingSafeEqual(
+    Buffer.from(sig, 'utf8'),
     Buffer.from(expected, 'utf8'),
   );
 }
@@ -38,9 +37,9 @@ function verifyHeyGenSignature(rawBody: string, signature: string, secret: strin
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   // Read raw body BEFORE parsing JSON (signature covers the raw bytes)
-  const rawBody  = await request.text();
+  const rawBody = await request.text();
   const signature = request.headers.get('x-heygen-signature') ?? '';
-  const secret    = process.env.HEYGEN_WEBHOOK_SECRET ?? '';
+  const secret = process.env.HEYGEN_WEBHOOK_SECRET ?? '';
 
   if (!secret) {
     // No secret configured — reject in production, allow in dev for testing
@@ -65,7 +64,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const event_type = payload.event_type as string | undefined;
-  const data       = payload.data as Record<string, unknown> | undefined;
+  const data = payload.data as Record<string, unknown> | undefined;
 
   logger.info('[heygen webhook] Received', { event_type });
 
@@ -76,8 +75,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     switch (event_type) {
       case 'avatar_video.success': {
-        const avatarId  = data.avatar_id as string;
-        const videoUrl  = data.video_url as string;
+        const avatarId = data.avatar_id as string;
+        const videoUrl = data.video_url as string;
         const thumbnail = data.thumbnail_url as string | undefined;
 
         if (!avatarId) {
@@ -88,10 +87,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         await supabaseAdmin
           .from('user_avatars')
           .update({
-            status:        'ready',
-            video_url:     videoUrl,
+            status: 'ready',
+            video_url: videoUrl,
             thumbnail_url: thumbnail ?? null,
-            updated_at:    new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           })
           .eq('heygen_avatar_id', avatarId);
 
@@ -106,8 +105,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
 
       case 'avatar_video.fail': {
-        const avatarId    = data.avatar_id as string;
-        const errorMsg    = (data.error as string | undefined) ?? 'Unknown HeyGen error';
+        const avatarId = data.avatar_id as string;
+        const errorMsg = (data.error as string | undefined) ?? 'Unknown HeyGen error';
 
         if (!avatarId) {
           logger.warn('[heygen webhook] avatar_video.fail missing avatar_id');
@@ -117,8 +116,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         await supabaseAdmin
           .from('user_avatars')
           .update({
-            status:     'failed',
-            error:      errorMsg,
+            status: 'failed',
+            error: errorMsg,
             updated_at: new Date().toISOString(),
           })
           .eq('heygen_avatar_id', avatarId);

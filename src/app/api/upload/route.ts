@@ -34,7 +34,8 @@ export async function POST(request: NextRequest) {
   const ext = file.name.split(".").pop() ?? "mp3";
   const filename = `${user.id}/samples/${Date.now()}.${ext}`;
 
-  const buffer = Buffer.from(await file.arrayBuffer());
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = new Uint8Array(arrayBuffer);
 
   const { error: uploadError } = await supabaseAdmin.storage
     .from("voice-samples")

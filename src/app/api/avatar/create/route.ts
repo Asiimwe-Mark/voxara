@@ -20,9 +20,14 @@ export async function POST(request: NextRequest) {
   // Upload image to Supabase Storage if provided
   let imageUrl: string | undefined;
   if (imageBase64) {
-    const buffer = Buffer.from(imageBase64, 'base64');
+    const base64Data = imageBase64.split(',')[1] || imageBase64;
+    const binaryString = atob(base64Data);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
     const path = `${user.id}/avatars/${Date.now()}.png`;
-    await supabase.storage.from('videos').upload(path, buffer, { contentType: 'image/png' });
+    await supabase.storage.from('videos').upload(path, bytes, { contentType: 'image/png' });
     const { data } = supabase.storage.from('videos').getPublicUrl(path);
     imageUrl = data.publicUrl;
   }

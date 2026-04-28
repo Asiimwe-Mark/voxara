@@ -41,10 +41,10 @@ export async function POST(request: NextRequest) {
   const { data: txRow, error: txError } = await supabaseAdmin
     .from('credit_transactions')
     .insert({
-      user_id:     user.id,
-      amount:      -1,
-      operation:   'ai_script_generation',
-      status:      'pending',
+      user_id: user.id,
+      amount: -1,
+      operation: 'ai_script_generation',
+      status: 'pending',
       description: `Script generation: "${topic.trim().slice(0, 80)}"`,
     })
     .select('id')
@@ -67,8 +67,7 @@ export async function POST(request: NextRequest) {
       await supabaseAdmin
         .from('credit_transactions')
         .update({ status: 'cancelled' })
-        .eq('id', txId)
-        .catch(() => {});
+        .eq('id', txId);
     }
     return NextResponse.json(
       { error: 'Insufficient credits. Please upgrade your plan or purchase more credits.' },
@@ -78,15 +77,19 @@ export async function POST(request: NextRequest) {
 
   // ── Step 3: call AI ──────────────────────────────────────────────────────
   try {
-    const script = await generateScript(topic.trim(), { tone, duration });
+    const script = await generateScript(topic.trim(), {
+      tone: tone as 'professional' | 'casual' | 'enthusiastic' | undefined,
+      duration: duration as 'short' | 'medium' | 'long' | undefined,
+    });
 
     // Mark transaction completed
     if (txId) {
-      await supabaseAdmin
-        .from('credit_transactions')
-        .update({ status: 'completed' })
-        .eq('id', txId)
-        .catch(() => {});
+      try {
+        await supabaseAdmin
+          .from('credit_transactions')
+          .update({ status: 'completed' })
+          .eq('id', txId);
+      } catch { }
     }
 
     return NextResponse.json({ script });
@@ -94,14 +97,15 @@ export async function POST(request: NextRequest) {
     // ── Step 4: refund on AI failure ────────────────────────────────────
     logger.error('Script generation failed:', { detail: error });
 
-    await addCredits(user.id, 1).catch(() => {});
+    await addCredits(user.id, 1).catch(() => { });
 
     if (txId) {
-      await supabaseAdmin
-        .from('credit_transactions')
-        .update({ status: 'refunded' })
-        .eq('id', txId)
-        .catch(() => {});
+      try {
+        await supabaseAdmin
+          .from('credit_transactions')
+          .update({ status: 'refunded' })
+          .eq('id', txId);
+      } catch { }
     }
 
     return NextResponse.json(

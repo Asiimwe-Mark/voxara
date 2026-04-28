@@ -32,13 +32,12 @@ export async function GET() {
 
   const overall = services.database.status === 'down' ? 'down'
     : Object.values(services).some(s => s.status !== 'ok') ? 'degraded'
-    : 'ok';
+      : 'ok';
 
   return NextResponse.json({
     status: overall,
     timestamp: new Date().toISOString(),
     version: process.env.NEXT_PUBLIC_APP_VERSION ?? '1.0.0',
     services,
-    uptime: process.uptime(),
   }, { status: overall === 'down' ? 503 : overall === 'degraded' ? 207 : 200 });
 }

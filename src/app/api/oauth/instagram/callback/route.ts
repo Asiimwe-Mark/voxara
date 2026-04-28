@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
   // Handle OAuth error from Instagram
   if (error) {
-    logger.error("Instagram OAuth error:", error, errorDescription);
+    logger.error("Instagram OAuth error:", { error, errorDescription });
     return NextResponse.redirect(
       new URL("/dashboard/settings?error=instagram_auth_failed", request.url)
     );
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
     const profileData = await profileResponse.json();
 
     // Store in database using service role client
-    
+
     const { error: dbError } = await supabaseAdmin.from("social_accounts").upsert(
       {
         user_id: userId,

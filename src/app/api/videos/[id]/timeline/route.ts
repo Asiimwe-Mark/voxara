@@ -87,3 +87,5 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
 }
+
+export { OPTIONS } from '@/lib/api/cors';

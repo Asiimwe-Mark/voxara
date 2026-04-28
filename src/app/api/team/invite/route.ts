@@ -60,6 +60,9 @@ export async function POST(request: NextRequest) {
   }
 
   // Create (or re-create) the invite token
+  const token = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
   const { data: invite, error } = await supabase
     .from('organization_invites')
     .upsert(
@@ -68,7 +71,7 @@ export async function POST(request: NextRequest) {
         email,
         role,
         invited_by: user.id,
-        token: crypto.randomUUID(),
+        token,
         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       },
       { onConflict: 'organization_id,email' }

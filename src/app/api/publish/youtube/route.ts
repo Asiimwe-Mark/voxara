@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   // Use the cookie-scoped server client to resolve the session user.
   // supabaseAdmin has no cookie context and always returns null here.
@@ -63,7 +65,7 @@ export async function POST(request: NextRequest) {
 
   let { access_token, refresh_token, token_expires_at } = socialAccount;
 
-  const youtubeClientId     = process.env.YOUTUBE_CLIENT_ID;
+  const youtubeClientId = process.env.YOUTUBE_CLIENT_ID;
   const youtubeClientSecret = process.env.YOUTUBE_CLIENT_SECRET;
   if (!youtubeClientId || !youtubeClientSecret) {
     return NextResponse.json({ error: "YouTube OAuth not configured" }, { status: 503 });
@@ -120,17 +122,17 @@ export async function POST(request: NextRequest) {
       throw new Error(`Failed to fetch video from Mux: ${response.status}`);
     }
 
-    const videoBuffer = Buffer.from(await response.arrayBuffer());
+    const videoBuffer = new Uint8Array(await response.arrayBuffer());
 
-    const title       = video.title || "My Faceless Video";
+    const title = video.title || "My Faceless Video";
     const description = `${title}\n\nCreated with voxara.app\n\n${video.script ? video.script.substring(0, 500) : ""}`;
-    const tags        = ["faceless", "ai generated", "voxara", "automation"];
+    const tags = ["faceless", "ai generated", "voxara", "automation"];
 
     const uploadResponse = await youtube.videos.insert({
       part: ["snippet", "status"],
       requestBody: {
         snippet: { title, description, tags, categoryId: "22" },
-        status:  { privacyStatus: "private", selfDeclaredMadeForKids: false },
+        status: { privacyStatus: "private", selfDeclaredMadeForKids: false },
       },
       media: { body: videoBuffer },
     });

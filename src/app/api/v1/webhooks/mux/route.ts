@@ -1,8 +1,9 @@
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import Mux from "@mux/mux-node";
+
+export const runtime = 'nodejs';
 
 
 function getMux() {
@@ -24,8 +25,9 @@ function verifyMuxSignature(request: NextRequest, rawBody: string): boolean {
   }
 
   try {
-    const webhook = getMux().webhooks;
-    webhook.verifyHeader(rawBody, signature, secret);
+    const mux = getMux();
+    // Use the correct Mux webhook verification method
+    mux.webhooks.verifyHeader(rawBody, signature, secret);
     return true;
   } catch {
     return false;

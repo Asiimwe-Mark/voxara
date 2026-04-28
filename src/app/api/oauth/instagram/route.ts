@@ -23,12 +23,12 @@ export async function GET(request: NextRequest) {
 
   // Instagram Basic Display scopes
   const scope = "user_profile,user_media";
-  
+
   // State parameter to prevent CSRF and pass user ID
-  const state = Buffer.from(JSON.stringify({
+  const state = btoa(JSON.stringify({
     userId: user.id,
     timestamp: Date.now(),
-  })).toString("base64");
+  }));
 
   const authorizationUrl = new URL("https://api.instagram.com/oauth/authorize");
   authorizationUrl.searchParams.set("client_id", clientId);

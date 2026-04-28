@@ -1,23 +1,26 @@
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
 import { inngest } from '@/inngest/client';
 
 
 async function validateApiKey(request: NextRequest): Promise<string | null> {
   const apiKey = request.headers.get('x-api-key');
   if (!apiKey) return null;
-  const keyHash = crypto.createHash('sha256').update(apiKey).digest('hex');
-  const { data } = await supabaseAdmin
+  const encoder = new TextEncoder();
+  const data = encoder.encode(apiKey);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const keyHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  const { data: keyData } = await supabaseAdmin
     .from('api_keys')
     .select('user_id, status, expires_at')
     .eq('key_hash', keyHash)
     .single();
-  if (!data || data.status !== 'active') return null;
-  if (data.expires_at && new Date(data.expires_at) < new Date()) return null;
+  if (!keyData || keyData.status !== 'active') return null;
+  if (keyData.expires_at && new Date(keyData.expires_at) < new Date()) return null;
   await supabaseAdmin.from('api_keys').update({ last_used_at: new Date().toISOString() }).eq('key_hash', keyHash);
-  return data.user_id;
+  return keyData.user_id;
 }
 
 export async function GET(request: NextRequest) {
@@ -116,7 +119,9 @@ export async function POST(request: NextRequest) {
     );
   } catch (err) {
     // Refund credit on unexpected error
-    await supabaseAdmin.rpc('add_credits', { p_user_id: userId, p_credits: 1 }).catch(() => {});
+    try {
+      await supabaseAdmin.rpc('add_credits', { p_user_id: userId, p_credits: 1 });
+    } catch { }
     logger.error('v1/videos POST error', { detail: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

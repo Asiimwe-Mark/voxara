@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
       .single();
 
     const admin = await isAdmin(user.id, supabase as Parameters<typeof isAdmin>[1]);
-    if (!adminByEnv && profile?.role !== 'admin') {
+    if (!admin && profile?.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

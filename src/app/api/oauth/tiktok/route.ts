@@ -23,12 +23,12 @@ export async function GET(request: NextRequest) {
 
   // TikTok scopes for video upload and user info
   const scope = "user.info.basic,video.publish";
-  
+
   // State parameter for CSRF protection and user identification
-  const state = Buffer.from(JSON.stringify({
+  const state = btoa(JSON.stringify({
     userId: user.id,
     timestamp: Date.now(),
-  })).toString("base64");
+  }));
 
   const authorizationUrl = new URL("https://www.tiktok.com/v2/auth/authorize/");
   authorizationUrl.searchParams.set("client_key", clientKey);
