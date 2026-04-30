@@ -33,7 +33,7 @@ export const PaymentSuccessEmail = ({
     <Html>
       <Head />
       <Preview>
-        Your {planName} subscription is active — {credits.toString()} credits ready!
+        Your {planName} subscription is active — {credits} credits ready!
       </Preview>
       <Body style={main}>
         <Container style={container}>

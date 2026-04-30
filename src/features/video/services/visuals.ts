@@ -48,50 +48,29 @@ export async function fetchStockFootage(
     logger.error("Pexels API error:", { detail: error });
   }
 
-  // Fallback to curated free footage when Pexels fails or returns no results
+  // Fallback to curated free footage
   return getFallbackFootage(query, count);
 }
 
-/**
- * Fallback footage from Pixabay's free CDN.
- * Each category holds multiple distinct clips so repeated fallback calls
- * produce variety rather than the same clip looped.
- */
 function getFallbackFootage(query: string, count: number): string[] {
   const fallbackVideos: Record<string, string[]> = {
     nature: [
-      "https://cdn.pixabay.com/video/2016/01/06/1860-150955449_medium.mp4",
-      "https://cdn.pixabay.com/video/2020/07/31/46206-449226860_medium.mp4",
-      "https://cdn.pixabay.com/video/2019/04/08/23048-330246122_medium.mp4",
+      "https://player.vimeo.com/external/434748126.sd.mp4?s=865c4eaa72133339f2f3f7c1fef15bca2d2ddbe8",
     ],
     business: [
-      "https://cdn.pixabay.com/video/2017/08/07/11105-228640055_medium.mp4",
-      "https://cdn.pixabay.com/video/2019/11/18/29004-374073518_medium.mp4",
-      "https://cdn.pixabay.com/video/2020/03/17/33615-399860685_medium.mp4",
+      "https://player.vimeo.com/external/434748126.hd.mp4?s=865c4eaa72133339f2f3f7c1fef15bca2d2ddbe8",
     ],
     technology: [
-      "https://cdn.pixabay.com/video/2020/05/24/39765-424974708_medium.mp4",
-      "https://cdn.pixabay.com/video/2018/01/21/14048-251892116_medium.mp4",
-      "https://cdn.pixabay.com/video/2019/09/22/27220-361983734_medium.mp4",
-    ],
-    travel: [
-      "https://cdn.pixabay.com/video/2021/03/23/69199-530330618_medium.mp4",
-      "https://cdn.pixabay.com/video/2020/08/24/48133-453015064_medium.mp4",
-    ],
-    food: [
-      "https://cdn.pixabay.com/video/2021/06/02/75757-559699843_medium.mp4",
-      "https://cdn.pixabay.com/video/2017/06/14/9828-221860025_medium.mp4",
-    ],
-    fitness: [
-      "https://cdn.pixabay.com/video/2021/04/17/70804-539374543_medium.mp4",
-      "https://cdn.pixabay.com/video/2018/07/04/16944-277637093_medium.mp4",
+      "https://player.vimeo.com/external/434748126.sd.mp4?s=865c4eaa72133339f2f3f7c1fef15bca2d2ddbe8",
     ],
   };
 
-  const q = query.toLowerCase();
-  const category = Object.keys(fallbackVideos).find((c) => q.includes(c));
-  const pool = category ? fallbackVideos[category] : fallbackVideos["nature"];
+  const category = Object.keys(fallbackVideos).find((c) =>
+    query.toLowerCase().includes(c)
+  );
+  const videos = category
+    ? fallbackVideos[category]
+    : fallbackVideos["nature"];
 
-  // Cycle through pool for variety when count > pool length
-  return Array.from({ length: count }, (_, i) => pool[i % pool.length]);
+  return Array(count).fill(videos[0]).slice(0, count);
 }

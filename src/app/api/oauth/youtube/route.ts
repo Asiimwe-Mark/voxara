@@ -3,8 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { google } from "googleapis";
 
-export const runtime = 'nodejs';
-
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -42,12 +40,12 @@ export async function GET(request: NextRequest) {
   ];
 
   // Generate state for CSRF protection and user identification
-  const state = btoa(
+  const state = Buffer.from(
     JSON.stringify({
       userId: user.id,
       timestamp: Date.now(),
     })
-  );
+  ).toString("base64");
 
   const authorizationUrl = oauth2Client.generateAuthUrl({
     access_type: "offline", // Required to get refresh token

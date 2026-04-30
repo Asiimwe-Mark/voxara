@@ -1,9 +1,9 @@
 import type { Config } from "tailwindcss";
 
 // Tailwind v4 uses CSS @theme tokens in globals.css for design tokens.
-// darkMode is configured via @variant in globals.css — not in this file.
-// The darkMode: ["class"] option from v3 has no effect in v4.
+// This file is kept for plugin registration and content path overrides.
 const config: Config = {
+  darkMode: ["class"],
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -15,7 +15,7 @@ const config: Config = {
   theme: {
     extend: {
       screens: {
-        xs: "480px",
+        "xs": "480px",
       },
     },
   },

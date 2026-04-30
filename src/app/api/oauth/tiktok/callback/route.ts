@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   const supabase = await createClient();
 
   if (error) {
-    logger.error("TikTok OAuth error:", { error, errorDescription });
+    logger.error("TikTok OAuth error:", error, errorDescription);
     return NextResponse.redirect(
       new URL("/dashboard/settings?error=tiktok_auth_failed", request.url)
     );
@@ -81,12 +81,12 @@ export async function GET(request: NextRequest) {
     const userData = await userResponse.json();
     const displayName = userData.data?.display_name || `TikTok User`;
 
-
+    
     const expiresAt = expires_in
       ? new Date(Date.now() + expires_in * 1000).toISOString()
       : null;
 
-    const { error: dbError } = await supabaseAdmin.from("social_accounts").upsert(
+    const { error: dbError } = await supabaseAdmin().from("social_accounts").upsert(
       {
         user_id: userId,
         platform: "tiktok",

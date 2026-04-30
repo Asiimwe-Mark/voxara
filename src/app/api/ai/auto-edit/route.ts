@@ -3,8 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { GoogleGenAI } from "@google/genai";
 
-export const runtime = 'edge';
-
 function getGenAI() {
   const key = process.env.GEMINI_API_KEY ?? process.env.GOOGLE_GENAI_API_KEY ?? process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   if (!key) throw new Error("GEMINI_API_KEY is not set");

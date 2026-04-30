@@ -76,43 +76,41 @@ export function hashBackupCode(code: string): string {
 }
 
 /**
- * Verify a TOTP code (RFC 6238 / RFC 4226 compliant).
- * Allows for a clock-skew window of ±timeWindow intervals (each = 30 s).
- *
- * HMAC-SHA1 input must be ONLY the 8-byte big-endian time counter —
- * no other bytes should be fed into the HMAC before or after.
+ * Verify a TOTP code
+ * Allows for a time window of +/- 30 seconds
  */
 export function verifyTOTPCode(secret: string, code: string, timeWindow: number = 1): boolean {
   const decoded = base32Decode(secret);
-
+  
   if (!decoded) {
     return false;
   }
-
-  // Current 30-second time step
+  
+  // Get current time in 30-second intervals (Unix timestamp / 30)
   const now = Math.floor(Date.now() / 1000 / 30);
-
+  
+  // Check current code and time window
   for (let i = -timeWindow; i <= timeWindow; i++) {
     const time = now + i;
-
-    // RFC 4226 §5.3 — HMAC-SHA1 over the 8-byte big-endian counter ONLY
+    const hmac = crypto.createHmac('sha1', decoded);
+    hmac.update(Buffer.from([0, 0, 0, 0]), 0, 4);
+    hmac.update(Buffer.alloc(4, 0));
+    
+    // Write 64-bit big-endian representation of time
     const buf = Buffer.alloc(8);
     buf.writeBigInt64BE(BigInt(time), 0);
-
-    const hmac = crypto.createHmac('sha1', decoded);
+    
     hmac.update(buf);
     const digest = hmac.digest();
-
-    // Dynamic truncation
     const offset = digest[digest.length - 1] & 0xf;
-    const part   = digest.readUInt32BE(offset) & 0x7fffffff;
-    const otp    = (part % 1_000_000).toString().padStart(6, '0');
-
+    const part = digest.readUInt32BE(offset) & 0x7fffffff;
+    const otp = (part % 1000000).toString().padStart(6, '0');
+    
     if (otp === code) {
       return true;
     }
   }
-
+  
   return false;
 }
 

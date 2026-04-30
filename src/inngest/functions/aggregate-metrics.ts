@@ -22,7 +22,7 @@ export const aggregateVideoMetrics = inngest.createFunction(
 
     for (const videoId of videos || []) {
       await step.run(`aggregate-${videoId}`, async () => {
-        const { data: video } = await supabaseAdmin.from('videos').select('user_id').eq('id', videoId).single();
+        const { data: video } = await supabaseAdmin().from('videos').select('user_id').eq('id', videoId).single();
         if (!video) return;
 
         const { data: sessions } = await supabaseAdmin
@@ -40,7 +40,7 @@ export const aggregateVideoMetrics = inngest.createFunction(
         const clicks = sessions.filter(s => s.playback_events?.some((e: { type: string }) => e.type === 'click')).length;
         const ctr = views > 0 ? (clicks / views) * 100 : 0;
 
-        await supabaseAdmin.from('video_metrics').upsert({
+        await supabaseAdmin().from('video_metrics').upsert({
           video_id: videoId,
           user_id: video.user_id,
           date: dateStr,

@@ -8,6 +8,9 @@
  *
  * In production: emits single-line JSON (picked up by Vercel Log Drains).
  * In development: emits coloured human-readable lines.
+ *
+ * Minimum log level controlled by LOG_LEVEL env var (defaults to 'info').
+ * Set to 'debug' during development if you need verbose output.
  */
 
 export interface LogContext {
@@ -16,7 +19,21 @@ export interface LogContext {
 
 type Level = 'debug' | 'info' | 'warn' | 'error';
 
+const LEVEL_ORDER: Record<Level, number> = {
+  debug: 0,
+  info: 1,
+  warn: 2,
+  error: 3,
+};
+
+function shouldEmit(level: Level): boolean {
+  const configured = (process.env.LOG_LEVEL as Level) ?? 'info';
+  return LEVEL_ORDER[level] >= LEVEL_ORDER[configured];
+}
+
 function emit(level: Level, message: string, ctx?: LogContext): void {
+  if (!shouldEmit(level)) return;
+
   const isProd = process.env.NODE_ENV === 'production';
 
   if (isProd) {
@@ -27,7 +44,6 @@ function emit(level: Level, message: string, ctx?: LogContext): void {
       timestamp: new Date().toISOString(),
       ...ctx,
     });
-    // console.* is supported in all runtimes including Edge
     if (level === 'error' || level === 'warn') {
       console.error(payload);
     } else {

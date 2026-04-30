@@ -104,7 +104,7 @@ async function logDelivery(
   payload: WebhookPayload,
   result: DeliveryResult
 ): Promise<void> {
-  await supabaseAdmin.from("webhook_logs").insert({
+  await supabaseAdmin().from("webhook_logs").insert({
     endpoint_id: endpointId,
     event_type: eventType,
     payload,

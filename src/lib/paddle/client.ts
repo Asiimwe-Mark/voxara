@@ -1,3 +1,4 @@
+import { verifyWebhookSignatureHmac } from '@/lib/security.node';
 import logger from '@/lib/logger';
 /**
  * Paddle Payment Provider Client
@@ -42,7 +43,7 @@ export class PaddleClient {
     this.vendorId = config.vendorId;
     this.apiKey = config.apiKey;
     this.webhookSecret = config.webhookSecret;
-    this.sandboxMode = config.sandboxMode ?? true;
+    this.sandboxMode = config.sandboxMode ?? (process.env.NODE_ENV !== 'production');
     this.baseUrl = 'https://api.paddle.com';
   }
 
@@ -61,7 +62,7 @@ export class PaddleClient {
       headers: {
         'Authorization': `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
-        'User-Agent': 'faceless-video-saas/1.0.0',
+        'User-Agent': 'voxara/1.0.0',
       },
     };
 
@@ -306,12 +307,7 @@ export class PaddleClient {
    */
   verifyWebhookSignature(payload: string, signature: string): boolean {
     try {
-      const hash = crypto
-        .createHmac('sha256', this.webhookSecret)
-        .update(payload)
-        .digest('hex');
-
-      return hash === signature;
+      return verifyWebhookSignatureHmac(payload, signature, this.webhookSecret);
     } catch (error) {
       logger.error('Webhook signature verification failed', { detail: error instanceof Error ? error.message : String(error) });
       return false;

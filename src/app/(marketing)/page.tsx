@@ -1,446 +1,1313 @@
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import {
-  Sparkles, Video, Wand2, Mic, Share2, BarChart3,
-  CheckCircle2, ArrowRight, Play, Zap, Globe, Lock,
-  Shield, TrendingUp, Cpu, DollarSign, Trophy, Star,
-  ChevronRight,
-} from 'lucide-react'
+"use client";
+import { useState, useEffect, useRef, useCallback } from "react";
 
+/* ─── Colour tokens ─────────────────────────────────────────── */
+const C = {
+  bg: "#04040a",
+  surface: "#0c0c18",
+  border: "rgba(255,255,255,0.06)",
+  borderHover: "rgba(120,100,255,0.4)",
+  accent: "#7b5cff",
+  accentB: "#ff5ca8",
+  accentC: "#5cf0ff",
+  text: "#f0eeff",
+  muted: "rgba(240,238,255,0.45)",
+  glow: "rgba(123,92,255,0.18)",
+};
+
+/* ─── Keyframes injected once ───────────────────────────────── */
+const CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: ${C.bg};
+    color: ${C.text};
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  @keyframes drift {
+    0%,100% { transform: translateY(0px) rotate(0deg); }
+    33%      { transform: translateY(-22px) rotate(1.5deg); }
+    66%      { transform: translateY(12px) rotate(-1deg); }
+  }
+  @keyframes pulse-ring {
+    0%   { transform: scale(0.8); opacity: 1; }
+    100% { transform: scale(2.4); opacity: 0; }
+  }
+  @keyframes shimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  @keyframes float-particle {
+    0%   { transform: translateY(100vh) translateX(0px) scale(0); opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 0.6; }
+    100% { transform: translateY(-10vh) translateX(60px) scale(1); opacity: 0; }
+  }
+  @keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(40px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.92); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes slide-right {
+    from { opacity: 0; transform: translateX(-30px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+  @keyframes noise {
+    0%,100% { transform: translate(0,0); }
+    10%  { transform: translate(-2px,-2px); }
+    20%  { transform: translate(2px,2px); }
+    30%  { transform: translate(-1px,2px); }
+    40%  { transform: translate(2px,-1px); }
+    50%  { transform: translate(-2px,1px); }
+    60%  { transform: translate(1px,2px); }
+    70%  { transform: translate(-1px,-2px); }
+    80%  { transform: translate(2px,1px); }
+    90%  { transform: translate(-2px,2px); }
+  }
+  @keyframes border-glow {
+    0%,100% { border-color: rgba(123,92,255,0.3); box-shadow: 0 0 20px rgba(123,92,255,0.1); }
+    50%     { border-color: rgba(255,92,168,0.4); box-shadow: 0 0 30px rgba(255,92,168,0.15); }
+  }
+  @keyframes count-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-fade-up    { animation: fade-up 0.7s cubic-bezier(.22,1,.36,1) both; }
+  .animate-scale-in   { animation: scale-in 0.6s cubic-bezier(.22,1,.36,1) both; }
+  .animate-slide-right{ animation: slide-right 0.6s cubic-bezier(.22,1,.36,1) both; }
+
+  .shimmer-text {
+    background: linear-gradient(90deg, ${C.text} 0%, ${C.accent} 30%, ${C.accentB} 55%, ${C.accentC} 70%, ${C.text} 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 4s linear infinite;
+  }
+
+  .noise-overlay::after {
+    content: '';
+    position: fixed; inset: -200%;
+    width: 400%; height: 400%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.028;
+    pointer-events: none;
+    animation: noise 0.15s steps(1) infinite;
+    z-index: 9999;
+    mix-blend-mode: overlay;
+  }
+
+  .magnetic-btn {
+    position: relative;
+    transition: transform 0.15s cubic-bezier(.22,1,.36,1);
+    cursor: pointer;
+  }
+  .magnetic-btn:hover { transform: translateY(-2px); }
+
+  .card-hover {
+    transition: transform 0.35s cubic-bezier(.22,1,.36,1),
+                border-color 0.35s ease,
+                box-shadow 0.35s ease;
+  }
+  .card-hover:hover {
+    transform: translateY(-6px);
+    border-color: rgba(123,92,255,0.35) !important;
+    box-shadow: 0 24px 60px rgba(123,92,255,0.12), 0 0 0 1px rgba(123,92,255,0.15);
+  }
+
+  .glow-line {
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(123,92,255,0.6), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.5s ease;
+  }
+  *:hover > .glow-line { transform: translateX(100%); }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: ${C.bg}; }
+  ::-webkit-scrollbar-thumb { background: ${C.accent}; border-radius: 2px; }
+`;
+
+/* ─── Particle System ───────────────────────────────────────── */
+function Particles() {
+  const particles = Array.from({ length: 18 }, (_, i) => ({
+    id: i,
+    left: `${5 + (i * 5.3) % 90}%`,
+    delay: `${(i * 1.1) % 8}s`,
+    duration: `${8 + (i * 0.7) % 12}s`,
+    size: `${1.5 + (i * 0.3) % 3}px`,
+    color: i % 3 === 0 ? C.accent : i % 3 === 1 ? C.accentB : C.accentC,
+  }));
+  return (
+    <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 1 }}>
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          style={{
+            position: "absolute",
+            left: p.left,
+            bottom: 0,
+            width: p.size,
+            height: p.size,
+            borderRadius: "50%",
+            background: p.color,
+            boxShadow: `0 0 8px 2px ${p.color}`,
+            animation: `float-particle ${p.duration} ${p.delay} linear infinite`,
+            opacity: 0,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ─── Mesh gradient background ──────────────────────────────── */
+function MeshBg() {
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 0, overflow: "hidden", pointerEvents: "none" }}>
+      <div style={{
+        position: "absolute", width: "900px", height: "900px",
+        top: "-300px", left: "-200px",
+        background: "radial-gradient(circle, rgba(123,92,255,0.12) 0%, transparent 65%)",
+        animation: "drift 14s ease-in-out infinite",
+      }} />
+      <div style={{
+        position: "absolute", width: "700px", height: "700px",
+        top: "200px", right: "-150px",
+        background: "radial-gradient(circle, rgba(255,92,168,0.09) 0%, transparent 65%)",
+        animation: "drift 18s ease-in-out infinite reverse",
+        animationDelay: "-5s",
+      }} />
+      <div style={{
+        position: "absolute", width: "600px", height: "600px",
+        bottom: "100px", left: "30%",
+        background: "radial-gradient(circle, rgba(92,240,255,0.07) 0%, transparent 65%)",
+        animation: "drift 22s ease-in-out infinite",
+        animationDelay: "-10s",
+      }} />
+      {/* Grid overlay */}
+      <div style={{
+        position: "absolute", inset: 0,
+        backgroundImage: `linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px)`,
+        backgroundSize: "60px 60px",
+        maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent)",
+      }} />
+    </div>
+  );
+}
+
+/* ─── Nav ───────────────────────────────────────────────────── */
+function Nav({ scrolled }) {
+  return (
+    <nav style={{
+      position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
+      padding: "0 32px",
+      height: "72px",
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      background: scrolled ? "rgba(4,4,10,0.88)" : "transparent",
+      backdropFilter: scrolled ? "blur(24px)" : "none",
+      borderBottom: scrolled ? `1px solid ${C.border}` : "none",
+      transition: "all 0.4s cubic-bezier(.22,1,.36,1)",
+    }}>
+      {/* Logo */}
+      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{
+          width: 36, height: 36, borderRadius: "10px",
+          background: `linear-gradient(135deg, ${C.accent}, ${C.accentB})`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: `0 0 20px rgba(123,92,255,0.4)`,
+        }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+        </div>
+        <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: "20px", letterSpacing: "-0.5px" }}>
+          voxara
+        </span>
+      </div>
+
+      {/* Links */}
+      <div style={{ display: "flex", alignItems: "center", gap: "36px" }}>
+        {["Features", "Pricing", "Use Cases", "FAQ"].map((item) => (
+          <a
+            key={item}
+            href={`#${item.toLowerCase().replace(" ", "-")}`}
+            style={{
+              color: C.muted, fontSize: "14px", fontWeight: 500,
+              textDecoration: "none", letterSpacing: "0.02em",
+              transition: "color 0.2s",
+            }}
+            onMouseEnter={e => e.target.style.color = C.text}
+            onMouseLeave={e => e.target.style.color = C.muted}
+          >
+            {item}
+          </a>
+        ))}
+      </div>
+
+      {/* CTA */}
+      <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+        <a href="/login" style={{
+          color: C.muted, fontSize: "14px", fontWeight: 500,
+          textDecoration: "none", padding: "8px 16px",
+          transition: "color 0.2s",
+        }}
+          onMouseEnter={e => e.target.style.color = C.text}
+          onMouseLeave={e => e.target.style.color = C.muted}
+        >
+          Sign in
+        </a>
+        <a href="/signup" className="magnetic-btn" style={{
+          background: `linear-gradient(135deg, ${C.accent}, ${C.accentB})`,
+          color: "white", fontSize: "14px", fontWeight: 600,
+          textDecoration: "none", padding: "9px 22px", borderRadius: "10px",
+          boxShadow: `0 0 24px rgba(123,92,255,0.35)`,
+          letterSpacing: "0.02em",
+        }}>
+          Start free →
+        </a>
+      </div>
+    </nav>
+  );
+}
+
+/* ─── useInView ─────────────────────────────────────────────── */
+function useInView(threshold = 0.15) {
+  const ref = useRef(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    if (!ref.current) return;
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setInView(true); }, { threshold });
+    obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return [ref, inView];
+}
+
+/* ─── Animated Counter ──────────────────────────────────────── */
+function Counter({ target, suffix = "", prefix = "" }) {
+  const [count, setCount] = useState(0);
+  const [ref, inView] = useInView(0.3);
+  useEffect(() => {
+    if (!inView) return;
+    const num = parseFloat(target.replace(/[^0-9.]/g, ""));
+    const duration = 1800;
+    const steps = 60;
+    const inc = num / steps;
+    let cur = 0;
+    const timer = setInterval(() => {
+      cur = Math.min(cur + inc, num);
+      setCount(Math.floor(cur));
+      if (cur >= num) clearInterval(timer);
+    }, duration / steps);
+    return () => clearInterval(timer);
+  }, [inView, target]);
+
+  const display = target.includes("M") ? `${count}M` :
+                  target.includes("K") ? `${count}K` :
+                  target.includes("%") ? `${count}%` : `${count}`;
+
+  return (
+    <span ref={ref} style={{
+      fontFamily: "Syne, sans-serif", fontWeight: 800,
+      fontSize: "clamp(2rem, 5vw, 3.5rem)",
+      background: `linear-gradient(135deg, ${C.accent}, ${C.accentC})`,
+      WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+      display: "block",
+      animation: inView ? "count-up 0.6s cubic-bezier(.22,1,.36,1) both" : "none",
+    }}>
+      {prefix}{display}{suffix}
+    </span>
+  );
+}
+
+/* ─── Section wrapper with scroll reveal ────────────────────── */
+function Reveal({ children, delay = 0, style = {} }) {
+  const [ref, inView] = useInView();
+  return (
+    <div
+      ref={ref}
+      style={{
+        opacity: inView ? 1 : 0,
+        transform: inView ? "translateY(0)" : "translateY(40px)",
+        transition: `opacity 0.7s cubic-bezier(.22,1,.36,1) ${delay}ms, transform 0.7s cubic-bezier(.22,1,.36,1) ${delay}ms`,
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* ─── Pill badge ─────────────────────────────────────────────── */
+function Pill({ children }) {
+  return (
+    <div style={{
+      display: "inline-flex", alignItems: "center", gap: "8px",
+      padding: "6px 16px", borderRadius: "100px",
+      border: `1px solid rgba(123,92,255,0.3)`,
+      background: "rgba(123,92,255,0.08)",
+      fontSize: "13px", color: C.accent, fontWeight: 500,
+      letterSpacing: "0.05em", marginBottom: "28px",
+      backdropFilter: "blur(12px)",
+    }}>
+      <span style={{
+        width: 6, height: 6, borderRadius: "50%",
+        background: C.accent, boxShadow: `0 0 8px ${C.accent}`,
+        animation: "pulse-ring 2s ease-out infinite",
+        display: "inline-block",
+      }} />
+      {children}
+    </div>
+  );
+}
+
+/* ─── Feature card ──────────────────────────────────────────── */
+function FeatureCard({ icon, title, desc, color, delay }) {
+  return (
+    <Reveal delay={delay}>
+      <div className="card-hover" style={{
+        padding: "32px", borderRadius: "20px",
+        border: `1px solid ${C.border}`,
+        background: `linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)`,
+        backdropFilter: "blur(12px)",
+        height: "100%",
+        position: "relative", overflow: "hidden",
+      }}>
+        {/* Top accent line */}
+        <div style={{
+          position: "absolute", top: 0, left: "20%", right: "20%", height: "1px",
+          background: `linear-gradient(90deg, transparent, ${color}, transparent)`,
+        }} />
+
+        {/* Icon */}
+        <div style={{
+          width: 52, height: 52, borderRadius: "14px",
+          background: `linear-gradient(135deg, ${color}22, ${color}11)`,
+          border: `1px solid ${color}33`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          marginBottom: "20px",
+          fontSize: "22px",
+        }}>
+          {icon}
+        </div>
+
+        <h3 style={{
+          fontFamily: "Syne, sans-serif", fontWeight: 700,
+          fontSize: "17px", marginBottom: "10px", color: C.text,
+        }}>
+          {title}
+        </h3>
+        <p style={{ fontSize: "14px", lineHeight: "1.7", color: C.muted }}>
+          {desc}
+        </p>
+      </div>
+    </Reveal>
+  );
+}
+
+/* ─── Pricing card ──────────────────────────────────────────── */
+function PricingCard({ plan, highlighted, delay }) {
+  return (
+    <Reveal delay={delay}>
+      <div className="card-hover" style={{
+        padding: "36px 32px",
+        borderRadius: "24px",
+        border: highlighted ? `1px solid rgba(123,92,255,0.5)` : `1px solid ${C.border}`,
+        background: highlighted
+          ? `linear-gradient(145deg, rgba(123,92,255,0.15), rgba(255,92,168,0.08), rgba(92,240,255,0.05))`
+          : `linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))`,
+        backdropFilter: "blur(20px)",
+        position: "relative", overflow: "hidden",
+        boxShadow: highlighted ? `0 0 60px rgba(123,92,255,0.15), inset 0 1px 0 rgba(255,255,255,0.08)` : "none",
+        transform: highlighted ? "scale(1.03)" : "scale(1)",
+        height: "100%", display: "flex", flexDirection: "column",
+      }}>
+        {highlighted && (
+          <>
+            <div style={{
+              position: "absolute", top: 0, left: 0, right: 0, height: "2px",
+              background: `linear-gradient(90deg, ${C.accent}, ${C.accentB}, ${C.accentC})`,
+            }} />
+            <div style={{
+              position: "absolute", top: "16px", right: "16px",
+              padding: "4px 12px", borderRadius: "100px",
+              background: `linear-gradient(135deg, ${C.accent}, ${C.accentB})`,
+              fontSize: "11px", fontWeight: 700, color: "white",
+              letterSpacing: "0.08em",
+            }}>
+              MOST POPULAR
+            </div>
+          </>
+        )}
+
+        <div style={{ marginBottom: "8px" }}>
+          <span style={{
+            fontFamily: "Syne, sans-serif", fontWeight: 800,
+            fontSize: "22px", color: C.text,
+          }}>{plan.name}</span>
+        </div>
+        <p style={{ fontSize: "13px", color: C.muted, marginBottom: "28px" }}>
+          {plan.description}
+        </p>
+
+        <div style={{ marginBottom: "28px" }}>
+          <span style={{
+            fontFamily: "Syne, sans-serif", fontWeight: 800,
+            fontSize: "52px", color: C.text, lineHeight: 1,
+          }}>${plan.price}</span>
+          {plan.price > 0 && (
+            <span style={{ fontSize: "14px", color: C.muted, marginLeft: "8px" }}>/mo</span>
+          )}
+        </div>
+
+        <ul style={{ listStyle: "none", marginBottom: "32px", flex: 1, display: "flex", flexDirection: "column", gap: "13px" }}>
+          {plan.features.map((f) => (
+            <li key={f} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px", color: C.muted }}>
+              <span style={{
+                width: 18, height: 18, borderRadius: "50%",
+                background: highlighted ? `linear-gradient(135deg, ${C.accent}, ${C.accentB})` : "rgba(123,92,255,0.2)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0,
+              }}>
+                <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
+                  <path d="M1 3.5L3.5 6L8 1" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </span>
+              {f}
+            </li>
+          ))}
+        </ul>
+
+        <a href={plan.href} className="magnetic-btn" style={{
+          display: "block", textAlign: "center",
+          padding: "14px 28px", borderRadius: "12px",
+          background: highlighted
+            ? `linear-gradient(135deg, ${C.accent}, ${C.accentB})`
+            : `rgba(255,255,255,0.06)`,
+          border: highlighted ? "none" : `1px solid ${C.border}`,
+          color: "white", fontSize: "15px", fontWeight: 600,
+          textDecoration: "none",
+          boxShadow: highlighted ? `0 0 30px rgba(123,92,255,0.4)` : "none",
+          letterSpacing: "0.02em",
+          transition: "all 0.2s ease",
+        }}>
+          {plan.cta}
+        </a>
+      </div>
+    </Reveal>
+  );
+}
+
+/* ─── Marquee logos ─────────────────────────────────────────── */
+function LogoMarquee() {
+  const logos = ["Google Gemini", "ElevenLabs", "HeyGen", "D-ID", "Synthesia", "Mux", "Pexels", "Paddle"];
+  const doubled = [...logos, ...logos];
+  return (
+    <div style={{
+      overflow: "hidden", padding: "24px 0",
+      borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`,
+      background: "rgba(255,255,255,0.015)",
+      position: "relative",
+    }}>
+      <div style={{ display: "flex", animation: "marquee 20s linear infinite", width: "max-content" }}>
+        {doubled.map((name, i) => (
+          <div key={i} style={{
+            display: "flex", alignItems: "center", gap: "10px",
+            padding: "0 36px",
+            whiteSpace: "nowrap",
+          }}>
+            <div style={{
+              width: 8, height: 8, borderRadius: "50%",
+              background: `linear-gradient(135deg, ${C.accent}, ${C.accentB})`,
+              flexShrink: 0,
+            }} />
+            <span style={{
+              fontFamily: "Syne, sans-serif", fontWeight: 600,
+              fontSize: "14px", color: C.muted, letterSpacing: "0.04em",
+            }}>
+              {name}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Testimonial card ───────────────────────────────────────── */
+function TestimonialCard({ name, role, text, initials, delay }) {
+  return (
+    <Reveal delay={delay}>
+      <div className="card-hover" style={{
+        padding: "28px",
+        borderRadius: "20px",
+        border: `1px solid ${C.border}`,
+        background: "linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))",
+        backdropFilter: "blur(12px)",
+        height: "100%",
+      }}>
+        {/* Stars */}
+        <div style={{ display: "flex", gap: "4px", marginBottom: "16px" }}>
+          {[1,2,3,4,5].map(i => (
+            <span key={i} style={{ fontSize: "13px", color: "#fbbf24" }}>★</span>
+          ))}
+        </div>
+
+        <p style={{
+          fontSize: "14px", lineHeight: "1.75", color: C.muted,
+          fontStyle: "italic", marginBottom: "20px",
+        }}>
+          "{text}"
+        </p>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{
+            width: 40, height: 40, borderRadius: "50%",
+            background: `linear-gradient(135deg, ${C.accent}, ${C.accentB})`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: "13px", fontWeight: 700, color: "white",
+            flexShrink: 0,
+          }}>
+            {initials}
+          </div>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: "14px", color: C.text }}>{name}</div>
+            <div style={{ fontSize: "12px", color: C.muted }}>{role}</div>
+          </div>
+        </div>
+      </div>
+    </Reveal>
+  );
+}
+
+/* ─── FAQ ────────────────────────────────────────────────────── */
+function FAQItem({ q, a, delay }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Reveal delay={delay}>
+      <div
+        onClick={() => setOpen(!open)}
+        style={{
+          padding: "22px 28px",
+          borderRadius: "16px",
+          border: `1px solid ${open ? "rgba(123,92,255,0.3)" : C.border}`,
+          background: open ? "rgba(123,92,255,0.05)" : "rgba(255,255,255,0.02)",
+          cursor: "pointer",
+          transition: "all 0.3s ease",
+          backdropFilter: "blur(12px)",
+        }}
+      >
+        <div style={{
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+          gap: "16px",
+        }}>
+          <span style={{
+            fontFamily: "Syne, sans-serif", fontWeight: 600,
+            fontSize: "15px", color: C.text,
+          }}>{q}</span>
+          <span style={{
+            width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+            background: open ? `linear-gradient(135deg, ${C.accent}, ${C.accentB})` : "rgba(255,255,255,0.06)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: "16px", color: "white", fontWeight: 300,
+            transition: "all 0.3s ease",
+            transform: open ? "rotate(45deg)" : "rotate(0deg)",
+          }}>+</span>
+        </div>
+        {open && (
+          <p style={{
+            marginTop: "14px", fontSize: "14px", lineHeight: "1.7",
+            color: C.muted,
+            animation: "fade-up 0.3s ease both",
+          }}>{a}</p>
+        )}
+      </div>
+    </Reveal>
+  );
+}
+
+/* ─── Data ───────────────────────────────────────────────────── */
 const FEATURES = [
-  {
-    icon: Wand2,
-    title: 'AI Script Generation',
-    desc: 'Google Gemini powers instant, platform-optimized scripts from any topic — with tone and length controls.',
-    color: 'from-violet-500 to-purple-600',
-    bg: 'bg-violet-50 dark:bg-violet-950/30',
-  },
-  {
-    icon: Mic,
-    title: 'AI Voice Cloning',
-    desc: 'ElevenLabs voice tech. Clone your voice or choose from 500+ natural voices in 90+ languages.',
-    color: 'from-blue-500 to-cyan-600',
-    bg: 'bg-blue-50 dark:bg-blue-950/30',
-  },
-  {
-    icon: Video,
-    title: 'Photorealistic Avatars',
-    desc: 'HeyGen, D-ID & Synthesia. Digital presenters with facial expressions, gestures, and perfect lip-sync.',
-    color: 'from-emerald-500 to-teal-600',
-    bg: 'bg-emerald-50 dark:bg-emerald-950/30',
-  },
-  {
-    icon: Share2,
-    title: 'One-Click Publishing',
-    desc: 'Auto-publish to YouTube, TikTok, Instagram with scheduling and built-in SEO metadata.',
-    color: 'from-orange-500 to-rose-500',
-    bg: 'bg-orange-50 dark:bg-orange-950/30',
-  },
-  {
-    icon: BarChart3,
-    title: 'Real-Time Analytics',
-    desc: 'Track views, retention, CTR and engagement across every platform in one unified dashboard.',
-    color: 'from-pink-500 to-fuchsia-600',
-    bg: 'bg-pink-50 dark:bg-pink-950/30',
-  },
-  {
-    icon: Globe,
-    title: 'Template Marketplace',
-    desc: 'Buy and sell proven templates. Create once, earn infinitely from your best-performing formats.',
-    color: 'from-amber-500 to-yellow-500',
-    bg: 'bg-amber-50 dark:bg-amber-950/30',
-  },
-]
+  { icon: "✦", color: C.accent,  title: "AI Script Generation",   desc: "Powered by Google Gemini Flash. Generate engaging, platform-optimised scripts from any topic in seconds — with tone, length, and style customisation." },
+  { icon: "◈", color: C.accentB, title: "AI Voice Cloning",        desc: "ElevenLabs voice technology. Clone your voice or choose from 500+ natural-sounding voices in 90+ languages for any audience." },
+  { icon: "◉", color: C.accentC, title: "Photorealistic Avatars",  desc: "HeyGen, D-ID & Synthesia. Create photorealistic AI avatars that speak with facial expressions, gestures, and lip sync." },
+  { icon: "◆", color: "#f59e0b", title: "One-Click Publishing",    desc: "Auto-publish to YouTube, TikTok, and Instagram with scheduling, built-in SEO metadata, and platform-specific formatting." },
+  { icon: "◇", color: "#22d3ee", title: "Real-Time Analytics",     desc: "Deep cross-platform analytics. Track views, retention, engagement, and CTR from every publishing channel in one unified dashboard." },
+  { icon: "◎", color: "#a78bfa", title: "Template Marketplace",    desc: "Buy and sell video templates. Create once, monetise infinitely. Earn passive income from your best-performing video formats." },
+];
+
+const STATS = [
+  { number: "50K",   suffix: "+", label: "Videos Created",    prefix: "" },
+  { number: "500",   suffix: "M+", label: "Total Views",       prefix: "" },
+  { number: "95",    suffix: "%", label: "Satisfaction Rate",  prefix: "" },
+  { number: "24",    suffix: "/7", label: "Support",           prefix: "" },
+];
 
 const PLANS = [
   {
-    name: 'Free',
-    price: '$0',
-    period: '/month',
-    credits: '1 credit',
-    features: ['1 AI videos/month', 'Basic voices', '720p render', 'Community support'],
-    cta: 'Get started free',
-    href: '/signup',
-    highlight: false,
+    name: "Free", price: 0, description: "Perfect for trying out the platform",
+    features: ["3 videos/month", "720p quality", "Watermark", "Basic voices", "Community access"],
+    cta: "Get started free", href: "/signup",
   },
   {
-    name: 'Pro',
-    price: '$29',
-    period: '/month',
-    credits: '30 credits',
-    features: ['30 AI videos/month', '500+ voices', '4K render', 'AI avatars', 'Analytics', 'Priority support'],
-    cta: 'Start Pro trial',
-    href: '/signup?plan=pro',
-    highlight: true,
+    name: "Pro", price: 29, description: "Most popular for content creators",
+    features: ["30 videos/month", "1080p quality", "No watermark", "Voice cloning", "All avatars", "Priority support", "Scheduling", "API access"],
+    cta: "Start Pro", href: "/signup?plan=pro",
   },
   {
-    name: 'Agency',
-    price: '$99',
-    period: '/month',
-    credits: '100 credits',
-    features: ['100 AI videos/month', 'Voice cloning', '4K render', 'All avatars', 'API access', 'Team seats', 'Dedicated support'],
-    cta: 'Start Agency trial',
-    href: '/signup?plan=agency',
-    highlight: false,
+    name: "Agency", price: 99, description: "For teams and agencies",
+    features: ["100+ videos/month", "4K quality", "White-label", "Team workspace (5)", "Full API access", "Dedicated support", "Custom branding", "Priority rendering"],
+    cta: "Start Agency", href: "/signup?plan=agency",
   },
-]
-
-const STATS = [
-  { value: '50K+', label: 'Videos Created' },
-  { value: '12K+', label: 'Creators' },
-  { value: '90+',  label: 'Languages' },
-  { value: '4.9★', label: 'Avg Rating' },
-]
+];
 
 const TESTIMONIALS = [
-  {
-    name: 'Sarah Chen',
-    role: 'Content Creator · 180K subs',
-    text: 'I went from posting once a week to 5x daily. Voxara does in 3 minutes what took me 6 hours.',
-    avatar: 'SC',
-    color: 'bg-violet-500',
-  },
-  {
-    name: 'Marcus Williams',
-    role: 'Agency Owner',
-    text: 'We manage 40 client channels with a 3-person team. Voxara is literally our entire production pipeline.',
-    avatar: 'MW',
-    color: 'bg-blue-500',
-  },
-  {
-    name: 'Priya Sharma',
-    role: 'EdTech Founder',
-    text: 'Our course completion rate went up 34% since switching to Voxara videos. The avatars are indistinguishable.',
-    avatar: 'PS',
-    color: 'bg-emerald-500',
-  },
-]
+  { name: "Sarah M.", role: "YouTube Creator", initials: "SM", text: "I went from 0 to 100k subscribers in 6 months. The quality is unbelievable — my audience can't tell it's AI-generated." },
+  { name: "James D.", role: "Marketing Agency Owner", initials: "JD", text: "We use it for all our clients' video ads. The ROI has been incredible and clients love the turnaround time. Total game changer." },
+  { name: "Emma L.", role: "E-Commerce Brand", initials: "EL", text: "Product demo videos that used to take weeks now take hours. Our conversion rate increased by 35% in the first month." },
+];
 
+const FAQS = [
+  { q: "How long does it take to generate a video?", a: "Most videos are generated within 5–15 minutes depending on length and complexity. You'll receive a notification the moment it's ready." },
+  { q: "Can I use these videos commercially?", a: "Yes! All videos generated with paid plans are yours to use commercially. Free plan videos include a watermark. You retain full rights." },
+  { q: "What video quality can I get?", a: "Free: 720p | Pro: 1080p | Agency: 4K. All videos include auto-captions and are optimised per platform." },
+  { q: "Do you offer API access?", a: "Yes, Pro and Agency plans include full API access. Programmatically generate videos and integrate Voxara into your own applications." },
+  { q: "What if I run out of credits?", a: "Purchase additional credits anytime. Auto-top-up is available on Pro and Agency plans so you never run dry mid-project." },
+];
+
+/* ─── MAIN APP ───────────────────────────────────────────────── */
 export default function LandingPage() {
+  const [scrolled, setScrolled] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    const onMouse = (e) => setMousePos({ x: e.clientX, y: e.clientY });
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("mousemove", onMouse, { passive: true });
+    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("mousemove", onMouse); };
+  }, []);
+
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 overflow-hidden">
+    <>
+      <style>{CSS}</style>
+      <div className="noise-overlay" style={{ position: "relative", minHeight: "100vh" }}>
 
-      {/* ── Nav ──────────────────────────────────────────────── */}
-      <nav className="fixed top-0 inset-x-0 z-50 border-b border-slate-200/60 dark:border-slate-800/60 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-blue-600 flex items-center justify-center shadow-md">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-bold text-lg tracking-tight">voxara</span>
-          </div>
-          <div className="hidden md:flex items-center gap-6 text-sm text-slate-600 dark:text-slate-400">
-            <Link href="#features" className="hover:text-slate-900 dark:hover:text-white transition-colors">Features</Link>
-            <Link href="#pricing"  className="hover:text-slate-900 dark:hover:text-white transition-colors">Pricing</Link>
-            <Link href="#testimonials" className="hover:text-slate-900 dark:hover:text-white transition-colors">Reviews</Link>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/login">Sign in</Link>
-            </Button>
-            <Button size="sm" className="btn-shine bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700 text-white border-0 shadow-md" asChild>
-              <Link href="/signup">Start free <ArrowRight className="ml-1 w-3.5 h-3.5" /></Link>
-            </Button>
-          </div>
-        </div>
-      </nav>
+        <MeshBg />
+        <Particles />
 
-      {/* ── Hero ─────────────────────────────────────────────── */}
-      <section className="relative pt-32 pb-24 px-4 sm:px-6 overflow-hidden">
-        {/* Aurora background */}
-        <div className="aurora" />
-        {/* Dot pattern */}
-        <div className="absolute inset-0 pattern-dots opacity-60" />
+        {/* Cursor spotlight */}
+        <div style={{
+          position: "fixed",
+          left: mousePos.x - 200, top: mousePos.y - 200,
+          width: 400, height: 400, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(123,92,255,0.06) 0%, transparent 70%)",
+          pointerEvents: "none", zIndex: 2,
+          transition: "left 0.1s linear, top 0.1s linear",
+        }} />
 
-        <div className="relative max-w-5xl mx-auto text-center">
-          {/* Badge */}
-          <div className="animate-fade-up inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-violet-50 dark:bg-violet-950/50 border border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-300 text-sm font-medium mb-8">
-            <Zap className="w-3.5 h-3.5" />
-            Powered by Google Gemini · ElevenLabs · HeyGen
-            <ChevronRight className="w-3.5 h-3.5" />
+        <Nav scrolled={scrolled} />
+
+        {/* ── HERO ─────────────────────────────────────────────── */}
+        <section style={{
+          position: "relative", zIndex: 10,
+          padding: "180px 32px 120px",
+          maxWidth: "1200px", margin: "0 auto",
+          textAlign: "center",
+        }}>
+          <div className="animate-fade-up" style={{ animationDelay: "0ms" }}>
+            <Pill>Powered by Gemini · ElevenLabs · HeyGen · D-ID</Pill>
           </div>
 
-          {/* Headline */}
-          <h1 className="animate-fade-up delay-75 text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.05] mb-6">
-            Create viral videos{' '}
-            <span className="gradient-text-hero">with AI</span>
-            <br />no camera needed
+          <h1 className="animate-fade-up" style={{
+            animationDelay: "80ms",
+            fontFamily: "Syne, sans-serif", fontWeight: 800,
+            fontSize: "clamp(3rem, 8vw, 7rem)",
+            lineHeight: 1.04, letterSpacing: "-0.03em",
+            marginBottom: "28px",
+          }}>
+            <span className="shimmer-text">Create Viral</span>
+            <br />
+            <span style={{ color: C.text }}>AI Videos in</span>
+            <br />
+            <span style={{
+              background: `linear-gradient(135deg, ${C.accentB}, ${C.accent})`,
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            }}>Minutes.</span>
           </h1>
 
-          <p className="animate-fade-up delay-150 text-lg sm:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Script → Voice → Avatar → Published in under 3 minutes.
-            The complete AI video production stack for creators and agencies.
+          <p className="animate-fade-up" style={{
+            animationDelay: "160ms",
+            fontSize: "clamp(1rem, 2.5vw, 1.25rem)",
+            lineHeight: 1.7, color: C.muted,
+            maxWidth: "620px", margin: "0 auto 48px",
+          }}>
+            Turn any topic into a polished, professional video with AI voiceover,
+            avatars, and stock footage. No camera. No editing. No limits.
           </p>
 
-          <div className="animate-fade-up delay-225 flex flex-col sm:flex-row gap-3 justify-center mb-16">
-            <Button size="lg" className="btn-shine h-12 px-8 bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700 text-white border-0 shadow-lg shadow-violet-500/25 text-base" asChild>
-              <Link href="/signup">
-                <Sparkles className="mr-2 w-4 h-4" />
-                Start creating free
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" className="h-12 px-8 text-base hover-lift" asChild>
-              <Link href="#features">
-                <Play className="mr-2 w-4 h-4" />
-                See how it works
-              </Link>
-            </Button>
+          <div className="animate-fade-up" style={{
+            animationDelay: "240ms",
+            display: "flex", flexWrap: "wrap",
+            justifyContent: "center", gap: "14px",
+            marginBottom: "64px",
+          }}>
+            {/* Primary CTA */}
+            <a href="/signup" className="magnetic-btn" style={{
+              display: "inline-flex", alignItems: "center", gap: "10px",
+              padding: "16px 36px", borderRadius: "14px",
+              background: `linear-gradient(135deg, ${C.accent}, ${C.accentB})`,
+              color: "white", fontSize: "16px", fontWeight: 700,
+              textDecoration: "none", letterSpacing: "0.02em",
+              boxShadow: `0 0 40px rgba(123,92,255,0.45), 0 0 80px rgba(123,92,255,0.15)`,
+              position: "relative", overflow: "hidden",
+            }}>
+              <span style={{
+                position: "absolute", inset: 0,
+                background: "linear-gradient(135deg, rgba(255,255,255,0.15), transparent)",
+              }} />
+              Start Creating Free
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </a>
+
+            {/* Secondary CTA */}
+            <a href="#features" className="magnetic-btn" style={{
+              display: "inline-flex", alignItems: "center", gap: "10px",
+              padding: "16px 32px", borderRadius: "14px",
+              background: "rgba(255,255,255,0.05)",
+              border: `1px solid ${C.border}`,
+              backdropFilter: "blur(12px)",
+              color: C.text, fontSize: "16px", fontWeight: 600,
+              textDecoration: "none", letterSpacing: "0.02em",
+            }}>
+              <div style={{
+                width: 28, height: 28, borderRadius: "50%",
+                background: "rgba(255,255,255,0.1)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <svg width="10" height="12" viewBox="0 0 10 12" fill="white">
+                  <path d="M0 0L10 6L0 12Z"/>
+                </svg>
+              </div>
+              See How It Works
+            </a>
           </div>
 
-          {/* Stats row */}
-          <div className="animate-fade-up delay-300 grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-2xl mx-auto">
-            {STATS.map((s, i) => (
-              <div key={i} className={`text-center delay-${75 * i}`}>
-                <div className="text-2xl sm:text-3xl font-bold gradient-text-hero tabular-nums">{s.value}</div>
-                <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">{s.label}</div>
+          {/* Trust signals */}
+          <div className="animate-fade-up" style={{
+            animationDelay: "320ms",
+            display: "flex", flexWrap: "wrap",
+            justifyContent: "center", gap: "28px", marginBottom: "80px",
+          }}>
+            {[
+              { icon: "🔒", text: "No credit card required" },
+              { icon: "🎬", text: "3 free videos per month" },
+              { icon: "⚡", text: "Generate in 5 minutes" },
+            ].map(({ icon, text }) => (
+              <div key={text} style={{
+                display: "flex", alignItems: "center", gap: "8px",
+                fontSize: "13px", color: C.muted,
+              }}>
+                <span>{icon}</span> {text}
               </div>
             ))}
           </div>
-        </div>
 
-        {/* Hero card preview */}
-        <div className="animate-fade-up delay-375 relative max-w-4xl mx-auto mt-16">
-          <div className="gradient-border rounded-2xl overflow-hidden shadow-2xl shadow-violet-500/20">
-            <div className="bg-slate-900 rounded-2xl p-6 sm:p-8">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-3 h-3 rounded-full bg-red-500" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                <div className="w-3 h-3 rounded-full bg-green-500" />
-                <span className="ml-3 text-slate-500 text-sm font-mono">voxara studio</span>
+          {/* Hero preview window */}
+          <div className="animate-scale-in" style={{
+            animationDelay: "400ms",
+            maxWidth: "960px", margin: "0 auto",
+            borderRadius: "24px",
+            border: `1px solid ${C.border}`,
+            background: "linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01))",
+            backdropFilter: "blur(20px)",
+            padding: "4px",
+            boxShadow: `0 40px 120px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.08)`,
+          }}>
+            {/* Window chrome */}
+            <div style={{
+              padding: "14px 20px",
+              borderBottom: `1px solid ${C.border}`,
+              display: "flex", alignItems: "center", gap: "8px",
+            }}>
+              {["#ff5f57", "#febc2e", "#28c840"].map(c => (
+                <div key={c} style={{ width: 12, height: 12, borderRadius: "50%", background: c }} />
+              ))}
+              <div style={{
+                flex: 1, margin: "0 16px",
+                height: "26px", borderRadius: "6px",
+                background: "rgba(255,255,255,0.04)",
+                display: "flex", alignItems: "center", paddingLeft: "12px",
+              }}>
+                <span style={{ fontSize: "11px", color: C.muted }}>app.voxara.app/studio</span>
               </div>
-              <div className="grid sm:grid-cols-3 gap-4">
-                {['Script', 'Voice', 'Publish'].map((step, i) => (
-                  <div key={step} className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${i === 0 ? 'bg-violet-600' : i === 1 ? 'bg-blue-600' : 'bg-emerald-600'}`}>{i + 1}</div>
-                      <span className="text-white text-sm font-medium">{step}</span>
-                    </div>
-                    <div className="space-y-1.5">
-                      <div className="h-2 bg-slate-700 rounded-full" />
-                      <div className="h-2 bg-slate-700 rounded-full w-4/5" />
-                      <div className="h-2 bg-slate-700 rounded-full w-3/5" />
-                    </div>
-                    {i === 2 && (
-                      <div className="mt-3 flex gap-1.5">
-                        {['YT','TK','IG'].map(p => (
-                          <span key={p} className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-600/20 text-emerald-400 font-mono">{p}</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+            </div>
+
+            {/* Video area */}
+            <div style={{
+              aspectRatio: "16/9",
+              background: "linear-gradient(135deg, #06061a, #0d0818, #04040c)",
+              borderRadius: "0 0 20px 20px",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              position: "relative", overflow: "hidden",
+            }}>
+              {/* Grid pattern in video */}
+              <div style={{
+                position: "absolute", inset: 0,
+                backgroundImage: `linear-gradient(rgba(123,92,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(123,92,255,0.04) 1px, transparent 1px)`,
+                backgroundSize: "40px 40px",
+              }} />
+
+              {/* Waveform visualization */}
+              <div style={{
+                position: "absolute", bottom: "30%", left: "10%", right: "10%",
+                display: "flex", alignItems: "center", gap: "3px", height: "60px",
+              }}>
+                {Array.from({ length: 60 }, (_, i) => (
+                  <div key={i} style={{
+                    flex: 1,
+                    height: `${20 + Math.abs(Math.sin(i * 0.4) * 40)}%`,
+                    background: `linear-gradient(180deg, ${C.accent}88, ${C.accentB}44)`,
+                    borderRadius: "2px",
+                    animation: `drift ${0.8 + (i % 5) * 0.2}s ease-in-out infinite`,
+                    animationDelay: `${i * 0.05}s`,
+                  }} />
                 ))}
               </div>
-              <div className="mt-4 flex items-center gap-2 text-emerald-400 text-sm">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Video ready in 2m 34s · Published to 3 platforms</span>
-              </div>
-            </div>
-          </div>
-          {/* Floating badges */}
-          <div className="absolute -top-4 -right-4 sm:-right-8 animate-float bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 px-4 py-2.5 hidden sm:flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse-ring" />
-            <span className="text-sm font-medium">3 videos published today</span>
-          </div>
-        </div>
-      </section>
 
-      {/* ── Features ─────────────────────────────────────────── */}
-      <section id="features" className="relative py-24 px-4 sm:px-6 bg-slate-50/70 dark:bg-slate-900/50">
-        <div className="absolute inset-0 pattern-grid opacity-50" />
-        <div className="relative max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <Badge className="mb-4 bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800">
-              Everything you need
-            </Badge>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
-              The complete AI video stack
-            </h2>
-            <p className="text-slate-600 dark:text-slate-400 text-lg max-w-2xl mx-auto">
-              Every tool from script to published video, powered by the world&apos;s best AI models.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {FEATURES.map((f, i) => (
-              <div key={f.title} className={`card-premium rounded-2xl p-6 group cursor-default animate-fade-up delay-${75 * (i % 4)}`}>
-                <div className={`w-12 h-12 rounded-xl ${f.bg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200`}>
-                  <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${f.color} flex items-center justify-center`}>
-                    <f.icon className="w-4 h-4 text-white" />
-                  </div>
-                </div>
-                <h3 className="font-semibold text-lg mb-2">{f.title}</h3>
-                <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Social proof ─────────────────────────────────────── */}
-      <section id="testimonials" className="py-24 px-4 sm:px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <Badge className="mb-4 bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800">
-              <Star className="w-3 h-3 mr-1 fill-current" />
-              Loved by creators
-            </Badge>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-              Real results, real creators
-            </h2>
-          </div>
-          <div className="grid sm:grid-cols-3 gap-5">
-            {TESTIMONIALS.map((t, i) => (
-              <div key={t.name} className={`card-premium rounded-2xl p-6 animate-fade-up delay-${150 * i}`}>
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, j) => (
-                    <Star key={j} className="w-4 h-4 text-amber-400 fill-amber-400" />
-                  ))}
-                </div>
-                <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed mb-5">
-                  &ldquo;{t.text}&rdquo;
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-full ${t.color} flex items-center justify-center text-white text-xs font-bold`}>
-                    {t.avatar}
-                  </div>
-                  <div>
-                    <div className="font-medium text-sm">{t.name}</div>
-                    <div className="text-xs text-slate-500">{t.role}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Pricing ──────────────────────────────────────────── */}
-      <section id="pricing" className="relative py-24 px-4 sm:px-6 bg-slate-50/70 dark:bg-slate-900/50">
-        <div className="absolute inset-0 pattern-dots opacity-40" />
-        <div className="relative max-w-5xl mx-auto">
-          <div className="text-center mb-16">
-            <Badge className="mb-4 bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800">
-              Simple pricing
-            </Badge>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">Start free, scale up</h2>
-            <p className="text-slate-600 dark:text-slate-400">No contracts. Cancel anytime.</p>
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-5">
-            {PLANS.map((plan, i) => (
-              <div
-                key={plan.name}
-                className={`relative rounded-2xl p-6 animate-fade-up delay-${150 * i} ${
-                  plan.highlight
-                    ? 'gradient-border bg-white dark:bg-slate-900 shadow-2xl shadow-violet-500/20 scale-[1.02]'
-                    : 'card-premium'
-                }`}
+              {/* Play button */}
+              <div style={{
+                width: 72, height: 72, borderRadius: "50%",
+                background: "rgba(255,255,255,0.1)",
+                backdropFilter: "blur(20px)",
+                border: "2px solid rgba(255,255,255,0.2)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", zIndex: 2,
+                boxShadow: `0 0 40px rgba(123,92,255,0.3)`,
+                transition: "all 0.3s ease",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.background = "rgba(123,92,255,0.3)"; e.currentTarget.style.transform = "scale(1.1)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.transform = "scale(1)"; }}
               >
-                {plan.highlight && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
-                      Most popular
-                    </span>
-                  </div>
-                )}
-                <div className="mb-5">
-                  <div className="font-semibold text-lg">{plan.name}</div>
-                  <div className="flex items-end gap-1 mt-2">
-                    <span className="text-4xl font-extrabold">{plan.price}</span>
-                    <span className="text-slate-500 pb-1">{plan.period}</span>
-                  </div>
-                  <div className="text-sm text-violet-600 dark:text-violet-400 font-medium mt-1">{plan.credits}</div>
-                </div>
-                <ul className="space-y-2.5 mb-6">
-                  {plan.features.map((feat) => (
-                    <li key={feat} className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                      <span>{feat}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  asChild
-                  className={`w-full btn-shine ${
-                    plan.highlight
-                      ? 'bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700 text-white border-0 shadow-lg shadow-violet-500/25'
-                      : ''
-                  }`}
-                  variant={plan.highlight ? 'default' : 'outline'}
-                >
-                  <Link href={plan.href}>{plan.cta}</Link>
-                </Button>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                  <path d="M5 3l14 9-14 9V3z"/>
+                </svg>
+              </div>
+
+              {/* Status pill */}
+              <div style={{
+                position: "absolute", bottom: 20, right: 20,
+                padding: "6px 14px", borderRadius: "100px",
+                background: "rgba(0,0,0,0.6)", backdropFilter: "blur(12px)",
+                border: `1px solid ${C.border}`,
+                display: "flex", alignItems: "center", gap: "8px",
+                fontSize: "12px", color: C.muted,
+              }}>
+                <span style={{
+                  width: 7, height: 7, borderRadius: "50%",
+                  background: "#4ade80",
+                  boxShadow: "0 0 8px #4ade80",
+                  animation: "pulse-ring 2s ease-out infinite",
+                }} />
+                Sample video · Generated with Voxara
+              </div>
+
+              {/* Corner gradient */}
+              <div style={{
+                position: "absolute", inset: 0,
+                background: "radial-gradient(ellipse at 20% 80%, rgba(123,92,255,0.08), transparent 50%)",
+              }} />
+            </div>
+          </div>
+        </section>
+
+        {/* ── LOGO MARQUEE ───────────────────────────────────── */}
+        <LogoMarquee />
+
+        {/* ── STATS ─────────────────────────────────────────── */}
+        <section style={{
+          position: "relative", zIndex: 10,
+          padding: "100px 32px",
+          maxWidth: "1200px", margin: "0 auto",
+        }}>
+          <div style={{
+            display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
+            gap: "2px",
+            borderRadius: "24px", overflow: "hidden",
+            border: `1px solid ${C.border}`,
+          }}>
+            {STATS.map(({ number, suffix, label, prefix }, i) => (
+              <div key={label} style={{
+                padding: "48px 32px",
+                background: i % 2 === 0 ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.015)",
+                borderRight: i < 3 ? `1px solid ${C.border}` : "none",
+                textAlign: "center",
+                backdropFilter: "blur(12px)",
+              }}>
+                <Counter target={`${number}${suffix}`} prefix={prefix} />
+                <p style={{ fontSize: "13px", color: C.muted, marginTop: "8px", letterSpacing: "0.05em" }}>
+                  {label}
+                </p>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── Trust badges ─────────────────────────────────────── */}
-      <section className="py-16 px-4 sm:px-6 border-t border-slate-200 dark:border-slate-800">
-        <div className="max-w-5xl mx-auto">
-          <div className="grid sm:grid-cols-4 gap-6 text-center">
-            {[
-              { icon: Shield,    label: 'SOC 2 compliant',    sub: 'Enterprise security' },
-              { icon: Lock,      label: 'End-to-end encrypted', sub: 'Your data stays yours' },
-              { icon: TrendingUp,label: '99.9% uptime SLA',   sub: 'Production-grade infra' },
-              { icon: Trophy,    label: '4.9/5 rating',       sub: '2,400+ verified reviews' },
-            ].map((item) => (
-              <div key={item.label} className="flex flex-col items-center gap-2 p-4">
-                <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                  <item.icon className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-                </div>
-                <div className="font-semibold text-sm">{item.label}</div>
-                <div className="text-xs text-slate-500">{item.sub}</div>
-              </div>
+        {/* ── FEATURES ──────────────────────────────────────── */}
+        <section id="features" style={{
+          position: "relative", zIndex: 10,
+          padding: "80px 32px 120px",
+          maxWidth: "1200px", margin: "0 auto",
+        }}>
+          <Reveal>
+            <div style={{ textAlign: "center", marginBottom: "72px" }}>
+              <Pill>Platform Capabilities</Pill>
+              <h2 style={{
+                fontFamily: "Syne, sans-serif", fontWeight: 800,
+                fontSize: "clamp(2rem, 5vw, 3.5rem)",
+                letterSpacing: "-0.03em", lineHeight: 1.1,
+                marginBottom: "20px",
+              }}>
+                Everything you need to{" "}
+                <span style={{
+                  background: `linear-gradient(135deg, ${C.accent}, ${C.accentC})`,
+                  WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                }}>go viral</span>
+              </h2>
+              <p style={{ fontSize: "16px", color: C.muted, maxWidth: "560px", margin: "0 auto", lineHeight: 1.7 }}>
+                Powered by the latest AI and enterprise infrastructure. Used by 50K+ creators worldwide.
+              </p>
+            </div>
+          </Reveal>
+
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: "20px",
+          }}>
+            {FEATURES.map((f, i) => (
+              <FeatureCard key={f.title} {...f} delay={i * 80} />
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── CTA ──────────────────────────────────────────────── */}
-      <section className="relative py-24 px-4 sm:px-6 overflow-hidden">
-        <div className="aurora" />
-        <div className="absolute inset-0 pattern-dots opacity-50" />
-        <div className="relative max-w-3xl mx-auto text-center">
-          <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-6">
-            Your first video is{' '}
-            <span className="gradient-text-hero">3 minutes away</span>
-          </h2>
-          <p className="text-slate-600 dark:text-slate-400 text-lg mb-10">
-            Join 12,000+ creators. No camera, no crew, no editing skills required.
-          </p>
-          <Button size="lg" className="btn-shine h-14 px-10 text-lg bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700 text-white border-0 shadow-xl shadow-violet-500/30" asChild>
-            <Link href="/signup">
-              <Sparkles className="mr-2 w-5 h-5" />
-              Create your first video free
-            </Link>
-          </Button>
-          <p className="mt-4 text-sm text-slate-500">No credit card required · 3 free videos included</p>
-        </div>
-      </section>
-
-      {/* ── Footer ───────────────────────────────────────────── */}
-      <footer className="border-t border-slate-200 dark:border-slate-800 py-12 px-4 sm:px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-blue-600 flex items-center justify-center">
-                <Sparkles className="w-3.5 h-3.5 text-white" />
+        {/* ── HOW IT WORKS ──────────────────────────────────── */}
+        <section style={{
+          position: "relative", zIndex: 10,
+          padding: "80px 32px 120px",
+          background: "rgba(255,255,255,0.01)",
+          borderTop: `1px solid ${C.border}`,
+          borderBottom: `1px solid ${C.border}`,
+        }}>
+          <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+            <Reveal>
+              <div style={{ textAlign: "center", marginBottom: "72px" }}>
+                <Pill>Simple Process</Pill>
+                <h2 style={{
+                  fontFamily: "Syne, sans-serif", fontWeight: 800,
+                  fontSize: "clamp(2rem, 5vw, 3.5rem)",
+                  letterSpacing: "-0.03em", lineHeight: 1.1,
+                }}>
+                  From idea to video{" "}
+                  <span style={{
+                    background: `linear-gradient(135deg, ${C.accentB}, ${C.accent})`,
+                    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                  }}>in 3 steps</span>
+                </h2>
               </div>
-              <span className="font-bold">voxara</span>
-              <span className="text-slate-400 text-sm ml-2">© 2025</span>
-            </div>
-            <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-slate-500">
-              <Link href="/legal/terms"   className="hover:text-slate-900 dark:hover:text-white transition-colors">Terms</Link>
-              <Link href="/legal/privacy" className="hover:text-slate-900 dark:hover:text-white transition-colors">Privacy</Link>
-              <Link href="/legal/dpa"     className="hover:text-slate-900 dark:hover:text-white transition-colors">DPA</Link>
-              <Link href="/legal/aup"     className="hover:text-slate-900 dark:hover:text-white transition-colors">AUP</Link>
+            </Reveal>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "2px", position: "relative" }}>
+              {[
+                { num: "01", title: "Describe your video", desc: "Enter a topic, paste a URL, or choose a template. Our AI understands context, audience, and intent.", color: C.accent },
+                { num: "02", title: "Customise & generate", desc: "Pick your voice, avatar, language, and style. Hit generate — our pipeline handles everything else.", color: C.accentB },
+                { num: "03", title: "Publish everywhere", desc: "One-click publishing to YouTube, TikTok, and Instagram with auto-optimised metadata and scheduling.", color: C.accentC },
+              ].map((step, i) => (
+                <Reveal key={step.num} delay={i * 120}>
+                  <div style={{
+                    padding: "48px 36px",
+                    background: "rgba(255,255,255,0.02)",
+                    borderRight: i < 2 ? `1px solid ${C.border}` : "none",
+                    position: "relative",
+                  }}>
+                    <div style={{
+                      fontFamily: "Syne, sans-serif", fontWeight: 800,
+                      fontSize: "80px", lineHeight: 1,
+                      color: "rgba(255,255,255,0.04)",
+                      marginBottom: "-16px",
+                      userSelect: "none",
+                    }}>
+                      {step.num}
+                    </div>
+                    <h3 style={{
+                      fontFamily: "Syne, sans-serif", fontWeight: 700,
+                      fontSize: "20px", color: C.text,
+                      marginBottom: "14px",
+                      position: "relative",
+                    }}>
+                      <span style={{
+                        display: "inline-block", width: 8, height: 8, borderRadius: "50%",
+                        background: step.color, marginRight: "10px",
+                        boxShadow: `0 0 10px ${step.color}`,
+                        verticalAlign: "middle",
+                      }} />
+                      {step.title}
+                    </h3>
+                    <p style={{ fontSize: "14px", color: C.muted, lineHeight: "1.7" }}>{step.desc}</p>
+                  </div>
+                </Reveal>
+              ))}
             </div>
           </div>
-        </div>
-      </footer>
-    </div>
-  )
+        </section>
+
+        {/* ── TESTIMONIALS ──────────────────────────────────── */}
+        <section style={{
+          position: "relative", zIndex: 10,
+          padding: "100px 32px",
+          maxWidth: "1200px", margin: "0 auto",
+        }}>
+          <Reveal>
+            <div style={{ textAlign: "center", marginBottom: "72px" }}>
+              <Pill>Social Proof</Pill>
+              <h2 style={{
+                fontFamily: "Syne, sans-serif", fontWeight: 800,
+                fontSize: "clamp(2rem, 5vw, 3.5rem)",
+                letterSpacing: "-0.03em",
+              }}>
+                Trusted by{" "}
+                <span style={{
+                  background: `linear-gradient(135deg, ${C.accent}, ${C.accentB})`,
+                  WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                }}>50K+ creators</span>
+              </h2>
+            </div>
+          </Reveal>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
+            {TESTIMONIALS.map((t, i) => (
+              <TestimonialCard key={t.name} {...t} delay={i * 100} />
+            ))}
+          </div>
+        </section>
+
+        {/* ── PRICING ───────────────────────────────────────── */}
+        <section id="pricing" style={{
+          position: "relative", zIndex: 10,
+          padding: "80px 32px 120px",
+          borderTop: `1px solid ${C.border}`,
+          background: "rgba(255,255,255,0.01)",
+        }}>
+          <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
+            <Reveal>
+              <div style={{ textAlign: "center", marginBottom: "72px" }}>
+                <Pill>Pricing</Pill>
+                <h2 style={{
+                  fontFamily: "Syne, sans-serif", fontWeight: 800,
+                  fontSize: "clamp(2rem, 5vw, 3.5rem)",
+                  letterSpacing: "-0.03em", lineHeight: 1.1,
+                  marginBottom: "20px",
+                }}>
+                  Simple, transparent{" "}
+                  <span style={{
+                    background: `linear-gradient(135deg, ${C.accentC}, ${C.accent})`,
+                    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                  }}>pricing</span>
+                </h2>
+                <p style={{ fontSize: "16px", color: C.muted, maxWidth: "480px", margin: "0 auto" }}>
+                  Start free and scale as you grow. No surprises. Cancel anytime.
+                </p>
+              </div>
+            </Reveal>
+
+            <div style={{
+              display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
+              gap: "20px", alignItems: "start",
+            }}>
+              {PLANS.map((plan, i) => (
+                <PricingCard key={plan.name} plan={plan} highlighted={i === 1} delay={i * 100} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── FAQ ───────────────────────────────────────────── */}
+        <section id="faq" style={{
+          position: "relative", zIndex: 10,
+          padding: "100px 32px",
+          maxWidth: "800px", margin: "0 auto",
+        }}>
+          <Reveal>
+            <div style={{ textAlign: "center", marginBottom: "60px" }}>
+              <Pill>Got Questions?</Pill>
+              <h2 style={{
+                fontFamily: "Syne, sans-serif", fontWeight: 800,
+                fontSize: "clamp(2rem, 5vw, 3rem)",
+                letterSpacing: "-0.03em",
+              }}>
+                Frequently asked questions
+              </h2>
+            </div>
+          </Reveal>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            {FAQS.map((faq, i) => (
+              <FAQItem key={faq.q} {...faq} delay={i * 60} />
+            ))}
+          </div>
+        </section>
+
+        {/* ── FINAL CTA ─────────────────────────────────────── */}
+        <section style={{
+          position: "relative", zIndex: 10,
+          padding: "120px 32px",
+          overflow: "hidden",
+        }}>
+          {/* Big background glow */}
+          <div style={{
+            position: "absolute", inset: 0,
+            background: `radial-gradient(ellipse 70% 60% at 50% 50%, rgba(123,92,255,0.12), transparent)`,
+          }} />
+          <div style={{
+            position: "absolute", top: 0, left: 0, right: 0, height: "1px",
+            background: `linear-gradient(90deg, transparent, ${C.accent}, ${C.accentB}, ${C.accentC}, transparent)`,
+          }} />
+
+          {/* Spinning ring */}
+          <div style={{
+            position: "absolute", width: "600px", height: "600px",
+            border: "1px solid rgba(123,92,255,0.08)",
+            borderRadius: "50%",
+            top: "50%", left: "50%",
+            transform: "translate(-50%, -50%)",
+            animation: "spin-slow 30s linear infinite",
+          }} />
+          <div style={{
+            position: "absolute", width: "400px", height: "400px",
+            border: "1px solid rgba(255,92,168,0.06)",
+            borderRadius: "50%",
+            top: "50%", left: "50%",
+            transform: "translate(-50%, -50%)",
+            animation: "spin-slow 20s linear infinite reverse",
+          }} />
+
+          <Reveal>
+            <div style={{ textAlign: "center", position: "relative" }}>
+              <h2 style={{
+                fontFamily: "Syne, sans-serif", fontWeight: 800,
+                fontSize: "clamp(2.5rem, 7vw, 5.5rem)",
+                letterSpacing: "-0.04em", lineHeight: 1.05,
+                marginBottom: "24px",
+              }}>
+                <span className="shimmer-text">Ready to go viral?</span>
+              </h2>
+              <p style={{
+                fontSize: "18px", color: C.muted, marginBottom: "52px",
+                maxWidth: "480px", margin: "0 auto 52px", lineHeight: 1.7,
+              }}>
+                Join 50,000+ creators, agencies, and businesses already using Voxara to grow their audience.
+              </p>
+
+              <div style={{ display: "flex", justifyContent: "center", gap: "16px", flexWrap: "wrap" }}>
+                <a href="/signup" className="magnetic-btn" style={{
+                  display: "inline-flex", alignItems: "center", gap: "12px",
+                  padding: "18px 44px", borderRadius: "16px",
+                  background: `linear-gradient(135deg, ${C.accent}, ${C.accentB})`,
+                  color: "white", fontSize: "17px", fontWeight: 700,
+                  textDecoration: "none", letterSpacing: "0.02em",
+                  boxShadow: `0 0 60px rgba(123,92,255,0.5), 0 0 120px rgba(123,92,255,0.2)`,
+                  position: "relative", overflow: "hidden",
+                }}>
+                  <span style={{
+                    position: "absolute", inset: 0,
+                    background: "linear-gradient(135deg, rgba(255,255,255,0.12), transparent)",
+                  }} />
+                  Create your first video — it's free
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
+                </a>
+
+                <a href="mailto:sales@voxara.app" className="magnetic-btn" style={{
+                  display: "inline-flex", alignItems: "center", gap: "10px",
+                  padding: "18px 36px", borderRadius: "16px",
+                  background: "rgba(255,255,255,0.04)",
+                  border: `1px solid ${C.border}`,
+                  backdropFilter: "blur(12px)",
+                  color: C.text, fontSize: "17px", fontWeight: 600,
+                  textDecoration: "none",
+                }}>
+                  Talk to sales
+                </a>
+              </div>
+            </div>
+          </Reveal>
+        </section>
+
+        {/* ── FOOTER ────────────────────────────────────────── */}
+        <footer style={{
+          position: "relative", zIndex: 10,
+          padding: "48px 32px",
+          borderTop: `1px solid ${C.border}`,
+          maxWidth: "1200px", margin: "0 auto",
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+          flexWrap: "wrap", gap: "20px",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{
+              width: 30, height: 30, borderRadius: "8px",
+              background: `linear-gradient(135deg, ${C.accent}, ${C.accentB})`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+            </div>
+            <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: "16px" }}>voxara</span>
+            <span style={{ fontSize: "13px", color: C.muted, marginLeft: "16px" }}>
+              © 2025 Voxara. All rights reserved.
+            </span>
+          </div>
+
+          <div style={{ display: "flex", gap: "28px" }}>
+            {["Privacy", "Terms", "Cookies", "Contact"].map(link => (
+              <a key={link} href={`/legal/${link.toLowerCase()}`} style={{
+                fontSize: "13px", color: C.muted, textDecoration: "none",
+                transition: "color 0.2s",
+              }}
+                onMouseEnter={e => e.target.style.color = C.text}
+                onMouseLeave={e => e.target.style.color = C.muted}
+              >
+                {link}
+              </a>
+            ))}
+          </div>
+        </footer>
+
+      </div>
+    </>
+  );
 }

@@ -2,6 +2,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin';
 import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -79,7 +80,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   await supabaseAdmin.storage
     .from("videos")
     .remove([`${user.id}/${id}/voiceover.mp3`])
-    .catch(() => { });
+    .catch(() => {});
 
   // Delete DB record (cascades to related records via FK)
   const { error } = await supabase

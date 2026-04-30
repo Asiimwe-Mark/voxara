@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import { verifyWebhookSignatureHmac } from '@/lib/security.node';
 
 export interface FlutterwaveConfig {
   apiKey: string;
@@ -130,14 +130,7 @@ export class FlutterwaveClient {
    * Verify webhook signature using HMAC-SHA256
    */
   verifyWebhookSignature(payload: string, signature: string): boolean {
-    const hash = crypto
-      .createHmac('sha256', this.webhookSecret)
-      .update(payload)
-      .digest('hex');
-    return crypto.timingSafeEqual(
-      Buffer.from(hash, 'utf8'),
-      Buffer.from(signature.trim(), 'utf8')
-    );
+    return verifyWebhookSignatureHmac(payload, signature, this.webhookSecret);
   }
 }
 

@@ -82,7 +82,7 @@ async function handlePaddleAutoTopup(
     p_credits:  settings.top_up_amount,
   });
 
-  await supabaseAdmin.from('credit_purchases').insert({
+  await supabaseAdmin().from('credit_purchases').insert({
     user_id:           userId,
     credits_purchased: settings.top_up_amount,
     amount_paid:       amountInCents,
@@ -133,7 +133,7 @@ async function handleFlutterwaveAutoTopup(
     if (response.status === 'success') {
       logger.info(`[auto-topup] Flutterwave link generated for ${userId}: ${response.data.link}`);
 
-      await supabaseAdmin.from('pending_credit_purchases').insert({
+      await supabaseAdmin().from('pending_credit_purchases').insert({
         user_id:         userId,
         credits_pending: settings.top_up_amount,
         tx_ref:          txRef,

@@ -37,13 +37,19 @@ export async function deductCredits(userId: string, amount: number = 1): Promise
  * fire the Inngest billing/auto-top-up event.
  */
 async function triggerAutoTopUpCheck(userId: string): Promise<void> {
+  const adminClient = supabaseAdmin();
+
   const [{ data: settings }, { data: profile }] = await Promise.all([
-    supabaseAdmin
+    adminClient
       .from('auto_top_up_settings')
       .select('enabled, threshold')
       .eq('user_id', userId)
       .single(),
-    supabaseAdmin.from('profiles').select('credits').eq('id', userId).single(),
+    adminClient
+      .from('profiles')
+      .select('credits')
+      .eq('id', userId)
+      .single(),
   ]);
 
   if (!settings?.enabled || profile == null) return;
@@ -78,9 +84,11 @@ export async function getCredits(userId: string): Promise<number> {
  */
 export async function awardSharingCredits(
   userId: string,
-  platform: keyof typeof CREDITS_CONFIG.SHARING_BONUS
+  platform: string // simplified from keyof typeof CREDITS_CONFIG.SHARING_BONUS to string
 ): Promise<number> {
-  const bonus = CREDITS_CONFIG.SHARING_BONUS[platform] ?? 1;
+  const adminClient = supabaseAdmin();
+
+  const bonus = (CREDITS_CONFIG.SHARING_BONUS as Record<string, number>)[platform] ?? 1;
   const cap   = CREDITS_CONFIG.MAX_SHARING_CREDITS_PER_MONTH;
 
   // Check how many sharing credits this user earned this calendar month
@@ -88,7 +96,7 @@ export async function awardSharingCredits(
   startOfMonth.setDate(1);
   startOfMonth.setHours(0, 0, 0, 0);
 
-  const { data: existing } = await supabaseAdmin
+  const { data: existing } = await adminClient
     .from('credit_transactions')
     .select('amount')
     .eq('user_id', userId)
@@ -101,14 +109,14 @@ export async function awardSharingCredits(
   const toAward = Math.min(bonus, cap - usedThisMonth);
 
   // Award credits via RPC
-  const { error: creditError } = await supabaseAdmin.rpc('add_credits', {
+  const { error: creditError } = await adminClient.rpc('add_credits', {
     p_user_id: userId,
     p_credits: toAward,
   });
   if (creditError) throw new Error(`awardSharingCredits RPC failed: ${creditError.message}`);
 
-  // Log transaction for cap enforcement
-  await supabaseAdmin.from('credit_transactions').insert({
+  // Log transaction
+  await adminClient.from('credit_transactions').insert({
     user_id: userId,
     amount: toAward,
     reason: 'social_share',
@@ -121,23 +129,22 @@ export async function awardSharingCredits(
 
 /**
  * Award referral credits when a new user signs up via a referral link.
- * The referrer gets REFERRAL_BONUS_REFERRER credits.
- * The new user gets REFERRAL_BONUS_NEW_USER extra credits on top of their free allotment.
  */
 export async function awardReferralCredits(referrerId: string, newUserId: string): Promise<void> {
+  const adminClient = supabaseAdmin();
 
   await Promise.all([
-    supabaseAdmin.rpc('add_credits', {
+    adminClient.rpc('add_credits', {
       p_user_id: referrerId,
       p_credits: CREDITS_CONFIG.REFERRAL_BONUS_REFERRER,
     }),
-    supabaseAdmin.rpc('add_credits', {
+    adminClient.rpc('add_credits', {
       p_user_id: newUserId,
       p_credits: CREDITS_CONFIG.REFERRAL_BONUS_NEW_USER,
     }),
   ]);
 
-  await supabaseAdmin.from('credit_transactions').insert([
+  await adminClient.from('credit_transactions').insert([
     { user_id: referrerId, amount: CREDITS_CONFIG.REFERRAL_BONUS_REFERRER, reason: 'referral_given', metadata: { referred_user: newUserId }, created_at: new Date().toISOString() },
     { user_id: newUserId, amount: CREDITS_CONFIG.REFERRAL_BONUS_NEW_USER, reason: 'referral_received', metadata: { referred_by: referrerId }, created_at: new Date().toISOString() },
   ]);

@@ -149,7 +149,7 @@ async function renderWithLocalNode(options: RenderOptions): Promise<string> {
     inputProps,
     onProgress: ({ progress }) => {
       if (process.env.NODE_ENV !== 'test') {
-        console.log(`[Remotion] ${videoId}: ${Math.round(progress * 100)}%`);
+        if (process.env.NODE_ENV !== 'test') console.log(`[Remotion] ${videoId}: ${Math.round(progress * 100)}%`);
       }
     },
   });

@@ -1,29 +1,19 @@
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 import { google } from "googleapis";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 
-export const runtime = 'nodejs';
-
 export async function POST(request: NextRequest) {
-  // Use the cookie-scoped server client to resolve the session user.
-  // supabaseAdmin has no cookie context and always returns null here.
   const supabase = await createServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await supabaseAdmin.auth.getUser();
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body: { videoId?: string };
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
-
-  const { videoId } = body;
+  const { videoId } = await request.json();
 
   if (!videoId) {
     return NextResponse.json({ error: "Video ID is required" }, { status: 400 });
@@ -48,7 +38,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Fetch YouTube OAuth tokens via service role (bypasses RLS for secure token access)
+  // Use service role to fetch tokens securely
+  
+  // Fetch YouTube OAuth tokens
   const { data: socialAccount, error: socialError } = await supabaseAdmin
     .from("social_accounts")
     .select("access_token, refresh_token, token_expires_at")
@@ -65,16 +57,10 @@ export async function POST(request: NextRequest) {
 
   let { access_token, refresh_token, token_expires_at } = socialAccount;
 
-  const youtubeClientId = process.env.YOUTUBE_CLIENT_ID;
-  const youtubeClientSecret = process.env.YOUTUBE_CLIENT_SECRET;
-  if (!youtubeClientId || !youtubeClientSecret) {
-    return NextResponse.json({ error: "YouTube OAuth not configured" }, { status: 503 });
-  }
-
   // Create OAuth2 client
   const oauth2Client = new google.auth.OAuth2(
-    youtubeClientId,
-    youtubeClientSecret,
+    (process.env.YOUTUBE_CLIENT_ID ?? (() => { throw new Error('YOUTUBE_CLIENT_ID is required for YouTube OAuth'); })()),
+    (process.env.YOUTUBE_CLIENT_SECRET ?? (() => { throw new Error('YOUTUBE_CLIENT_SECRET is required for YouTube OAuth'); })()),
     `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/youtube/callback`
   );
 
@@ -89,7 +75,8 @@ export async function POST(request: NextRequest) {
     try {
       const { credentials } = await oauth2Client.refreshAccessToken();
       access_token = credentials.access_token!;
-
+      
+      // Update stored token
       await supabaseAdmin
         .from("social_accounts")
         .update({
@@ -102,7 +89,7 @@ export async function POST(request: NextRequest) {
         })
         .eq("user_id", user.id)
         .eq("platform", "youtube");
-
+        
       oauth2Client.setCredentials(credentials);
     } catch (refreshError) {
       logger.error("Failed to refresh YouTube token:", { detail: refreshError });
@@ -116,29 +103,43 @@ export async function POST(request: NextRequest) {
   const youtube = google.youtube({ version: "v3", auth: oauth2Client });
 
   try {
+    // Fetch the video file from Mux
     const videoUrl = `https://stream.mux.com/${video.mux_playback_id}.mp4`;
     const response = await fetch(videoUrl);
     if (!response.ok) {
       throw new Error(`Failed to fetch video from Mux: ${response.status}`);
     }
 
-    const videoBuffer = new Uint8Array(await response.arrayBuffer());
+    const videoBuffer = Buffer.from(await response.arrayBuffer());
 
+    // Prepare metadata
     const title = video.title || "My Faceless Video";
     const description = `${title}\n\nCreated with voxara.app\n\n${video.script ? video.script.substring(0, 500) : ""}`;
     const tags = ["faceless", "ai generated", "voxara", "automation"];
 
+    // Upload to YouTube
     const uploadResponse = await youtube.videos.insert({
       part: ["snippet", "status"],
       requestBody: {
-        snippet: { title, description, tags, categoryId: "22" },
-        status: { privacyStatus: "private", selfDeclaredMadeForKids: false },
+        snippet: {
+          title,
+          description,
+          tags,
+          categoryId: "22", // People & Blogs
+        },
+        status: {
+          privacyStatus: "private", // Start as private; user can change later
+          selfDeclaredMadeForKids: false,
+        },
       },
-      media: { body: videoBuffer },
+      media: {
+        body: videoBuffer,
+      },
     });
 
     const youtubeVideoId = uploadResponse.data.id;
 
+    // Update video record with YouTube ID
     await supabaseAdmin
       .from("videos")
       .update({ youtube_id: youtubeVideoId })
@@ -157,5 +158,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-export { OPTIONS } from '@/lib/api/cors';

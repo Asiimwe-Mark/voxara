@@ -6,7 +6,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { verifyTOTPCode, verifyBackupCode, useBackupCode, isValidTOTPFormat, isValidBackupCodeFormat } from '@/lib/two-factor-auth';
-import { decryptTOTPSecret } from '@/lib/totp-encryption';
 import { captureException, addBreadcrumb } from '@/lib/monitoring';
 
 export async function POST(req: NextRequest) {
@@ -42,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     // Check if it's a TOTP code
     if (isValidTOTPFormat(code)) {
-      isValid = verifyTOTPCode(decryptTOTPSecret(profile.two_fa_secret), code);
+      isValid = verifyTOTPCode(profile.two_fa_secret, code);
     }
     // Check if it's a backup code
     else if (isValidBackupCodeFormat(code)) {

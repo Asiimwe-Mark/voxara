@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
       .eq("id", avatarId);
 
     // Extract gender from metadata or default to neutral
-    const gender = ((avatar as { gender?: string }).gender || "neutral") as "male" | "female" | "neutral";
+    const gender = (avatar as any).gender || "neutral";
 
     // Trigger new avatar creation with HeyGen
     const { avatarId: newAvatarId, taskId } = await createHeyGenAvatar({
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     await inngest.send({
       name: "avatar/poll-status",
       data: { avatarId, retryCount: 0 },
-      ts: new Date(Date.now() + 2 * 60 * 1000).getTime(), // Start after 2 minutes
+      ts: new Date(Date.now() + 2 * 60 * 1000), // Start after 2 minutes
     });
 
     return NextResponse.json({

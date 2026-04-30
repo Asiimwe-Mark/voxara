@@ -1,4 +1,3 @@
-import { env } from '@/lib/env';
 /**
  * Payment Adapter — Voxara
  *
@@ -173,7 +172,7 @@ export class PaymentAdapter {
 // ─── Factory ─────────────────────────────────────────────────────────────────
 
 export function createPaymentAdapter(): PaymentAdapter {
-  const raw = env.PAYMENT_PROVIDER.toLowerCase();
+  const raw = (process.env.PAYMENT_PROVIDER ?? 'paddle').toLowerCase();
 
   if (raw !== 'paddle' && raw !== 'flutterwave') {
     throw new Error(

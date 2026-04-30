@@ -50,7 +50,7 @@ export async function handleTransactionCompleted(data: Record<string, unknown>):
     }
 
     // Record credit purchase in database
-    const { error: insertError } = await supabaseAdmin.from('credit_purchases').insert({
+    const { error: insertError } = await supabaseAdmin().from('credit_purchases').insert({
       user_id: userId,
       credits_purchased: credits,
       amount_paid: parseInt(amount, 10),
@@ -406,7 +406,7 @@ export async function logWebhookEvent(
   error?: Error
 ): Promise<void> {
   try {
-    await supabaseAdmin.from('webhook_logs').insert({
+    await supabaseAdmin().from('webhook_logs').insert({
       provider: 'paddle',
       event_type: eventType,
       payload: data,

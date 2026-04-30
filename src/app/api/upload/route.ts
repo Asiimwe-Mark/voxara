@@ -34,8 +34,7 @@ export async function POST(request: NextRequest) {
   const ext = file.name.split(".").pop() ?? "mp3";
   const filename = `${user.id}/samples/${Date.now()}.${ext}`;
 
-  const arrayBuffer = await file.arrayBuffer();
-  const buffer = new Uint8Array(arrayBuffer);
+  const buffer = Buffer.from(await file.arrayBuffer());
 
   const { error: uploadError } = await supabaseAdmin.storage
     .from("voice-samples")
@@ -53,5 +52,3 @@ export async function POST(request: NextRequest) {
   const { data } = supabaseAdmin.storage.from("voice-samples").getPublicUrl(filename);
   return NextResponse.json({ url: data.publicUrl, filename });
 }
-
-export { OPTIONS } from '@/lib/api/cors';

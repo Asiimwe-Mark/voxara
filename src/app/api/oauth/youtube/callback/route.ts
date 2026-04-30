@@ -45,8 +45,8 @@ export async function GET(request: NextRequest) {
 
   try {
     const oauth2Client = new google.auth.OAuth2(
-      process.env.YOUTUBE_CLIENT_ID,
-      process.env.YOUTUBE_CLIENT_SECRET,
+      (process.env.YOUTUBE_CLIENT_ID ?? (() => { throw new Error('YOUTUBE_CLIENT_ID is required for YouTube OAuth'); })()),
+      (process.env.YOUTUBE_CLIENT_SECRET ?? (() => { throw new Error('YOUTUBE_CLIENT_SECRET is required for YouTube OAuth'); })()),
       `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/youtube/callback`
     );
 
@@ -68,10 +68,10 @@ export async function GET(request: NextRequest) {
       throw new Error("No YouTube channel found for this account");
     }
 
-
+    
     // Store tokens in Supabase Vault (recommended) or encrypted column
     // For simplicity, we store in social_accounts with tokens
-    const { error: dbError } = await supabaseAdmin.from("social_accounts").upsert(
+    const { error: dbError } = await supabaseAdmin().from("social_accounts").upsert(
       {
         user_id: userId,
         platform: "youtube",

@@ -39,8 +39,6 @@ export const CREDITS_CONFIG = {
   REFERRAL_BONUS_REFERRER: 3,     // Credits awarded to person who referred
   REFERRAL_BONUS_NEW_USER: 1,     // Extra credit for new user who was referred
   MAX_SHARING_CREDITS_PER_MONTH: 5, // Cap so users can't farm unlimited credits
-  SOCIAL_SHARE_CREDITS: 1,        // Credits earned per social share
-  SOCIAL_SHARE_MAX_PER_MONTH: 5,  // Max social share credits per month
 };
 
 // Pricing Configuration

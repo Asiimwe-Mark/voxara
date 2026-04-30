@@ -21,11 +21,11 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(10, 'NEXT_PUBLIC_SUPABASE_ANON_KEY is too short'),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(10, 'SUPABASE_SERVICE_ROLE_KEY is too short'),
 
-  // AI (at least Gemini OR Anthropic required for script generation)
+  // AI (at least one required for generation; validate later if needed)
   GOOGLE_GENAI_API_KEY: z.string().optional(),
   GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional(),
-  GEMINI_API_KEY: z.string().optional(),        // alias used by auto-edit route
   ANTHROPIC_API_KEY: z.string().optional(),
+  OPENAI_API_KEY: z.string().optional(),
 
   // Voice
   ELEVENLABS_API_KEY: z.string().optional(),
@@ -34,13 +34,10 @@ const envSchema = z.object({
   MUX_TOKEN_ID: z.string().optional(),
   MUX_TOKEN_SECRET: z.string().optional(),
   MUX_WEBHOOK_SECRET: z.string().optional(),
-  MUX_WEBHOOK_SIGNING_SECRET: z.string().optional(), // alternate name accepted by mux route
 
-  // Avatar providers
+  // Avatar
   HEYGEN_API_KEY: z.string().optional(),
   HEYGEN_WEBHOOK_SECRET: z.string().optional(),
-  DID_API_KEY: z.string().optional(),           // D-ID talking avatars
-  SYNTHESIA_API_KEY: z.string().optional(),     // Synthesia avatars
 
   // Footage
   PEXELS_API_KEY: z.string().optional(),
@@ -53,36 +50,24 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().email().default('noreply@voxara.app'),
 
-  // Payments — provider selection
+  // Payments – Paddle (required for billing)
+  PADDLE_VENDOR_ID: z.string().optional(),
+  PADDLE_API_KEY: z.string().optional(),
+  PADDLE_WEBHOOK_SECRET: z.string().optional(),
+  PADDLE_SANDBOX_MODE: z.enum(['true', 'false']).default('true'),
   PAYMENT_PROVIDER: z.enum(['paddle', 'flutterwave']).default('paddle'),
 
-  // Paddle (global / USD)
-  PADDLE_API_KEY: z.string().optional(),
-  PADDLE_VENDOR_ID: z.string().optional(),
-  PADDLE_WEBHOOK_SECRET: z.string().optional(),
-  PADDLE_PRO_MONTHLY_PRICE_ID: z.string().optional(),
-  PADDLE_PRO_YEARLY_PRICE_ID: z.string().optional(),
-  PADDLE_AGENCY_MONTHLY_PRICE_ID: z.string().optional(),
-  PADDLE_AGENCY_YEARLY_PRICE_ID: z.string().optional(),
-  PADDLE_CREDITS_10_PRICE_ID: z.string().optional(),
-  PADDLE_CREDITS_25_PRICE_ID: z.string().optional(),
-  PADDLE_CREDITS_50_PRICE_ID: z.string().optional(),
-
-  // Flutterwave (Africa / local currencies)
+  // Flutterwave (optional)
   FLUTTERWAVE_SECRET_KEY: z.string().optional(),
   FLUTTERWAVE_WEBHOOK_SECRET: z.string().optional(),
 
   // Rate limiting (Upstash Redis)
   UPSTASH_REDIS_REST_URL: z.string().url().optional().or(z.literal('')),
   UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
-  API_RATE_LIMIT_REQUESTS: z.string().optional(),
-  API_RATE_LIMIT_WINDOW: z.string().optional(),
 
   // Monitoring
   NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional().or(z.literal('')),
   SENTRY_AUTH_TOKEN: z.string().optional(),
-  SENTRY_ORG: z.string().optional(),
-  SENTRY_PROJECT: z.string().optional(),
 
   // Social OAuth
   YOUTUBE_CLIENT_ID: z.string().optional(),
@@ -91,10 +76,8 @@ const envSchema = z.object({
   TIKTOK_CLIENT_SECRET: z.string().optional(),
   INSTAGRAM_CLIENT_ID: z.string().optional(),
   INSTAGRAM_CLIENT_SECRET: z.string().optional(),
-  LINKEDIN_CLIENT_ID: z.string().optional(),
-  LINKEDIN_CLIENT_SECRET: z.string().optional(),
 
-  // Remotion (optional — passthrough mode used if absent)
+  // Remotion (optional)
   RENDER_BACKEND: z.enum(['auto', 'local', 'lambda']).default('auto'),
   REMOTION_LAMBDA_FUNCTION_NAME: z.string().optional(),
   REMOTION_SERVE_URL: z.string().url().optional().or(z.literal('')),
@@ -102,15 +85,11 @@ const envSchema = z.object({
   AWS_ACCESS_KEY_ID: z.string().optional(),
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
 
+  // Logger level
+  LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
+
   // Admin
   ADMIN_USER_IDS: z.string().default(''),
-
-  // 2FA secret encryption key (AES-256-GCM)
-  // Falls back to SUPABASE_SERVICE_ROLE_KEY if not set
-  TOTP_ENCRYPTION_KEY: z.string().optional(),
-
-  // App version (set by CI)
-  NEXT_PUBLIC_APP_VERSION: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -137,8 +116,10 @@ export function getEnv(): Env {
     const message = `Environment validation failed:\n${issues}`;
 
     if (process.env.NODE_ENV === 'production') {
+      // Hard crash in production — missing vars = broken deployment
       throw new Error(message);
     } else {
+      // Warn in development — allow partial config for local testing
       logger.warn(message);
     }
   }
@@ -148,7 +129,8 @@ export function getEnv(): Env {
 }
 
 /**
- * Validate at module load time (called from instrumentation.ts).
+ * Validate at module load time (called from next.config.js / instrumentation).
+ * Logs a success/failure summary.
  */
 export function validateEnv(): void {
   try {
@@ -159,12 +141,14 @@ export function validateEnv(): void {
       error: err instanceof Error ? err.message : String(err),
     });
     if (process.env.NODE_ENV === 'production') {
-      throw new Error('Server misconfigured: required environment variables are missing. Check deployment logs.');
+      throw new Error(
+        'Server misconfigured: required environment variables are missing. Check deployment logs.'
+      );
     }
   }
 }
 
-// Typed proxy — use env.PAYMENT_PROVIDER instead of process.env.PAYMENT_PROVIDER
+// Re-export for convenience (Proxy is fine for config access)
 export const env = new Proxy({} as Env, {
   get(_, key) {
     return getEnv()[key as keyof Env];
