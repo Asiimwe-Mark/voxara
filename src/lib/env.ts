@@ -101,7 +101,7 @@ export function getEnv(): Env {
 
   if (!result.success) {
     const issues = result.error.errors
-      .map((e) => `  • ${e.path.join('.')}: ${e.message}`)
+      .map((e: any) => `  • ${e.path.join('.')}: ${e.message}`)
       .join('\n');
 
     const message = `Environment validation failed:\n${issues}`;

@@ -27,7 +27,7 @@ function createRatelimiter(): Ratelimit {
     redis: new Redis({ url, token }),
     limiter: Ratelimit.slidingWindow(
       Number(process.env.API_RATE_LIMIT_REQUESTS) || 100,
-      `${process.env.API_RATE_LIMIT_WINDOW || 60} s`
+      `${process.env.API_RATE_LIMIT_WINDOW || 60} s` as any
     ),
     analytics: true,
   });

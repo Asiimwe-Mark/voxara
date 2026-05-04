@@ -48,7 +48,7 @@ describe("Script Generator with GenKit", () => {
     });
 
     it("should handle API errors gracefully", async () => {
-      mockGenerateContent.mockRejectedValue(new Error("API rate limit"));
+      mockGenerate.mockRejectedValue(new Error("API rate limit"));
 
       await expect(generateScript("topic")).rejects.toThrow("API rate limit");
     });
@@ -56,18 +56,18 @@ describe("Script Generator with GenKit", () => {
 
   describe("generateScriptWithKeywords", () => {
     it("should include keywords in the prompt", async () => {
-      mockGenerateContent.mockResolvedValue({
+      mockGenerate.mockResolvedValue({
         response: { text: () => "Script with keywords." },
       });
 
       await generateScriptWithKeywords("topic", ["keyword1", "keyword2"]);
 
-      const prompt = mockGenerateContent.mock.calls[0][0];
+      const prompt = mockGenerate.mock.calls[0][0];
       expect(prompt).toContain("keyword1, keyword2");
     });
 
     it("should return script text", async () => {
-      mockGenerateContent.mockResolvedValue({
+      mockGenerate.mockResolvedValue({
         response: { text: () => "Keyword optimized script." },
       });
 

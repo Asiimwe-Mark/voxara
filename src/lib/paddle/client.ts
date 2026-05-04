@@ -83,7 +83,7 @@ export class PaddleClient {
       const data = (await response.json()) as { data?: T };
       return data.data as T;
     } catch (error) {
-      logger.error(`Paddle API request failed: ${method} ${endpoint}`, error);
+      logger.error(`Paddle API request failed: ${method} ${endpoint}`, { detail: error instanceof Error ? error.message : String(error) });
       throw error;
     }
   }

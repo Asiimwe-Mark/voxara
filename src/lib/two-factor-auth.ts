@@ -93,7 +93,7 @@ export function verifyTOTPCode(secret: string, code: string, timeWindow: number 
   for (let i = -timeWindow; i <= timeWindow; i++) {
     const time = now + i;
     const hmac = crypto.createHmac('sha1', decoded);
-    hmac.update(Buffer.from([0, 0, 0, 0]), 0, 4);
+    hmac.update(Buffer.from([0, 0, 0, 0]));
     hmac.update(Buffer.alloc(4, 0));
     
     // Write 64-bit big-endian representation of time

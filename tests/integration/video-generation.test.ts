@@ -64,7 +64,7 @@ describe("Video Generation Pipeline", () => {
       password: "test123456",
       email_confirm: true,
     });
-    testUserId = data.user.id;
+    testUserId = data.user!.id;
   });
 
   afterAll(async () => {
@@ -93,9 +93,9 @@ describe("Video Generation Pipeline", () => {
 
     expect(error).toBeNull();
     expect(video).toBeDefined();
-    expect(video.status).toBe("pending");
+    expect(video!.status).toBe("pending");
 
-    testVideoId = video.id;
+    testVideoId = video!.id;
   });
 
   it("should generate voiceover and store in Supabase Storage", async () => {
@@ -103,7 +103,7 @@ describe("Video Generation Pipeline", () => {
       "Test script for voiceover.",
       testUserId,
       testVideoId,
-      supabaseAdmin
+      supabaseAdmin as any
     );
 
     expect(audioUrl).toContain("voiceover.mp3");
@@ -147,7 +147,7 @@ describe("Video Generation Pipeline", () => {
       .eq("id", testVideoId)
       .single();
 
-    expect(video.status).toBe("ready");
+    expect(video!.status).toBe("ready");
   });
 
   it("should enforce credit deduction", async () => {
@@ -158,7 +158,7 @@ describe("Video Generation Pipeline", () => {
       .eq("id", testUserId)
       .single();
 
-    const initialCredits = profileBefore.credits;
+    const initialCredits = profileBefore!.credits;
 
     // Deduct one credit
     await supabaseAdmin
@@ -172,6 +172,6 @@ describe("Video Generation Pipeline", () => {
       .eq("id", testUserId)
       .single();
 
-    expect(profileAfter.credits).toBe(initialCredits - 1);
+    expect(profileAfter!.credits).toBe(initialCredits - 1);
   });
 });

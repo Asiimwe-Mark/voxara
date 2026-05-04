@@ -20,7 +20,7 @@ export {
  * Render a React Email template to an HTML string.
  * Useful when sending emails via Resend or other providers.
  */
-export async function renderEmailTemplate<T extends Record<string, unknown>>(
+export async function renderEmailTemplate<T extends Record<string, any>>(
   Template: React.ComponentType<T>,
   props: T
 ): Promise<string> {

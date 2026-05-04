@@ -46,9 +46,9 @@ describe("Authentication Integration", () => {
       .single();
 
     expect(profile).toBeDefined();
-    expect(profile.full_name).toBe(testUser.fullName);
-    expect(profile.credits).toBe(3); // Default free credits
-    expect(profile.plan).toBe("free");
+    expect(profile!.full_name).toBe(testUser.fullName);
+    expect(profile!.credits).toBe(3); // Default free credits
+    expect(profile!.plan).toBe("free");
   });
 
   it("should sign in an existing user", async () => {
@@ -113,6 +113,6 @@ describe("Authentication Integration", () => {
       .eq("id", userId)
       .single();
 
-    expect(profile.full_name).toBe("Updated Name");
+    expect(profile!.full_name).toBe("Updated Name");
   });
 });

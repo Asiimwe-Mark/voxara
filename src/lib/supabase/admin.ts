@@ -10,8 +10,9 @@
  * NEVER import this in client components or edge runtime routes.
  */
 import { createClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/supabase';
 
-let _adminClient: ReturnType<typeof createClient> | null = null;
+let _adminClient: ReturnType<typeof createClient<Database>> | null = null;
 
 export function getAdminClient() {
   if (_adminClient) return _adminClient;
@@ -25,7 +26,7 @@ export function getAdminClient() {
     );
   }
 
-  _adminClient = createClient(url, key, {
+  _adminClient = createClient<Database>(url, key, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -36,8 +37,8 @@ export function getAdminClient() {
 }
 
 /** Convenience alias */
-export const supabaseAdmin = new Proxy({} as ReturnType<typeof createClient>, {
+export const supabaseAdmin = new Proxy({} as ReturnType<typeof createClient<Database>>, {
   get(_, prop) {
-    return (getAdminClient() as Record<string | symbol, unknown>)[prop];
+    return (getAdminClient() as unknown as Record<string | symbol, unknown>)[prop];
   },
 });
