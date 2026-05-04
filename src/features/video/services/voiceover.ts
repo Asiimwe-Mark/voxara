@@ -5,7 +5,8 @@ import { createClient } from "@supabase/supabase-js";
 // Use the service-role admin client: this service is called from Inngest background
 // jobs where there is no HTTP request / cookie context for the SSR client.
 function getStorageClient() {
-  return }
+  return
+}
 
 export interface VoiceoverOptions {
   voice?: string;
@@ -24,7 +25,7 @@ export async function generateVoiceover(
   const supabase = getStorageClient();
   const { voice = DEFAULT_VOICE, rate = "+0%", pitch = "+0Hz" } = options;
 
-  const tts = new EdgeTTS(script, voice, rate, pitch);
+  const tts = new EdgeTTS(script, voice);
   const result = await tts.synthesize();
   const audioBuffer = Buffer.from(await result.audio.arrayBuffer());
 

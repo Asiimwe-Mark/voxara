@@ -10,7 +10,7 @@ interface YouTubeTokens {
 }
 
 async function getRefreshedTokens(userId: string): Promise<YouTubeTokens> {
-  const { data: account } = await supabaseAdmin
+  const { data: account } = await (supabaseAdmin as any)
     .from("social_accounts")
     .select("access_token, refresh_token, token_expires_at")
     .eq("user_id", userId)
@@ -19,6 +19,8 @@ async function getRefreshedTokens(userId: string): Promise<YouTubeTokens> {
 
   if (!account) throw new Error("YouTube account not connected");
 
+  const accountData = account as { access_token: string; refresh_token: string; token_expires_at: string | null };
+
   const oauth2Client = new google.auth.OAuth2(
     (process.env.YOUTUBE_CLIENT_ID ?? (() => { throw new Error('YOUTUBE_CLIENT_ID is required for YouTube OAuth'); })()),
     (process.env.YOUTUBE_CLIENT_SECRET ?? (() => { throw new Error('YOUTUBE_CLIENT_SECRET is required for YouTube OAuth'); })()),
@@ -26,21 +28,21 @@ async function getRefreshedTokens(userId: string): Promise<YouTubeTokens> {
   );
 
   oauth2Client.setCredentials({
-    access_token: account.access_token,
-    refresh_token: account.refresh_token,
-    expiry_date: account.token_expires_at
-      ? new Date(account.token_expires_at).getTime()
+    access_token: accountData.access_token,
+    refresh_token: accountData.refresh_token,
+    expiry_date: accountData.token_expires_at
+      ? new Date(accountData.token_expires_at).getTime()
       : undefined,
   });
 
   // Refresh if expired
-  if (account.token_expires_at && new Date(account.token_expires_at) < new Date()) {
+  if (accountData.token_expires_at && new Date(accountData.token_expires_at) < new Date()) {
     const { credentials } = await oauth2Client.refreshAccessToken();
-    await supabaseAdmin
+    await (supabaseAdmin as any)
       .from("social_accounts")
       .update({
         access_token: credentials.access_token,
-        refresh_token: credentials.refresh_token || account.refresh_token,
+        refresh_token: credentials.refresh_token || accountData.refresh_token,
         token_expires_at: credentials.expiry_date
           ? new Date(credentials.expiry_date).toISOString()
           : null,
@@ -49,15 +51,15 @@ async function getRefreshedTokens(userId: string): Promise<YouTubeTokens> {
       .eq("platform", "youtube");
     return {
       access_token: credentials.access_token!,
-      refresh_token: credentials.refresh_token || account.refresh_token,
+      refresh_token: credentials.refresh_token || accountData.refresh_token,
       expiry_date: credentials.expiry_date,
     };
   }
 
   return {
-    access_token: account.access_token,
-    refresh_token: account.refresh_token,
-    expiry_date: account.token_expires_at ? new Date(account.token_expires_at).getTime() : null,
+    access_token: accountData.access_token,
+    refresh_token: accountData.refresh_token,
+    expiry_date: accountData.token_expires_at ? new Date(accountData.token_expires_at).getTime() : null,
   };
 }
 

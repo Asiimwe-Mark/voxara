@@ -41,7 +41,7 @@ export const processAutoTopUp = inngest.createFunction(
     const { userId } = event.data as { userId: string };
 
     const settings = await step.run('get-settings', async (): Promise<TopUpSettings> => {
-      const { data } = await supabaseAdmin
+      const { data } = await supabaseAdmin()
         .from('auto_top_up_settings')
         .select('*, profiles(email, credits, full_name)')
         .eq('user_id', userId)
@@ -50,7 +50,7 @@ export const processAutoTopUp = inngest.createFunction(
       return data as TopUpSettings;
     });
 
-    const { data: profile } = await supabaseAdmin
+    const { data: profile } = await supabaseAdmin()
       .from('profiles')
       .select('email, full_name')
       .eq('id', userId)
@@ -78,7 +78,7 @@ async function handlePaddleAutoTopup(
   const amountInCents = CREDIT_PRICES[settings.top_up_amount] ?? 1999;
 
   // Award credits and record purchase
-  await supabaseAdmin.rpc('add_credits', {
+  await supabaseAdmin().rpc('add_credits', {
     p_user_id: userId,
     p_credits:  settings.top_up_amount,
   });
@@ -92,7 +92,7 @@ async function handlePaddleAutoTopup(
     status:            'completed',
   });
 
-  const { data: updated } = await supabaseAdmin
+  const { data: updated } = await supabaseAdmin()
     .from('profiles')
     .select('credits')
     .eq('id', userId)

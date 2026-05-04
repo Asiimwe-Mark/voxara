@@ -66,11 +66,11 @@ export async function renderVideo(options: RenderOptions): Promise<string> {
  *           AWS_SECRET_ACCESS_KEY, REMOTION_SERVE_URL
  */
 async function renderWithLambda(options: RenderOptions): Promise<string> {
-  const { renderMediaOnLambda, speculateFunctionName } = await import('@remotion/lambda');
+  const { renderMediaOnLambda } = await import('@remotion/lambda');
 
   const functionName =
     process.env.REMOTION_LAMBDA_FUNCTION_NAME ??
-    speculateFunctionName({ memorySizeInMb: 2048, diskSizeInMb: 2048, timeoutInSeconds: 120 });
+    'remotion-render';
 
   const serveUrl = process.env.REMOTION_SERVE_URL;
   if (!serveUrl) throw new Error('REMOTION_SERVE_URL is required for Lambda rendering');
@@ -148,9 +148,7 @@ async function renderWithLocalNode(options: RenderOptions): Promise<string> {
     outputLocation,
     inputProps,
     onProgress: ({ progress }) => {
-      if (process.env.NODE_ENV !== 'test') {
-        if (process.env.NODE_ENV !== 'test') console.log(`[Remotion] ${videoId}: ${Math.round(progress * 100)}%`);
-      }
+      console.log(`[Remotion] ${videoId}: ${Math.round(progress * 100)}%`);
     },
   });
 

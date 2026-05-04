@@ -162,7 +162,7 @@ export const generateVideo = inngest.createFunction(
       });
 
       await step.run("update-database", async () => {
-        await supabaseAdmin().from("videos").update({
+        await supabaseAdmin.from("videos").update({
           status: "ready",
           mux_asset_id: muxAsset.assetId,
           mux_playback_id: muxAsset.playbackId ?? null,
@@ -186,7 +186,7 @@ export const generateVideo = inngest.createFunction(
     } else {
       // Free tier: direct URL, no Mux cost
       await step.run("update-database", async () => {
-        await supabaseAdmin().from("videos").update({
+        await supabaseAdmin.from("videos").update({
           status: "ready",
           mux_asset_id: null,
           mux_playback_id: null,

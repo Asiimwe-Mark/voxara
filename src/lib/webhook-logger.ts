@@ -18,7 +18,7 @@ export interface WebhookLogEntry {
  */
 export async function logWebhookEvent(entry: WebhookLogEntry) {
   try {
-    await supabaseAdmin().from('webhook_logs').insert({
+    await supabaseAdmin.from('webhook_logs').insert({
       provider: entry.provider,
       event_type: entry.eventType,
       user_id: entry.userId,

@@ -43,7 +43,7 @@ export class PaddleClient {
     this.vendorId = config.vendorId;
     this.apiKey = config.apiKey;
     this.webhookSecret = config.webhookSecret;
-    this.sandboxMode = config.sandboxMode ?? (process.env.NODE_ENV !== 'production');
+    this.sandboxMode = config.sandboxMode ?? true;
     this.baseUrl = 'https://api.paddle.com';
   }
 
@@ -62,7 +62,7 @@ export class PaddleClient {
       headers: {
         'Authorization': `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
-        'User-Agent': 'voxara/1.0.0',
+        'User-Agent': 'faceless-video-saas/1.0.0',
       },
     };
 

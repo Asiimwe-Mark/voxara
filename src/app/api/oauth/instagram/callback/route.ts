@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
 
     // Store in database using service role client
     
-    const { error: dbError } = await supabaseAdmin().from("social_accounts").upsert(
+    const { error: dbError } = await supabaseAdmin.from("social_accounts").upsert(
       {
         user_id: userId,
         platform: "instagram",

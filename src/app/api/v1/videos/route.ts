@@ -10,14 +10,14 @@ async function validateApiKey(request: NextRequest): Promise<string | null> {
   const apiKey = request.headers.get('x-api-key');
   if (!apiKey) return null;
   const keyHash = crypto.createHash('sha256').update(apiKey).digest('hex');
-  const { data } = await supabaseAdmin
+  const { data } = await (supabaseAdmin as any)
     .from('api_keys')
     .select('user_id, status, expires_at')
     .eq('key_hash', keyHash)
     .single();
   if (!data || data.status !== 'active') return null;
   if (data.expires_at && new Date(data.expires_at) < new Date()) return null;
-  await supabaseAdmin().from('api_keys').update({ last_used_at: new Date().toISOString() }).eq('key_hash', keyHash);
+  await (supabaseAdmin as any).from('api_keys').update({ last_used_at: new Date().toISOString() }).eq('key_hash', keyHash);
   return data.user_id;
 }
 
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Check user credits atomically
-  const { data: deducted } = await supabaseAdmin.rpc('deduct_credits', {
+  const { data: deducted } = await (supabaseAdmin as any).rpc('deduct_credits', {
     p_user_id: userId,
     p_credits: 1,
   });
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create video record
-    const { data: video, error: insertError } = await supabaseAdmin
+    const { data: video, error: insertError } = await (supabaseAdmin as any)
       .from('videos')
       .insert({
         user_id: userId,
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     if (insertError || !video) {
       // Refund credit on DB error
-      await supabaseAdmin.rpc('add_credits', { p_user_id: userId, p_credits: 1 });
+      await (supabaseAdmin as any).rpc('add_credits', { p_user_id: userId, p_credits: 1 });
       return NextResponse.json({ error: 'Failed to create video record' }, { status: 500 });
     }
 
@@ -99,25 +99,25 @@ export async function POST(request: NextRequest) {
     await inngest.send({
       name: 'video/generate',
       data: {
-        videoId: video.id,
+        videoId: (video as any).id,
         userId,
-        title: video.title,
+        title: (video as any).title,
         script: finalScript,
       },
     });
 
     return NextResponse.json(
       {
-        id: video.id,
-        title: video.title,
-        status: video.status,
-        created_at: video.created_at,
+        id: (video as any).id,
+        title: (video as any).title,
+        status: (video as any).status,
+        created_at: (video as any).created_at,
       },
       { status: 202 }
     );
   } catch (err) {
     // Refund credit on unexpected error
-    await supabaseAdmin.rpc('add_credits', { p_user_id: userId, p_credits: 1 }).catch(() => {});
+    await (supabaseAdmin as any).rpc('add_credits', { p_user_id: userId, p_credits: 1 });
     logger.error('v1/videos POST error', { detail: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

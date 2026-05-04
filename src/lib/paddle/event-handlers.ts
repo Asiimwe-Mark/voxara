@@ -28,10 +28,10 @@ export async function handleTransactionCompleted(data: Record<string, unknown>):
   }
 
   try {
-    const transactionId = data.id;
+    const transactionId = data.id as string;
     const credits = extractCreditsFromWebhook(data);
-    const amount = data.totals?.total || '0';
-    const currencyCode = data.currency_code || 'USD';
+    const amount = (data.totals as any)?.total || '0';
+    const currencyCode = (data.currency_code as string) || 'USD';
 
     // Only process if credits are specified
     if (credits <= 0) {
@@ -40,24 +40,24 @@ export async function handleTransactionCompleted(data: Record<string, unknown>):
     }
 
     // Add credits to user
-    const { error: rpcError } = await supabaseAdmin.rpc('add_credits', {
+    const { error: rpcError } = await supabaseAdmin.rpc('add_credits' as any, {
       p_user_id: userId,
       p_credits: credits,
-    });
+    } as any);
 
     if (rpcError) {
       throw new Error(`Failed to add credits: ${rpcError.message}`);
     }
 
     // Record credit purchase in database
-    const { error: insertError } = await supabaseAdmin().from('credit_purchases').insert({
+    const { error: insertError } = await supabaseAdmin.from('credit_purchases' as any).insert({
       user_id: userId,
       credits_purchased: credits,
       amount_paid: parseInt(amount, 10),
       payment_intent_id: transactionId,
       provider: 'paddle',
       status: 'completed',
-    });
+    } as any);
 
     if (insertError) {
       throw new Error(`Failed to record purchase: ${insertError.message}`);
@@ -65,7 +65,7 @@ export async function handleTransactionCompleted(data: Record<string, unknown>):
 
     // Fetch user details for email
     const { data: profile, error: profileError } = await supabaseAdmin
-      .from('profiles')
+      .from('profiles' as any)
       .select('email, full_name, credits')
       .eq('id', userId)
       .maybeSingle();
@@ -75,11 +75,11 @@ export async function handleTransactionCompleted(data: Record<string, unknown>):
     }
 
     // Send success email
-    if (profile?.email) {
+    if ((profile as any)?.email) {
       try {
         await sendPaymentSuccessEmail(
-          profile.email,
-          profile.full_name || 'Creator',
+          (profile as any).email,
+          (profile as any).full_name || 'Creator',
           'credit_pack',
           `${currencyCode} ${(parseInt(amount, 10) / 100).toFixed(2)}`,
           credits,
@@ -110,14 +110,14 @@ export async function handleSubscriptionCreated(data: Record<string, unknown>): 
   }
 
   try {
-    const subscriptionId = data.id;
-    const planType = data?.custom_data?.plan_type || 'pro';
-    const status = mapSubscriptionStatus(data.status);
+    const subscriptionId = data.id as string;
+    const planType = (data.custom_data as any)?.plan_type || 'pro';
+    const status = mapSubscriptionStatus(data.status as string);
     const credits = getCreditsForPlan(planType);
 
     // Upsert subscription record
     const { error: upsertError } = await supabaseAdmin
-      .from('payment_subscriptions')
+      .from('payment_subscriptions' as any)
       .upsert(
         {
           user_id: userId,
@@ -125,10 +125,10 @@ export async function handleSubscriptionCreated(data: Record<string, unknown>): 
           provider: 'paddle',
           plan: planType,
           status,
-          paddle_customer_id: data.customer_id,
-          metadata: data?.custom_data || {},
+          paddle_customer_id: data.customer_id as string,
+          metadata: (data.custom_data as any) || {},
           updated_at: new Date().toISOString(),
-        },
+        } as any,
         { onConflict: 'subscription_id' }
       );
 
@@ -137,7 +137,7 @@ export async function handleSubscriptionCreated(data: Record<string, unknown>): 
     }
 
     // Update user profile with new plan and credits
-    const { error: updateError } = await supabaseAdmin
+    const { error: updateError } = await (supabaseAdmin as any)
       .from('profiles')
       .update({ plan: planType, credits })
       .eq('id', userId);
@@ -148,7 +148,7 @@ export async function handleSubscriptionCreated(data: Record<string, unknown>): 
 
     // Fetch user details for email
     const { data: profile, error: profileError } = await supabaseAdmin
-      .from('profiles')
+      .from('profiles' as any)
       .select('email, full_name')
       .eq('id', userId)
       .maybeSingle();
@@ -158,7 +158,7 @@ export async function handleSubscriptionCreated(data: Record<string, unknown>): 
     }
 
     // Send welcome/confirmation email
-    if (profile?.email) {
+    if ((profile as any)?.email) {
       try {
         const prices: Record<string, string> = {
           'pro': '$19.99/month',
@@ -167,8 +167,8 @@ export async function handleSubscriptionCreated(data: Record<string, unknown>): 
         };
 
         await sendPaymentSuccessEmail(
-          profile.email,
-          profile.full_name || 'Creator',
+          (profile as any).email,
+          (profile as any).full_name || 'Creator',
           planType,
           prices[planType] || '$0.00',
           credits,
@@ -199,16 +199,16 @@ export async function handleSubscriptionUpdated(data: Record<string, unknown>): 
   }
 
   try {
-    const subscriptionId = data.id;
-    const planType = data?.custom_data?.plan_type || 'pro';
-    const status = mapSubscriptionStatus(data.status);
+    const subscriptionId = data.id as string;
+    const planType = (data.custom_data as any)?.plan_type || 'pro';
+    const status = mapSubscriptionStatus(data.status as string);
 
     // Update subscription record
-    const { error: updateError } = await supabaseAdmin
-      .from('payment_subscriptions')
+    const { error: updateError } = await (supabaseAdmin
+      .from('payment_subscriptions' as any) as any)
       .update({
         status,
-        metadata: data?.custom_data || {},
+        metadata: (data.custom_data as any) || {},
         updated_at: new Date().toISOString(),
       })
       .eq('subscription_id', subscriptionId);
@@ -237,11 +237,11 @@ export async function handleSubscriptionPaused(data: Record<string, unknown>): P
   }
 
   try {
-    const subscriptionId = data.id;
+    const subscriptionId = data.id as string;
 
     // Update subscription status to paused
-    const { error: updateError } = await supabaseAdmin
-      .from('payment_subscriptions')
+    const { error: updateError } = await (supabaseAdmin
+      .from('payment_subscriptions' as any) as any)
       .update({
         status: 'paused',
         updated_at: new Date().toISOString(),
@@ -272,11 +272,11 @@ export async function handleSubscriptionResumed(data: Record<string, unknown>): 
   }
 
   try {
-    const subscriptionId = data.id;
+    const subscriptionId = data.id as string;
 
     // Update subscription status to active
-    const { error: updateError } = await supabaseAdmin
-      .from('payment_subscriptions')
+    const { error: updateError } = await (supabaseAdmin
+      .from('payment_subscriptions' as any) as any)
       .update({
         status: 'active',
         updated_at: new Date().toISOString(),
@@ -307,11 +307,11 @@ export async function handleSubscriptionCanceled(data: Record<string, unknown>):
   }
 
   try {
-    const subscriptionId = data.id;
+    const subscriptionId = data.id as string;
 
     // Update subscription status to canceled
-    const { error: updateError } = await supabaseAdmin
-      .from('payment_subscriptions')
+    const { error: updateError } = await (supabaseAdmin
+      .from('payment_subscriptions' as any) as any)
       .update({
         status: 'canceled',
         updated_at: new Date().toISOString(),
@@ -323,7 +323,7 @@ export async function handleSubscriptionCanceled(data: Record<string, unknown>):
     }
 
     // Downgrade user to free plan
-    const { error: profileError } = await supabaseAdmin
+    const { error: profileError } = await (supabaseAdmin as any)
       .from('profiles')
       .update({ plan: 'free', credits: 1 })
       .eq('id', userId);
@@ -334,15 +334,15 @@ export async function handleSubscriptionCanceled(data: Record<string, unknown>):
 
     // Send cancellation email
     const { data: profile } = await supabaseAdmin
-      .from('profiles')
+      .from('profiles' as any)
       .select('email, full_name')
       .eq('id', userId)
       .maybeSingle();
 
-    if (profile?.email) {
+    if ((profile as any)?.email) {
       try {
         // Send cancellation email (you may want to create a specific email template for this)
-        logger.info(`Subscription canceled for ${profile.email}`);
+        logger.info(`Subscription canceled for ${(profile as any).email}`);
       } catch (emailError) {
         logger.error('Failed to send cancellation email', { detail: emailError instanceof Error ? emailError.message : String(emailError) });
       }
@@ -368,12 +368,12 @@ export async function handleCustomerCreated(data: Record<string, unknown>): Prom
   }
 
   try {
-    const customerId = data.id;
-    const email = data.email;
+    const customerId = data.id as string;
+    const email = data.email as string;
 
     // Record Paddle customer ID
     const { error: upsertError } = await supabaseAdmin
-      .from('payment_customers')
+      .from('payment_customers' as any)
       .upsert(
         {
           user_id: userId,
@@ -381,7 +381,7 @@ export async function handleCustomerCreated(data: Record<string, unknown>): Prom
           provider: 'paddle',
           email,
           metadata: data,
-        },
+        } as any,
         { onConflict: 'user_id' }
       );
 
@@ -406,14 +406,14 @@ export async function logWebhookEvent(
   error?: Error
 ): Promise<void> {
   try {
-    await supabaseAdmin().from('webhook_logs').insert({
+    await supabaseAdmin.from('webhook_logs' as any).insert({
       provider: 'paddle',
       event_type: eventType,
       payload: data,
       status,
       error_message: error?.message || null,
       created_at: new Date().toISOString(),
-    });
+    } as any);
   } catch (logError) {
     logger.error('Failed to log webhook event', { detail: logError instanceof Error ? logError.message : String(logError) });
   }

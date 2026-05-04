@@ -217,7 +217,7 @@ function MeshBg() {
 }
 
 /* ─── Nav ───────────────────────────────────────────────────── */
-function Nav({ scrolled }) {
+function Nav({ scrolled }: { scrolled: boolean }) {
   return (
     <nav style={{
       position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
@@ -257,8 +257,8 @@ function Nav({ scrolled }) {
               textDecoration: "none", letterSpacing: "0.02em",
               transition: "color 0.2s",
             }}
-            onMouseEnter={e => e.target.style.color = C.text}
-            onMouseLeave={e => e.target.style.color = C.muted}
+            onMouseEnter={e => (e.target as HTMLElement).style.color = C.text}
+            onMouseLeave={e => (e.target as HTMLElement).style.color = C.muted}
           >
             {item}
           </a>
@@ -272,8 +272,8 @@ function Nav({ scrolled }) {
           textDecoration: "none", padding: "8px 16px",
           transition: "color 0.2s",
         }}
-          onMouseEnter={e => e.target.style.color = C.text}
-          onMouseLeave={e => e.target.style.color = C.muted}
+          onMouseEnter={e => (e.target as HTMLElement).style.color = C.text}
+          onMouseLeave={e => (e.target as HTMLElement).style.color = C.muted}
         >
           Sign in
         </a>
@@ -305,7 +305,7 @@ function useInView(threshold = 0.15) {
 }
 
 /* ─── Animated Counter ──────────────────────────────────────── */
-function Counter({ target, suffix = "", prefix = "" }) {
+function Counter({ target, suffix = "", prefix = "" }: { target: string; suffix?: string; prefix?: string }) {
   const [count, setCount] = useState(0);
   const [ref, inView] = useInView(0.3);
   useEffect(() => {
@@ -342,7 +342,7 @@ function Counter({ target, suffix = "", prefix = "" }) {
 }
 
 /* ─── Section wrapper with scroll reveal ────────────────────── */
-function Reveal({ children, delay = 0, style = {} }) {
+function Reveal({ children, delay = 0, style = {} }: { children: React.ReactNode; delay?: number; style?: React.CSSProperties }) {
   const [ref, inView] = useInView();
   return (
     <div
@@ -360,7 +360,7 @@ function Reveal({ children, delay = 0, style = {} }) {
 }
 
 /* ─── Pill badge ─────────────────────────────────────────────── */
-function Pill({ children }) {
+function Pill({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
       display: "inline-flex", alignItems: "center", gap: "8px",
@@ -383,7 +383,7 @@ function Pill({ children }) {
 }
 
 /* ─── Feature card ──────────────────────────────────────────── */
-function FeatureCard({ icon, title, desc, color, delay }) {
+function FeatureCard({ icon, title, desc, color, delay }: { icon: React.ReactNode; title: string; desc: string; color: string; delay: number }) {
   return (
     <Reveal delay={delay}>
       <div className="card-hover" style={{
@@ -427,7 +427,7 @@ function FeatureCard({ icon, title, desc, color, delay }) {
 }
 
 /* ─── Pricing card ──────────────────────────────────────────── */
-function PricingCard({ plan, highlighted, delay }) {
+function PricingCard({ plan, highlighted, delay }: { plan: any; highlighted: boolean; delay: number }) {
   return (
     <Reveal delay={delay}>
       <div className="card-hover" style={{
@@ -482,7 +482,7 @@ function PricingCard({ plan, highlighted, delay }) {
         </div>
 
         <ul style={{ listStyle: "none", marginBottom: "32px", flex: 1, display: "flex", flexDirection: "column", gap: "13px" }}>
-          {plan.features.map((f) => (
+          {plan.features.map((f: string) => (
             <li key={f} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px", color: C.muted }}>
               <span style={{
                 width: 18, height: 18, borderRadius: "50%",
@@ -556,7 +556,7 @@ function LogoMarquee() {
 }
 
 /* ─── Testimonial card ───────────────────────────────────────── */
-function TestimonialCard({ name, role, text, initials, delay }) {
+function TestimonialCard({ name, role, text, initials, delay }: { name: string; role: string; text: string; initials: string; delay: number }) {
   return (
     <Reveal delay={delay}>
       <div className="card-hover" style={{
@@ -602,7 +602,7 @@ function TestimonialCard({ name, role, text, initials, delay }) {
 }
 
 /* ─── FAQ ────────────────────────────────────────────────────── */
-function FAQItem({ q, a, delay }) {
+function FAQItem({ q, a, delay }: { q: string; a: string; delay: number }) {
   const [open, setOpen] = useState(false);
   return (
     <Reveal delay={delay}>
@@ -703,7 +703,7 @@ export default function LandingPage() {
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
-    const onMouse = (e) => setMousePos({ x: e.clientX, y: e.clientY });
+    const onMouse = (e: MouseEvent) => setMousePos({ x: e.clientX, y: e.clientY });
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("mousemove", onMouse, { passive: true });
     return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("mousemove", onMouse); };
@@ -1298,8 +1298,8 @@ export default function LandingPage() {
                 fontSize: "13px", color: C.muted, textDecoration: "none",
                 transition: "color 0.2s",
               }}
-                onMouseEnter={e => e.target.style.color = C.text}
-                onMouseLeave={e => e.target.style.color = C.muted}
+                onMouseEnter={e => (e.target as HTMLElement).style.color = C.text}
+                onMouseLeave={e => (e.target as HTMLElement).style.color = C.muted}
               >
                 {link}
               </a>

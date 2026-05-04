@@ -1,4 +1,3 @@
-import React from "react";
 import { render } from "@react-email/components";
 import { WelcomeEmail } from "../../../emails/welcome";
 import { PaymentSuccessEmail } from "../../../emails/payment-success";
@@ -21,9 +20,9 @@ export {
  * Render a React Email template to an HTML string.
  * Useful when sending emails via Resend or other providers.
  */
-export async function renderEmailTemplate(
-  Template: React.ComponentType<any>,
-  props: Record<string, unknown>
+export async function renderEmailTemplate<T extends Record<string, unknown>>(
+  Template: React.ComponentType<T>,
+  props: T
 ): Promise<string> {
   return await render(<Template {...props} />);
 }
@@ -31,27 +30,38 @@ export async function renderEmailTemplate(
 /**
  * Convenience functions for each template type.
  */
-
-export async function renderWelcomeEmail(props: Parameters<typeof WelcomeEmail>[0]): Promise<string> {
+export async function renderWelcomeEmail(
+  props: Parameters<typeof WelcomeEmail>[0]
+): Promise<string> {
   return renderEmailTemplate(WelcomeEmail, props);
 }
 
-export async function renderPaymentSuccessEmail(props: Parameters<typeof PaymentSuccessEmail>[0]): Promise<string> {
+export async function renderPaymentSuccessEmail(
+  props: Parameters<typeof PaymentSuccessEmail>[0]
+): Promise<string> {
   return renderEmailTemplate(PaymentSuccessEmail, props);
 }
 
-export async function renderPaymentFailedEmail(props: Parameters<typeof PaymentFailedEmail>[0]): Promise<string> {
+export async function renderPaymentFailedEmail(
+  props: Parameters<typeof PaymentFailedEmail>[0]
+): Promise<string> {
   return renderEmailTemplate(PaymentFailedEmail, props);
 }
 
-export async function renderCreditAlertEmail(props: Parameters<typeof CreditAlertEmail>[0]): Promise<string> {
+export async function renderCreditAlertEmail(
+  props: Parameters<typeof CreditAlertEmail>[0]
+): Promise<string> {
   return renderEmailTemplate(CreditAlertEmail, props);
 }
 
-export async function renderAvatarReadyEmail(props: Parameters<typeof AvatarReadyEmail>[0]): Promise<string> {
+export async function renderAvatarReadyEmail(
+  props: Parameters<typeof AvatarReadyEmail>[0]
+): Promise<string> {
   return renderEmailTemplate(AvatarReadyEmail, props);
 }
 
-export async function renderResetPasswordEmail(props: Parameters<typeof ResetPasswordEmail>[0]): Promise<string> {
+export async function renderResetPasswordEmail(
+  props: Parameters<typeof ResetPasswordEmail>[0]
+): Promise<string> {
   return renderEmailTemplate(ResetPasswordEmail, props);
 }

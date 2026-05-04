@@ -97,13 +97,10 @@ export function PublishingScheduler({ videoId }: { videoId: string }) {
   }
 
   const platformIcons: Record<string, React.ReactNode> = {
-    tiktok: <Music2 className="h-5 w-5" />,
-  const platformIcons: Record<string, React.ReactNode> = {
     instagram: <IconInstagram className="h-5 w-5" />,
     linkedin:  <IconLinkedin  className="h-5 w-5" />,
     youtube:   <IconYoutube   className="h-5 w-5" />,
     tiktok:    <IconTiktok    className="h-5 w-5" />,
-  };
   };
 
   const platformColors: Record<string, string> = {

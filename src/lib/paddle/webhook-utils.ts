@@ -38,7 +38,7 @@ export const paddleWebhookTransactionDataSchema = z.object({
       quantity: z.number(),
     })
   ),
-  custom_data: z.record(z.any()).optional(),
+  custom_data: z.record(z.string(), z.any()).optional(),
   totals: z
     .object({
       subtotal: z.string(),
@@ -65,7 +65,7 @@ export const paddleWebhookSubscriptionDataSchema = z.object({
       next_billed_at: z.string().datetime().optional(),
     })
   ),
-  custom_data: z.record(z.any()).optional(),
+  custom_data: z.record(z.string(), z.any()).optional(),
   current_billing_period: z
     .object({
       starts_at: z.string().datetime(),
@@ -82,7 +82,7 @@ export const paddleWebhookEventSchema = z.object({
   event_type: z.string(),
   occurred_at: z.string().datetime(),
   notification_id: z.string(),
-  data: z.record(z.any()),
+  data: z.record(z.string(), z.any()),
 });
 
 export type PaddleWebhookEvent = z.infer<typeof paddleWebhookEventSchema>;
@@ -202,18 +202,18 @@ export function isSubscriptionStatusEvent(eventType: string): boolean {
  */
 export function extractUserIdFromWebhook(data: Record<string, unknown>): string | null {
   // Try custom_data first
-  if (data?.custom_data?.user_id) {
-    return data.custom_data.user_id;
+  if ((data as any)?.custom_data?.user_id) {
+    return (data as any).custom_data.user_id;
   }
 
   // For transaction/subscription data
-  if (data?.metadata?.user_id) {
-    return data.metadata.user_id;
+  if ((data as any)?.metadata?.user_id) {
+    return (data as any).metadata.user_id;
   }
 
   // Try different nested paths
-  if (data?.attributes?.custom_data?.user_id) {
-    return data.attributes.custom_data.user_id;
+  if ((data as any)?.attributes?.custom_data?.user_id) {
+    return (data as any).attributes.custom_data.user_id;
   }
 
   return null;
@@ -224,13 +224,13 @@ export function extractUserIdFromWebhook(data: Record<string, unknown>): string 
  */
 export function extractCreditsFromWebhook(data: Record<string, unknown>): number {
   // From custom_data
-  if (data?.custom_data?.credits) {
-    return parseInt(data.custom_data.credits, 10);
+  if ((data as any)?.custom_data?.credits) {
+    return parseInt((data as any).custom_data.credits, 10);
   }
 
   // From metadata
-  if (data?.metadata?.credits) {
-    return parseInt(data.metadata.credits, 10);
+  if ((data as any)?.metadata?.credits) {
+    return parseInt((data as any).metadata.credits, 10);
   }
 
   return 0;
@@ -288,7 +288,7 @@ export function validateWebhookEvent(
     return { valid: true };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const errors = error.errors.map((e) => `${e.path.join('.')}: ${e.message}`);
+      const errors = error.issues.map((e: any) => `${e.path.join('.')}: ${e.message}`);
       return { valid: false, errors };
     }
     return { valid: false, errors: ['Unknown validation error'] };

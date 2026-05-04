@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 
 export async function trackViewStart(videoId: string, sessionId: string, data: Record<string, unknown>) {
-  await supabaseAdmin().from('viewer_sessions').upsert({
+  await supabaseAdmin.from('viewer_sessions').upsert({
     video_id: videoId,
     session_id: sessionId,
     viewer_id: data.viewerId,

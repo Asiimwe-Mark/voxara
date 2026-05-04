@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
       ? new Date(Date.now() + expires_in * 1000).toISOString()
       : null;
 
-    const { error: dbError } = await supabaseAdmin().from("social_accounts").upsert(
+    const { error: dbError } = await supabaseAdmin.from("social_accounts").upsert(
       {
         user_id: userId,
         platform: "tiktok",

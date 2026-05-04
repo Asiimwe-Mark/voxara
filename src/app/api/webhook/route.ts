@@ -1,7 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { headers } from 'next/headers';
 import { sendPaymentSuccessEmail, sendPaymentFailedEmail } from '@/lib/email/service';
 import { createPaymentAdapter } from '@/lib/payment-adapter';
@@ -52,13 +51,12 @@ interface AutoTopUpSettings {
   profiles?: { email: string; credits: number; full_name?: string };
 }
 
-// ─── Supabase admin client ────────────────────────────────────────────────────
-
+// ─── Setup ───────────────────────────────────────────────────────────────────
 
 const paymentAdapter = createPaymentAdapter();
 const provider = process.env.PAYMENT_PROVIDER ?? 'paddle';
 
-// ─── Route handler ────────────────────────────────────────────────────────────
+// ─── Route handler ───────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
   let body = '';
@@ -89,7 +87,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (!paymentAdapter.verifyWebhookSignature(body, signature)) {
-    logger.error('[webhook] Invalid signature for provider', { detail: provider instanceof Error ? (provider as Error).message : String(provider) });
+    logger.error('[webhook] Invalid signature for provider', { detail: provider });
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
@@ -113,15 +111,15 @@ export async function POST(request: NextRequest) {
 // ─── Paddle handler ──────────────────────────────────────────────────────────
 
 const PLAN_MAP: Record<string, { plan: string; credits: number }> = {
-  pro: { plan: 'pro', credits: 30 },
+  pro:    { plan: 'pro',    credits: 30  },
   agency: { plan: 'agency', credits: 100 },
-  free: { plan: 'free', credits: 1 },
+  free:   { plan: 'free',   credits: 1   },
 };
 
 const PLAN_PRICES: Record<string, string> = {
-  pro: '$29.00',
+  pro:    '$29.00',
   agency: '$99.00',
-  free: 'Free',
+  free:   'Free',
 };
 
 async function handlePaddleWebhook(event: PaddleEvent): Promise<NextResponse> {
@@ -132,19 +130,21 @@ async function handlePaddleWebhook(event: PaddleEvent): Promise<NextResponse> {
   );
 
   if (!userId) {
-    logger.warn('[paddle-webhook] No user_id in event', { detail: eventType instanceof Error ? eventType.message : String(eventType) });
+    logger.warn('[paddle-webhook] No user_id in event', { detail: eventType });
     return NextResponse.json({ received: true });
   }
+
+  const adminClient = supabaseAdmin();
 
   switch (eventType) {
     case 'order.created':
     case 'order.completed': {
       const credits = Number(data?.custom_data?.credits ?? 0);
-      const total = data.total ?? 0;
+      const total   = data.total ?? 0;
 
       if (credits > 0) {
-        await (supabaseAdmin as any).rpc('add_credits', { p_user_id: userId, p_credits: credits });
-        await (supabaseAdmin as any).from('credit_purchases').insert({
+        await adminClient.rpc('add_credits', { p_user_id: userId, p_credits: credits });
+        await adminClient.from('credit_purchases').insert({
           user_id: userId,
           credits_purchased: credits,
           amount_paid: total,
@@ -153,17 +153,16 @@ async function handlePaddleWebhook(event: PaddleEvent): Promise<NextResponse> {
           status: 'completed',
         });
 
-        const { data: profile } = await (supabaseAdmin as any)
+        const { data: profile } = await adminClient
           .from('profiles')
           .select('email, full_name, credits')
           .eq('id', userId)
           .maybeSingle();
 
-        if (profile) {
-          const profileData = profile as { email: string; full_name: string; credits: number };
+        if (profile?.email) {
           await sendPaymentSuccessEmail(
-            profileData.email,
-            profileData.full_name ?? 'Creator',
+            profile.email,
+            profile.full_name ?? 'Creator',
             'credit_pack',
             `$${(total / 100).toFixed(2)}`,
             credits,
@@ -180,33 +179,33 @@ async function handlePaddleWebhook(event: PaddleEvent): Promise<NextResponse> {
       const { plan, credits } = PLAN_MAP[planType] ?? PLAN_MAP.pro;
       const attrs = data.attributes ?? {};
 
-      await (supabaseAdmin as any).from('payment_subscriptions').upsert(
+      await adminClient.from('payment_subscriptions').upsert(
         {
-          user_id: userId,
+          user_id:       userId,
           subscription_id: data.id,
-          provider: 'paddle',
+          provider:      'paddle',
           plan,
-          status: attrs.status ?? 'active',
-          renews_at: attrs.renews_at ?? null,
-          metadata: data?.custom_data ?? {},
-          updated_at: new Date().toISOString(),
+          status:        attrs.status ?? 'active',
+          renews_at:     attrs.renews_at ?? null,
+          metadata:      data?.custom_data ?? {},
+          updated_at:    new Date().toISOString(),
         },
         { onConflict: 'subscription_id' }
       );
 
-      await (supabaseAdmin as any).from('profiles').update({ plan, credits }).eq('id', userId);
+      await adminClient.from('profiles').update({ plan, credits }).eq('id', userId);
 
       if (eventType === 'subscription.created') {
-        const { data: profile } = await (supabaseAdmin as any)
+        const { data: profile } = await adminClient
           .from('profiles')
           .select('email, full_name')
           .eq('id', userId)
           .maybeSingle();
 
-        if ((profile as any)?.email) {
+        if (profile?.email) {
           await sendPaymentSuccessEmail(
-            (profile as any).email,
-            (profile as any).full_name ?? 'Creator',
+            profile.email,
+            profile.full_name ?? 'Creator',
             plan,
             PLAN_PRICES[plan] ?? '$29.00',
             credits,
@@ -218,23 +217,23 @@ async function handlePaddleWebhook(event: PaddleEvent): Promise<NextResponse> {
     }
 
     case 'subscription.cancelled': {
-      const { data: sub } = await (supabaseAdmin as any)
+      const { data: sub } = await adminClient
         .from('payment_subscriptions')
         .select('user_id')
         .eq('subscription_id', data.id)
         .maybeSingle();
 
       if (sub) {
-        await (supabaseAdmin as any)
+        await adminClient
           .from('profiles')
           .update({ plan: 'free', credits: 1 })
-          .eq('id', (sub as any).user_id);
+          .eq('id', sub.user_id);
       }
       break;
     }
 
     default:
-      logger.info('[paddle-webhook] Unhandled event', { detail: eventType instanceof Error ? (eventType as Error).message : String(eventType) });
+      logger.info('[paddle-webhook] Unhandled event', { detail: eventType });
   }
 
   return NextResponse.json({ received: true });
@@ -246,16 +245,18 @@ async function handleFlutterwaveWebhook(event: FlutterwaveEvent): Promise<NextRe
   const { data, event: eventType, status } = event;
 
   if (status !== 'success') {
-    logger.warn('[fw-webhook] Non-success status', { detail: status instanceof Error ? (status as Error).message : String(status) });
+    logger.warn('[fw-webhook] Non-success status', { detail: status });
     return NextResponse.json({ received: true });
   }
 
   const userId = String(data?.meta?.userId ?? data?.meta?.user_id ?? '');
 
   if (!userId) {
-    logger.warn('[fw-webhook] No user_id in event', { detail: eventType instanceof Error ? (eventType as Error).message : String(eventType) });
+    logger.warn('[fw-webhook] No user_id in event', { detail: eventType });
     return NextResponse.json({ received: true });
   }
+
+  const adminClient = supabaseAdmin();
 
   switch (eventType) {
     case 'charge.completed': {
@@ -263,26 +264,26 @@ async function handleFlutterwaveWebhook(event: FlutterwaveEvent): Promise<NextRe
       const credits = Number(data?.meta?.credits ?? 0);
 
       if (credits > 0) {
-        await (supabaseAdmin as any).rpc('add_credits', { p_user_id: userId, p_credits: credits });
-        await (supabaseAdmin as any).from('credit_purchases').insert({
-          user_id: userId,
+        await adminClient.rpc('add_credits', { p_user_id: userId, p_credits: credits });
+        await adminClient.from('credit_purchases').insert({
+          user_id:          userId,
           credits_purchased: credits,
-          amount_paid: amount,
+          amount_paid:      amount,
           payment_intent_id: id,
-          provider: 'flutterwave',
-          status: 'completed',
+          provider:         'flutterwave',
+          status:           'completed',
         });
 
-        const { data: profile } = await (supabaseAdmin as any)
+        const { data: profile } = await adminClient
           .from('profiles')
           .select('email, full_name, credits')
           .eq('id', userId)
           .maybeSingle();
 
-        if ((profile as any)?.email) {
+        if (profile?.email) {
           await sendPaymentSuccessEmail(
-            (profile as any).email,
-            (profile as any).full_name ?? 'Creator',
+            profile.email,
+            profile.full_name ?? 'Creator',
             'credit_pack',
             `${currency} ${(amount / 100).toFixed(2)}`,
             credits,
@@ -294,16 +295,16 @@ async function handleFlutterwaveWebhook(event: FlutterwaveEvent): Promise<NextRe
     }
 
     case 'charge.failed': {
-      const { data: profile } = await (supabaseAdmin as any)
+      const { data: profile } = await adminClient
         .from('profiles')
         .select('email, full_name')
         .eq('id', userId)
         .maybeSingle();
 
-      if ((profile as any)?.email) {
+      if (profile?.email) {
         await sendPaymentFailedEmail(
-          (profile as any).email,
-          (profile as any).full_name ?? 'Creator',
+          profile.email,
+          profile.full_name ?? 'Creator',
           'Your payment could not be processed. Please try again.'
         );
       }
@@ -311,7 +312,7 @@ async function handleFlutterwaveWebhook(event: FlutterwaveEvent): Promise<NextRe
     }
 
     default:
-      logger.info('[fw-webhook] Unhandled event', { detail: eventType instanceof Error ? eventType.message : String(eventType) });
+      logger.info('[fw-webhook] Unhandled event', { detail: eventType });
   }
 
   return NextResponse.json({ received: true });

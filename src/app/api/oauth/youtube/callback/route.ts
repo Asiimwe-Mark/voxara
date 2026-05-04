@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
     
     // Store tokens in Supabase Vault (recommended) or encrypted column
     // For simplicity, we store in social_accounts with tokens
-    const { error: dbError } = await supabaseAdmin().from("social_accounts").upsert(
+    const { error: dbError } = await supabaseAdmin.from("social_accounts").upsert(
       {
         user_id: userId,
         platform: "youtube",

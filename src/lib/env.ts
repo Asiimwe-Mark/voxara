@@ -21,11 +21,10 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(10, 'NEXT_PUBLIC_SUPABASE_ANON_KEY is too short'),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(10, 'SUPABASE_SERVICE_ROLE_KEY is too short'),
 
-  // AI (at least one required for generation; validate later if needed)
+  // AI (at least Gemini OR Claude required)
   GOOGLE_GENAI_API_KEY: z.string().optional(),
   GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
-  OPENAI_API_KEY: z.string().optional(),
 
   // Voice
   ELEVENLABS_API_KEY: z.string().optional(),
@@ -50,14 +49,9 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().email().default('noreply@voxara.app'),
 
-  // Payments – Paddle (required for billing)
-  PADDLE_VENDOR_ID: z.string().optional(),
+  // Payments
   PADDLE_API_KEY: z.string().optional(),
   PADDLE_WEBHOOK_SECRET: z.string().optional(),
-  PADDLE_SANDBOX_MODE: z.enum(['true', 'false']).default('true'),
-  PAYMENT_PROVIDER: z.enum(['paddle', 'flutterwave']).default('paddle'),
-
-  // Flutterwave (optional)
   FLUTTERWAVE_SECRET_KEY: z.string().optional(),
   FLUTTERWAVE_WEBHOOK_SECRET: z.string().optional(),
 
@@ -77,16 +71,13 @@ const envSchema = z.object({
   INSTAGRAM_CLIENT_ID: z.string().optional(),
   INSTAGRAM_CLIENT_SECRET: z.string().optional(),
 
-  // Remotion (optional)
+  // Remotion (optional — passthrough mode used if absent)
   RENDER_BACKEND: z.enum(['auto', 'local', 'lambda']).default('auto'),
   REMOTION_LAMBDA_FUNCTION_NAME: z.string().optional(),
   REMOTION_SERVE_URL: z.string().url().optional().or(z.literal('')),
   AWS_REGION: z.string().default('us-east-1'),
   AWS_ACCESS_KEY_ID: z.string().optional(),
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
-
-  // Logger level
-  LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 
   // Admin
   ADMIN_USER_IDS: z.string().default(''),
@@ -141,14 +132,14 @@ export function validateEnv(): void {
       error: err instanceof Error ? err.message : String(err),
     });
     if (process.env.NODE_ENV === 'production') {
-      throw new Error(
-        'Server misconfigured: required environment variables are missing. Check deployment logs.'
-      );
+      // process.exit() is not available in Edge Runtime — throw instead.
+      // This surfaces as a 500 at the first request, with a clear error message.
+      throw new Error('Server misconfigured: required environment variables are missing. Check deployment logs.');
     }
   }
 }
 
-// Re-export for convenience (Proxy is fine for config access)
+// Re-export for convenience
 export const env = new Proxy({} as Env, {
   get(_, key) {
     return getEnv()[key as keyof Env];
