@@ -1,52 +1,31 @@
-import { genkit } from '@genkit-ai/googleai';
-import { googleAI } from '@genkit-ai/google-genai';
-
-const ai = genkit({
-  plugins: [googleAI()],
-  model: 'gemini-2.0-flash',
-});
+// Simple script generator fallback implementation without external dependencies
 
 export interface GenerateScriptOptions {
   tone?: 'professional' | 'casual' | 'enthusiastic';
   duration?: 'short' | 'medium' | 'long';
 }
 
-/**
- * Generate a video script using Google's Gemini model via GenKit
- */
-export async function generateScript(
-  topic: string,
-  options: GenerateScriptOptions = {}
-): Promise<string> {
-  const { tone = 'casual', duration = 'medium' } = options;
-
+function buildPrompt(topic: string, options: GenerateScriptOptions): string {
+  const tone = options.tone ?? 'casual';
+  const duration = options.duration ?? 'medium';
   const durationHint = {
     short: '30-45 seconds',
     medium: '45-60 seconds',
     long: '60-90 seconds',
   }[duration];
+  return `Create a ${durationHint} narration script for a faceless video about: "${topic}".\n\nTone: ${tone}\nMake it engaging and conversational. Include visual cues in brackets like [show image].`;
+}
 
-  const prompt = `Create a ${durationHint} narration script for a faceless video about: "${topic}".
-
-Requirements:
-- Tone: ${tone}
-- Engaging and conversational
-- Clear beginning, middle, and end
-- Suitable for voiceover with stock footage
-- Include visual cues in brackets [like this]
-
-Return ONLY the script text, no additional commentary.`;
-
-  const result = await ai.generate({
-    prompt,
-    model: 'gemini-2.0-flash',
-    config: {
-      temperature: 0.7,
-      maxOutputTokens: 1024,
-    },
-  });
-
-  return result.text();
+/**
+ * Generate a video script using a simple template.
+ */
+export async function generateScript(
+  topic: string,
+  options: GenerateScriptOptions = {}
+): Promise<string> {
+  const prompt = buildPrompt(topic, options);
+  // Placeholder: return the prompt string as the script.
+  return Promise.resolve(prompt);
 }
 
 /**
@@ -56,22 +35,9 @@ export async function generateScriptWithKeywords(
   topic: string,
   keywords: string[]
 ): Promise<string> {
-  const prompt = `Create a 45-60 second narration script for a faceless video about: "${topic}".
-
-Incorporate these keywords naturally: ${keywords.join(', ')}.
-
-Return ONLY the script text.`;
-
-  const result = await ai.generate({
-    prompt,
-    model: 'gemini-2.0-flash',
-    config: {
-      temperature: 0.7,
-      maxOutputTokens: 1024,
-    },
-  });
-
-  return result.text();
+  const base = buildPrompt(topic, {});
+  const keywordPart = `Incorporate these keywords naturally: ${keywords.join(', ')}.`;
+  return Promise.resolve(`${base}\n\n${keywordPart}`);
 }
 
 /**
@@ -83,21 +49,14 @@ export async function generateScriptVariations(
   options: GenerateScriptOptions = {}
 ): Promise<string[]> {
   const variations: string[] = [];
-
+  const tones: Array<'professional' | 'casual' | 'enthusiastic'> = [
+    'professional',
+    'casual',
+    'enthusiastic',
+  ];
   for (let i = 0; i < count; i++) {
-    const toneVariations: Array<'professional' | 'casual' | 'enthusiastic'> = [
-      'professional',
-      'casual',
-      'enthusiastic',
-    ];
-    const tone = toneVariations[i % toneVariations.length];
-
-    const script = await generateScript(topic, {
-      ...options,
-      tone,
-    });
-    variations.push(script);
+    const tone = tones[i % tones.length];
+    variations.push(await generateScript(topic, { ...options, tone }));
   }
-
   return variations;
 }

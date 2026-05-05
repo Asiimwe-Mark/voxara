@@ -328,7 +328,7 @@ function Counter({ target, suffix = "", prefix = "" }: { target: string; suffix?
                   target.includes("%") ? `${count}%` : `${count}`;
 
   return (
-    <span ref={ref} style={{
+    <span ref={ref as any} style={{
       fontFamily: "Syne, sans-serif", fontWeight: 800,
       fontSize: "clamp(2rem, 5vw, 3.5rem)",
       background: `linear-gradient(135deg, ${C.accent}, ${C.accentC})`,
@@ -346,7 +346,7 @@ function Reveal({ children, delay = 0, style = {} }: { children: React.ReactNode
   const [ref, inView] = useInView();
   return (
     <div
-      ref={ref}
+      ref={ref as any}
       style={{
         opacity: inView ? 1 : 0,
         transform: inView ? "translateY(0)" : "translateY(40px)",

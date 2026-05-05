@@ -1,14 +1,4 @@
-import {
-  AbsoluteFill,
-  Audio,
-  Img,
-  Sequence,
-  useCurrentFrame,
-  useVideoConfig,
-  Video,
-  interpolate,
-  spring,
-} from 'remotion'
+import { AbsoluteFill, Audio, Img, Sequence, useCurrentFrame, useVideoConfig, Video, interpolate, spring, Composition } from 'remotion'
 import { z } from 'zod'
 
 // Props schema for type safety
