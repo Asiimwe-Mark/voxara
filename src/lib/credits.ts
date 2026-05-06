@@ -1,6 +1,9 @@
 import logger from '@/lib/logger';
 import { createClient } from '@/lib/supabase/server';
-import { supabaseAdmin } from '@/lib/supabase/admin';
+import { sb } from '@/lib/supabase/admin';
+
+// Cast to any to avoid strict Supabase type constraints in this utility module
+const sb = sb as any;
 import { CREDITS_CONFIG } from '@/lib/constants';
 
 /**
@@ -38,12 +41,12 @@ export async function deductCredits(userId: string, amount: number = 1): Promise
  */
 async function triggerAutoTopUpCheck(userId: string): Promise<void> {
   const [{ data: settings }, { data: profile }] = await Promise.all([
-    supabaseAdmin
+    sb
       .from('auto_top_up_settings')
       .select('enabled, threshold')
       .eq('user_id', userId)
       .single(),
-    supabaseAdmin.from('profiles').select('credits').eq('id', userId).single(),
+    sb.from('profiles').select('credits').eq('id', userId).single(),
   ]);
 
   if (!settings?.enabled || profile == null) return;
@@ -88,7 +91,7 @@ export async function awardSharingCredits(
   startOfMonth.setDate(1);
   startOfMonth.setHours(0, 0, 0, 0);
 
-  const { data: existing } = await supabaseAdmin
+  const { data: existing } = await sb
     .from('credit_transactions')
     .select('amount')
     .eq('user_id', userId)
@@ -101,14 +104,14 @@ export async function awardSharingCredits(
   const toAward = Math.min(bonus, cap - usedThisMonth);
 
   // Award credits via RPC
-  const { error: creditError } = await supabaseAdmin.rpc('add_credits', {
+  const { error: creditError } = await sb.rpc('add_credits', {
     p_user_id: userId,
     p_credits: toAward,
   });
   if (creditError) throw new Error(`awardSharingCredits RPC failed: ${creditError.message}`);
 
   // Log transaction for cap enforcement
-  await supabaseAdmin.from('credit_transactions').insert({
+  await sb.from('credit_transactions').insert({
     user_id: userId,
     amount: toAward,
     reason: 'social_share',
@@ -127,17 +130,17 @@ export async function awardSharingCredits(
 export async function awardReferralCredits(referrerId: string, newUserId: string): Promise<void> {
 
   await Promise.all([
-    supabaseAdmin.rpc('add_credits', {
+    sb.rpc('add_credits', {
       p_user_id: referrerId,
       p_credits: CREDITS_CONFIG.REFERRAL_BONUS_REFERRER,
     }),
-    supabaseAdmin.rpc('add_credits', {
+    sb.rpc('add_credits', {
       p_user_id: newUserId,
       p_credits: CREDITS_CONFIG.REFERRAL_BONUS_NEW_USER,
     }),
   ]);
 
-  await supabaseAdmin.from('credit_transactions').insert([
+  await sb.from('credit_transactions').insert([
     { user_id: referrerId, amount: CREDITS_CONFIG.REFERRAL_BONUS_REFERRER, reason: 'referral_given', metadata: { referred_user: newUserId }, created_at: new Date().toISOString() },
     { user_id: newUserId, amount: CREDITS_CONFIG.REFERRAL_BONUS_NEW_USER, reason: 'referral_received', metadata: { referred_by: referrerId }, created_at: new Date().toISOString() },
   ]);

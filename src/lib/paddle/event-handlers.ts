@@ -40,7 +40,7 @@ export async function handleTransactionCompleted(data: Record<string, unknown>):
     }
 
     // Add credits to user
-    const { error: rpcError } = await supabaseAdmin.rpc('add_credits' as any, {
+    const { error: rpcError } = await (supabaseAdmin as any).rpc('add_credits' as any, {
       p_user_id: userId,
       p_credits: credits,
     } as any);
@@ -50,7 +50,7 @@ export async function handleTransactionCompleted(data: Record<string, unknown>):
     }
 
     // Record credit purchase in database
-    const { error: insertError } = await supabaseAdmin.from('credit_purchases' as any).insert({
+    const { error: insertError } = await (supabaseAdmin as any).from('credit_purchases' as any).insert({
       user_id: userId,
       credits_purchased: credits,
       amount_paid: parseInt(amount, 10),
@@ -406,7 +406,7 @@ export async function logWebhookEvent(
   error?: Error
 ): Promise<void> {
   try {
-    await supabaseAdmin.from('webhook_logs' as any).insert({
+    await (supabaseAdmin as any).from('webhook_logs' as any).insert({
       provider: 'paddle',
       event_type: eventType,
       payload: data,

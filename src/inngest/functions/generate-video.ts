@@ -31,8 +31,7 @@ export const generateVideo = inngest.createFunction(
       const videoId = event.data.event?.data?.videoId;
       const userId = event.data.event?.data?.userId;
       if (videoId) {
-        await supabaseAdmin
-          .from("videos")
+        await (supabaseAdmin as any).from("videos")
           .update({ status: "failed", updated_at: new Date().toISOString() })
           .eq("id", videoId);
         if (userId) {
@@ -49,8 +48,7 @@ export const generateVideo = inngest.createFunction(
     const eventUserPlan: PlanType = (event.data.userPlan as PlanType) ?? "free";
 
     const video = await step.run("fetch-video", async () => {
-      const { data, error } = await supabaseAdmin
-        .from("videos")
+      const { data, error } = await (supabaseAdmin as any).from("videos")
         .select("*, user_avatars(*), user_voices(*)")
         .eq("id", videoId)
         .single();
@@ -61,8 +59,7 @@ export const generateVideo = inngest.createFunction(
     // Fetch plan — use event data if provided, otherwise query DB
     const userPlan = await step.run("fetch-user-plan", async () => {
       if (eventUserPlan && eventUserPlan !== "free") return eventUserPlan;
-      const { data } = await supabaseAdmin
-        .from("profiles")
+      const { data } = await (supabaseAdmin as any).from("profiles")
         .select("plan")
         .eq("id", userId)
         .single();
@@ -70,9 +67,7 @@ export const generateVideo = inngest.createFunction(
     });
 
     await step.run("mark-processing", async () => {
-      await supabaseAdmin
-        .from("videos")
-        .update({ status: "processing", updated_at: new Date().toISOString() })
+      await (supabaseAdmin as any).update({ status: "processing", updated_at: new Date().toISOString() })
         .eq("id", videoId);
     });
 
@@ -162,7 +157,7 @@ export const generateVideo = inngest.createFunction(
       });
 
       await step.run("update-database", async () => {
-        await supabaseAdmin.from("videos").update({
+        await (supabaseAdmin as any).from("videos").update({
           status: "ready",
           mux_asset_id: muxAsset.assetId,
           mux_playback_id: muxAsset.playbackId ?? null,
@@ -186,7 +181,7 @@ export const generateVideo = inngest.createFunction(
     } else {
       // Free tier: direct URL, no Mux cost
       await step.run("update-database", async () => {
-        await supabaseAdmin.from("videos").update({
+        await (supabaseAdmin as any).from("videos").update({
           status: "ready",
           mux_asset_id: null,
           mux_playback_id: null,

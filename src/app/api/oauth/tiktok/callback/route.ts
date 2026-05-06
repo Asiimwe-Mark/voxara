@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   const supabase = await createClient();
 
   if (error) {
-    logger.error("TikTok OAuth error:", error, errorDescription);
+    logger.error("TikTok OAuth error:", {error, errorDescription,});
     return NextResponse.redirect(
       new URL("/dashboard/settings?error=tiktok_auth_failed", request.url)
     );

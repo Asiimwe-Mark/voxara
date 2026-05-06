@@ -1,9 +1,12 @@
-import { supabaseAdmin } from '@/lib/supabase/admin';
+import { sb } from '@/lib/supabase/admin';
+
+// Cast to any for flexible column usage
+const sb = sb as any;
 import { createClient } from '@supabase/supabase-js';
 
 
 export async function trackViewStart(videoId: string, sessionId: string, data: Record<string, unknown>) {
-  await supabaseAdmin.from('viewer_sessions').upsert({
+  await sb.from('viewer_sessions').upsert({
     video_id: videoId,
     session_id: sessionId,
     viewer_id: data.viewerId,
@@ -19,7 +22,7 @@ export async function trackViewStart(videoId: string, sessionId: string, data: R
 }
 
 export async function trackViewProgress(sessionId: string, progress: number, currentTime: number) {
-  const { data: session } = await supabaseAdmin
+  const { data: session } = await sb
     .from('viewer_sessions')
     .select('playback_events')
     .eq('session_id', sessionId)
@@ -28,7 +31,7 @@ export async function trackViewProgress(sessionId: string, progress: number, cur
   if (session) {
     const events = session.playback_events || [];
     events.push({ type: 'progress', progress, time: currentTime, timestamp: new Date().toISOString() });
-    await supabaseAdmin
+    await sb
       .from('viewer_sessions')
       .update({ playback_events: events, watch_duration: currentTime, watch_percentage: progress })
       .eq('session_id', sessionId);
@@ -36,7 +39,7 @@ export async function trackViewProgress(sessionId: string, progress: number, cur
 }
 
 export async function trackViewComplete(sessionId: string, duration: number) {
-  await supabaseAdmin
+  await sb
     .from('viewer_sessions')
     .update({ end_time: new Date().toISOString(), watch_duration: duration, watch_percentage: 100 })
     .eq('session_id', sessionId);

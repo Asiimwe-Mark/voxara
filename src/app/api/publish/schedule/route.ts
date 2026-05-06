@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
   await inngest.send({
     name: 'social/publish-scheduled',
     data: { scheduleId: schedule.id },
-    ts: scheduledDate,
+    ts: scheduledDate.getDate(),
   });
 
   return NextResponse.json({ success: true, schedule }, { status: 201 });

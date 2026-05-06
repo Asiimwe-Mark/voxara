@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(npm run *)",
-      "Bash(NODE_OPTIONS=--max-old-space-size=4096 npm run *)"
+      "Bash(NODE_OPTIONS=--max-old-space-size=4096 npm run *)",
+      "Bash(npm ls *)",
+      "Bash(npx tsc *)"
     ]
   }
 }
