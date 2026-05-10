@@ -55,11 +55,18 @@ interface AutoTopUpState {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const CREDIT_PACKS = [
+interface CreditPack {
+  credits: number;
+  price: number;
+  label: string;
+  popular?: true;
+}
+
+const CREDIT_PACKS: CreditPack[] = [
   { credits: 10, price: 900,  label: '$9'  },
   { credits: 25, price: 1900, label: '$19', popular: true },
   { credits: 50, price: 2900, label: '$29' },
-] as const
+]
 
 const PLAN_BADGE: Record<PlanType, { label: string; className: string }> = {
   free:   { label: 'Free',   className: '' },

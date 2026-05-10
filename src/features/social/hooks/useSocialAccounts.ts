@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import logger from "@/lib/logger";
 
 export type SocialPlatform = "youtube" | "tiktok" | "instagram" | "linkedin";
 
@@ -58,9 +59,12 @@ export function useSocialAccounts(): UseSocialAccountsReturn {
 
       if (error) throw error;
       setAccounts(
-        data.map((acc: Record<string, unknown>) => ({
-          ...acc,
-          connected_at: acc.created_at,
+        data.map((acc: any) => ({
+          id: String(acc.id),
+          platform: acc.platform as SocialPlatform,
+          account_id: String(acc.account_id),
+          account_name: acc.account_name ?? '',
+          connected_at: acc.created_at ?? new Date().toISOString(),
         }))
       );
     } catch (error) {

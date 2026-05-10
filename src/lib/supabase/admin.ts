@@ -42,3 +42,6 @@ export const supabaseAdmin = new Proxy({} as ReturnType<typeof createClient<Data
     return (getAdminClient() as unknown as Record<string | symbol, unknown>)[prop];
   },
 });
+
+/** Alias for backwards compatibility */
+export const sb = supabaseAdmin;

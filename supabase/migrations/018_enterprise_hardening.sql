@@ -1,20 +1,15 @@
 -- ============================================================
--- 017_enterprise_hardening.sql
+-- 018_enterprise_hardening.sql (FIXED)
 --
--- Enterprise-grade hardening pass across ALL tables:
---
---   1.  Fix free-tier default credits (3 → 1) in schema
---   2.  Add CHECK constraints for enums & numeric bounds
---   3.  Add NOT NULL constraints where data is always required
---   4.  Add soft-delete (deleted_at) to videos, profiles, teams
---   5.  Add service_role bypass policies to every table
---   6.  Add missing updated_at triggers to tables that lacked them
---   7.  Add missing columns discovered during linting audit
---   8.  Harden all RPCs with explicit transaction safety
---   9.  Add partial/conditional indexes for common query patterns
---   10. Add pg_cron monthly credit reset job
---   11. Add webhook_url column to videos (used by generate-video)
---   12. Fix cascades on orphaned foreign keys
+-- Fixes applied vs original:
+--   - marketplace_templates → video_templates (table doesn't exist)
+--   - teams/team_members/team_invitations → organizations/* (these tables
+--     don't exist; schema uses organizations/organization_members/invites)
+--   - api_keys.rate_limit_per_minute removed (column never created in 007)
+--   - idx_api_keys_active uses status column, not non-existent revoked_at
+--   - pending_credit_purchases CREATE removed (already created in 014)
+--   - Section 5 tables array cleaned up (removed non-existent tables)
+--   - Section 12 cascade fixes updated to actual table names
 -- ============================================================
 
 BEGIN;
@@ -26,7 +21,6 @@ BEGIN;
 ALTER TABLE public.profiles
   ALTER COLUMN credits SET DEFAULT 1;
 
--- Correct any existing free accounts still at old default (3)
 UPDATE public.profiles
 SET credits = 1, updated_at = NOW()
 WHERE plan = 'free'
@@ -71,14 +65,14 @@ ALTER TABLE public.payment_subscriptions DROP CONSTRAINT IF EXISTS chk_pay_sub_s
 ALTER TABLE public.payment_subscriptions ADD CONSTRAINT chk_pay_sub_status
   CHECK (status IN ('active','cancelled','past_due','trialing','paused','expired'));
 
--- marketplace_templates.status
-ALTER TABLE public.marketplace_templates DROP CONSTRAINT IF EXISTS chk_mkt_status;
-ALTER TABLE public.marketplace_templates ADD CONSTRAINT chk_mkt_status
-  CHECK (status IN ('draft','published','rejected','archived'));
+-- FIX: was marketplace_templates (doesn't exist) → video_templates
+ALTER TABLE public.video_templates DROP CONSTRAINT IF EXISTS chk_mkt_status;
+ALTER TABLE public.video_templates ADD CONSTRAINT chk_mkt_status
+  CHECK (status IN ('draft','published','pending','approved','rejected','archived'));
 
--- marketplace_templates.price — non-negative
-ALTER TABLE public.marketplace_templates DROP CONSTRAINT IF EXISTS chk_mkt_price;
-ALTER TABLE public.marketplace_templates ADD CONSTRAINT chk_mkt_price
+-- video_templates.price — non-negative
+ALTER TABLE public.video_templates DROP CONSTRAINT IF EXISTS chk_mkt_price;
+ALTER TABLE public.video_templates ADD CONSTRAINT chk_mkt_price
   CHECK (price >= 0);
 
 -- auto_top_up_settings bounds
@@ -90,26 +84,36 @@ ALTER TABLE public.auto_top_up_settings DROP CONSTRAINT IF EXISTS chk_auto_topup
 ALTER TABLE public.auto_top_up_settings ADD CONSTRAINT chk_auto_topup_amount
   CHECK (top_up_amount IN (10, 25, 50, 100));
 
--- api_keys.rate_limit_per_minute
-ALTER TABLE public.api_keys DROP CONSTRAINT IF EXISTS chk_api_key_rate_limit;
-ALTER TABLE public.api_keys ADD CONSTRAINT chk_api_key_rate_limit
-  CHECK (rate_limit_per_minute BETWEEN 1 AND 1000);
+-- FIX: removed api_keys.rate_limit_per_minute constraint — column never exists
+-- (api_keys table from 007 has: id, user_id, name, key_hash, key_preview,
+--  permissions, last_used_at, expires_at, status, created_at, updated_at)
 
 -- ============================================================
 -- SECTION 3: NOT NULL constraints
 -- ============================================================
 
 -- profiles: email is always set by handle_new_user trigger
-ALTER TABLE public.profiles ALTER COLUMN email SET NOT NULL;
+-- Guarded to avoid failure if any existing row has NULL email
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.profiles WHERE email IS NULL LIMIT 1
+  ) THEN
+    ALTER TABLE public.profiles ALTER COLUMN email SET NOT NULL;
+  ELSE
+    RAISE NOTICE '[018] Skipped email NOT NULL — some profiles have NULL email. '
+                 'Backfill emails before re-running this constraint.';
+  END IF;
+END $$;
 
--- videos: user_id already NOT NULL — add status NOT NULL
+-- videos: status NOT NULL with default
 ALTER TABLE public.videos ALTER COLUMN status SET NOT NULL;
 ALTER TABLE public.videos ALTER COLUMN status SET DEFAULT 'pending';
 
 -- credit_transactions: all three core fields must be present
 ALTER TABLE public.credit_transactions ALTER COLUMN user_id SET NOT NULL;
-ALTER TABLE public.credit_transactions ALTER COLUMN amount SET NOT NULL;
-ALTER TABLE public.credit_transactions ALTER COLUMN reason SET NOT NULL;
+ALTER TABLE public.credit_transactions ALTER COLUMN amount  SET NOT NULL;
+ALTER TABLE public.credit_transactions ALTER COLUMN reason  SET NOT NULL;
 
 -- ============================================================
 -- SECTION 4: Soft-delete (deleted_at) columns
@@ -121,7 +125,9 @@ ALTER TABLE public.videos
 ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
 
-ALTER TABLE public.teams
+-- FIX: removed ALTER TABLE public.teams — that table doesn't exist.
+-- The schema uses public.organizations; add deleted_at there instead.
+ALTER TABLE public.organizations
   ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
 
 -- Hide soft-deleted videos from default RLS policies
@@ -135,8 +141,10 @@ CREATE POLICY "Users can soft-delete own videos" ON public.videos
   WITH CHECK (auth.uid() = user_id);
 
 -- ============================================================
--- SECTION 5: service_role bypass policies (essential for
---            server-side admin operations via supabaseAdmin)
+-- SECTION 5: service_role bypass policies
+-- FIX: removed non-existent tables; kept only real tables.
+-- The EXCEPTION handler already suppresses undefined_table errors,
+-- but a clean list avoids noise in logs.
 -- ============================================================
 
 DO $$ 
@@ -144,15 +152,15 @@ DECLARE
   tbl TEXT;
   tables TEXT[] := ARRAY[
     'profiles','videos','credit_transactions','credit_purchases',
-    'stripe_customers','stripe_subscriptions','credit_packs',
-    'auto_top_up_settings','user_avatars','user_voices',
-    'teams','team_members','team_invitations','video_templates',
-    'video_analytics','session_analytics','daily_metrics',
-    'platform_metrics','user_metrics','marketplace_templates',
-    'template_purchases','marketplace_reviews','api_keys',
-    'api_usage','video_publishes','payment_customers',
-    'payment_subscriptions','payment_sessions','payment_transactions',
-    'webhook_logs','credit_transactions'
+    'credit_packs','auto_top_up_settings','user_avatars','user_voices',
+    'video_templates','template_purchases','creator_accounts',
+    'social_accounts','social_shares','social_share_monthly_limits',
+    'api_keys','webhook_endpoints','webhook_logs','video_publishes',
+    'video_metrics','viewer_sessions','ab_experiments','ab_impressions',
+    'seo_performance','payment_customers','payment_subscriptions',
+    'payment_sessions','pending_credit_purchases','publishing_schedules',
+    'organizations','organization_members','organization_subscriptions',
+    'organization_invites'
   ];
 BEGIN
   FOREACH tbl IN ARRAY tables LOOP
@@ -167,7 +175,6 @@ BEGIN
         tbl
       );
     EXCEPTION WHEN undefined_table THEN
-      -- Table doesn't exist yet, skip silently
       NULL;
     END;
   END LOOP;
@@ -177,7 +184,6 @@ END $$;
 -- SECTION 6: Missing updated_at triggers
 -- ============================================================
 
--- Ensure the trigger function exists (may have been created in 001)
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -191,14 +197,13 @@ DECLARE
   tbl TEXT;
   tables_needing_trigger TEXT[] := ARRAY[
     'credit_purchases','auto_top_up_settings','user_avatars',
-    'user_voices','teams','team_members','marketplace_templates',
+    'user_voices','video_templates','creator_accounts',
     'api_keys','payment_customers','payment_subscriptions',
-    'payment_sessions','payment_transactions'
+    'payment_sessions'
   ];
 BEGIN
   FOREACH tbl IN ARRAY tables_needing_trigger LOOP
     BEGIN
-      -- Check the table has an updated_at column before adding trigger
       IF EXISTS (
         SELECT 1 FROM information_schema.columns
         WHERE table_schema = 'public'
@@ -223,21 +228,13 @@ END $$;
 -- SECTION 7: Missing columns from linting audit
 -- ============================================================
 
--- videos: webhook_url used by generate-video inngest function
-ALTER TABLE public.videos
-  ADD COLUMN IF NOT EXISTS webhook_url TEXT;
-
--- videos: avatar_id referenced in render route
+-- videos: all already added in migration 010 — guarded with IF NOT EXISTS
+ALTER TABLE public.videos ADD COLUMN IF NOT EXISTS webhook_url TEXT;
+ALTER TABLE public.videos ADD COLUMN IF NOT EXISTS youtube_id TEXT;
 ALTER TABLE public.videos
   ADD COLUMN IF NOT EXISTS avatar_id UUID REFERENCES public.user_avatars(id) ON DELETE SET NULL;
-
--- videos: voice_id referenced in render route
 ALTER TABLE public.videos
   ADD COLUMN IF NOT EXISTS voice_id UUID REFERENCES public.user_voices(id) ON DELETE SET NULL;
-
--- videos: youtube_id used by video-card publish
-ALTER TABLE public.videos
-  ADD COLUMN IF NOT EXISTS youtube_id TEXT;
 
 -- profiles: referral_code for fast lookup (pre-computed)
 ALTER TABLE public.profiles
@@ -248,42 +245,18 @@ ALTER TABLE public.profiles
 CREATE UNIQUE INDEX IF NOT EXISTS idx_profiles_referral_code
   ON public.profiles(referral_code);
 
--- credit_transactions: metadata column (for social share & referral tracking)
+-- credit_transactions: metadata column
 ALTER TABLE public.credit_transactions
   ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}';
 
--- pending_credit_purchases table (used by Flutterwave auto-topup)
-CREATE TABLE IF NOT EXISTS public.pending_credit_purchases (
-  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id          UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  credits_pending  INTEGER NOT NULL CHECK (credits_pending > 0),
-  tx_ref           TEXT NOT NULL UNIQUE,
-  provider         TEXT NOT NULL,
-  status           TEXT NOT NULL DEFAULT 'pending'
-                     CHECK (status IN ('pending','completed','expired','failed')),
-  created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  expires_at       TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '24 hours'
-);
-
-ALTER TABLE public.pending_credit_purchases ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users view own pending purchases" ON public.pending_credit_purchases
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Service role full access" ON public.pending_credit_purchases
-  FOR ALL TO service_role USING (true) WITH CHECK (true);
-
-CREATE INDEX IF NOT EXISTS idx_pending_purchases_user_id
-  ON public.pending_credit_purchases(user_id);
-
-CREATE INDEX IF NOT EXISTS idx_pending_purchases_tx_ref
-  ON public.pending_credit_purchases(tx_ref);
+-- FIX: pending_credit_purchases is already created in migration 014.
+-- Removed CREATE TABLE block that would conflict. If the metadata / updated_at
+-- columns from 014 need to exist, they are already there.
 
 -- ============================================================
 -- SECTION 8: Hardened RPCs
 -- ============================================================
 
--- Atomic credit deduction with row-level lock
 CREATE OR REPLACE FUNCTION public.deduct_credits(
   p_user_id UUID,
   p_credits  INT DEFAULT 1
@@ -296,7 +269,6 @@ AS $$
 DECLARE
   v_credits INT;
 BEGIN
-  -- Lock the row to prevent concurrent deductions
   SELECT credits INTO v_credits
   FROM public.profiles
   WHERE id = p_user_id
@@ -311,7 +283,6 @@ BEGIN
       updated_at = NOW()
   WHERE id = p_user_id;
 
-  -- Audit log
   INSERT INTO public.credit_transactions(user_id, amount, reason)
   VALUES (p_user_id, -p_credits, 'video_render');
 
@@ -319,7 +290,6 @@ BEGIN
 END;
 $$;
 
--- Atomic credit addition
 CREATE OR REPLACE FUNCTION public.add_credits(
   p_user_id UUID,
   p_credits  INT
@@ -345,7 +315,6 @@ BEGIN
 END;
 $$;
 
--- Monthly credit reset (called by pg_cron)
 CREATE OR REPLACE FUNCTION public.reset_monthly_credits()
 RETURNS VOID
 LANGUAGE plpgsql
@@ -353,21 +322,9 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  -- Reset free users to 1 credit
-  UPDATE public.profiles
-  SET credits = 1, updated_at = NOW()
-  WHERE plan = 'free';
-
-  -- Reset pro users to 30 credits
-  UPDATE public.profiles
-  SET credits = 30, updated_at = NOW()
-  WHERE plan = 'pro';
-
-  -- Reset agency users to 100 credits
-  UPDATE public.profiles
-  SET credits = 100, updated_at = NOW()
-  WHERE plan = 'agency';
-
+  UPDATE public.profiles SET credits = 1,   updated_at = NOW() WHERE plan = 'free';
+  UPDATE public.profiles SET credits = 30,  updated_at = NOW() WHERE plan = 'pro';
+  UPDATE public.profiles SET credits = 100, updated_at = NOW() WHERE plan = 'agency';
   RAISE NOTICE '[reset_monthly_credits] completed at %', NOW();
 END;
 $$;
@@ -376,45 +333,39 @@ $$;
 -- SECTION 9: Partial/composite indexes for common queries
 -- ============================================================
 
--- Ready videos only (dashboard query)
 CREATE INDEX IF NOT EXISTS idx_videos_user_ready
   ON public.videos(user_id, created_at DESC)
   WHERE status = 'ready' AND deleted_at IS NULL;
 
--- Processing videos (polling query)
 CREATE INDEX IF NOT EXISTS idx_videos_processing
   ON public.videos(created_at)
   WHERE status = 'processing';
 
--- Failed videos (retry query)
 CREATE INDEX IF NOT EXISTS idx_videos_failed
   ON public.videos(user_id, created_at DESC)
   WHERE status = 'failed';
 
--- credit_transactions monthly sharing cap query
 CREATE INDEX IF NOT EXISTS idx_credit_tx_monthly_share
   ON public.credit_transactions(user_id, created_at DESC)
   WHERE reason = 'social_share';
 
--- credit_transactions referral history
 CREATE INDEX IF NOT EXISTS idx_credit_tx_referral
   ON public.credit_transactions(user_id, created_at DESC)
   WHERE reason IN ('referral_given','referral_received');
 
--- Active subscriptions lookup
 CREATE INDEX IF NOT EXISTS idx_pay_sub_active
   ON public.payment_subscriptions(user_id)
   WHERE status = 'active';
 
--- Active marketplace templates (public listing)
+-- FIX: was marketplace_templates → video_templates
 CREATE INDEX IF NOT EXISTS idx_mkt_published
-  ON public.marketplace_templates(created_at DESC)
+  ON public.video_templates(created_at DESC)
   WHERE status = 'published';
 
--- API keys: active only
+-- FIX: api_keys has no revoked_at column → use status = 'active' instead
 CREATE INDEX IF NOT EXISTS idx_api_keys_active
   ON public.api_keys(user_id)
-  WHERE revoked_at IS NULL;
+  WHERE status = 'active';
 
 -- ============================================================
 -- SECTION 10: pg_cron monthly credit reset
@@ -422,16 +373,15 @@ CREATE INDEX IF NOT EXISTS idx_api_keys_active
 
 DO $$
 BEGIN
-  -- Only schedule if pg_cron extension is available
   IF EXISTS (SELECT 1 FROM pg_available_extensions WHERE name = 'pg_cron') THEN
     PERFORM cron.schedule(
       'monthly-credit-reset',
-      '0 0 1 * *',  -- 00:00 on the 1st of every month
-      $$SELECT public.reset_monthly_credits()$$
+      '0 0 1 * *',
+      'SELECT public.reset_monthly_credits()'
     );
-    RAISE NOTICE '[017] pg_cron monthly reset scheduled';
+    RAISE NOTICE '[018] pg_cron monthly reset scheduled';
   ELSE
-    RAISE NOTICE '[017] pg_cron not available — schedule reset_monthly_credits() externally via Inngest or Supabase Edge Functions';
+    RAISE NOTICE '[018] pg_cron not available — schedule reset_monthly_credits() via Inngest';
   END IF;
 END $$;
 
@@ -451,45 +401,33 @@ BEGIN
     NEW.id,
     NEW.email,
     NEW.raw_user_meta_data->>'full_name',
-    1,       -- Free tier: 1 credit
+    1,
     'free'
   )
-  ON CONFLICT (id) DO NOTHING;  -- Idempotent: safe if trigger fires twice
+  ON CONFLICT (id) DO NOTHING;
 
   RETURN NEW;
 END;
 $$;
 
--- Re-attach trigger in case it was dropped
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- ============================================================
--- SECTION 12: Cascade fixes for orphaned FK references
+-- SECTION 12: Cascade fixes for FK references
+-- FIX: teams/team_members/team_invitations don't exist.
+-- The schema uses organizations/organization_members/organization_invites.
+-- Those FKs are already set with ON DELETE CASCADE in migration 004.
+-- Nothing to do here — kept as a no-op comment for traceability.
 -- ============================================================
 
--- videos.user_id: already CASCADE — confirm
--- team_members: if team deleted, members should cascade
-ALTER TABLE public.team_members
-  DROP CONSTRAINT IF EXISTS team_members_team_id_fkey;
-
-ALTER TABLE public.team_members
-  ADD CONSTRAINT team_members_team_id_fkey
-    FOREIGN KEY (team_id) REFERENCES public.teams(id) ON DELETE CASCADE;
-
--- team_invitations: cascade on team delete
-ALTER TABLE public.team_invitations
-  DROP CONSTRAINT IF EXISTS team_invitations_team_id_fkey;
-
-ALTER TABLE public.team_invitations
-  ADD CONSTRAINT team_invitations_team_id_fkey
-    FOREIGN KEY (team_id) REFERENCES public.teams(id) ON DELETE CASCADE;
+-- organization_members.organization_id already CASCADE (migration 004)
+-- organization_invites.organization_id already CASCADE (migration 004)
 
 COMMIT;
 
--- Post-commit VACUUM to update stats after mass UPDATE
 ANALYZE public.profiles;
 ANALYZE public.videos;
 ANALYZE public.credit_transactions;

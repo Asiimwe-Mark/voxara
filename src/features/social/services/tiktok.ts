@@ -45,16 +45,16 @@ async function getRefreshedTokens(userId: string): Promise<TikTokTokens> {
       .eq("platform", "tiktok");
 
     return {
-      access_token: data.data.access_token,
-      refresh_token: data.data.refresh_token,
-      open_id: data.data.open_id,
+      access_token: data.data.access_token ?? '',
+      refresh_token: data.data.refresh_token ?? '',
+      open_id: data.data.open_id ?? '',
     };
   }
 
   return {
-    access_token: account.access_token,
-    refresh_token: account.refresh_token,
-    open_id: account.account_id,
+    access_token: account.access_token ?? '',
+    refresh_token: account.refresh_token ?? '',
+    open_id: account.account_id ?? '',
   };
 }
 

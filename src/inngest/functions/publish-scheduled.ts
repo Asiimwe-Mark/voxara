@@ -71,7 +71,7 @@ async function publishToYouTubeFull(
 export const publishScheduled = inngest.createFunction(
   { id: 'publish-scheduled', name: 'Publish Scheduled Video', retries: 3 },
   { event: 'social/publish-scheduled' },
-  async ({ event, step }) => {
+  async ({ event, step }: { event: any; step: any }) => {
     const { scheduleId } = event.data;
 
     const schedule = await step.run('get-schedule', async () => {

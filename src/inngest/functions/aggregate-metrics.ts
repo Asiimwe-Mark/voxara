@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 export const aggregateVideoMetrics = inngest.createFunction(
   { id: 'aggregate-metrics', name: 'Aggregate Video Metrics' },
   { cron: '0 0 * * *' },
-  async ({ step, event }) => {
+  async ({ step, event }: { step: any; event: any }) => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const dateStr = yesterday.toISOString().split('T')[0];

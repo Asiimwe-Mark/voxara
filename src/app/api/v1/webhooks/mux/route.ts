@@ -12,7 +12,7 @@ function getMux() {
   });
 }
 
-function verifyMuxSignature(request: NextRequest, rawBody: string): boolean {
+async function verifyMuxSignature(request: NextRequest, rawBody: string): Promise<boolean> {
   const signature = request.headers.get("mux-signature");
   if (!signature) return false;
 
@@ -24,9 +24,26 @@ function verifyMuxSignature(request: NextRequest, rawBody: string): boolean {
   }
 
   try {
-    const webhook = getMux().webhooks;
-    webhook.verifyHeader(rawBody, signature, secret);
-    return true;
+    // Manual HMAC verification - more reliable across SDK versions
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    const signatureBytes = await crypto.subtle.sign('HMAC', key, encoder.encode(rawBody));
+    const expectedSignature = Array.from(new Uint8Array(signatureBytes))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
+    // Mux sends timestamp as part of signature: t=<timestamp>,v1=<signature>
+    const parts = signature.split(',');
+    const sigPart = parts.find(p => p.startsWith('v1='));
+    if (!sigPart) return false;
+
+    return sigPart.slice(3) === expectedSignature;
   } catch {
     return false;
   }
@@ -35,7 +52,7 @@ function verifyMuxSignature(request: NextRequest, rawBody: string): boolean {
 export async function POST(request: NextRequest) {
   const rawBody = await request.text();
 
-  if (!verifyMuxSignature(request, rawBody)) {
+  if (!await verifyMuxSignature(request, rawBody)) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 

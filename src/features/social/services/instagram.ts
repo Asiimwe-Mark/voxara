@@ -22,8 +22,8 @@ async function getRefreshedTokens(userId: string): Promise<InstagramTokens> {
   // For production, use long-lived tokens and refresh via Facebook Graph API.
 
   return {
-    access_token: account.access_token,
-    instagram_account_id: account.account_id,
+    access_token: account.access_token ?? '',
+    instagram_account_id: account.account_id ?? '',
   };
 }
 

@@ -24,7 +24,7 @@ async function getRefreshedTokens(userId: string): Promise<LinkedInTokens> {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
         grant_type: "refresh_token",
-        refresh_token: account.refresh_token,
+        refresh_token: account.refresh_token ?? '',
         client_id: (process.env.LINKEDIN_CLIENT_ID ?? (() => { throw new Error('LINKEDIN_CLIENT_ID is required for LinkedIn OAuth'); })()),
         client_secret: (process.env.LINKEDIN_CLIENT_SECRET ?? (() => { throw new Error('LINKEDIN_CLIENT_SECRET is required for LinkedIn OAuth'); })()),
       }),
@@ -43,10 +43,10 @@ async function getRefreshedTokens(userId: string): Promise<LinkedInTokens> {
       .eq("user_id", userId)
       .eq("platform", "linkedin");
 
-    return { access_token: data.access_token, person_urn: account.account_id };
+    return { access_token: data.access_token ?? '', person_urn: account.account_id ?? '' };
   }
 
-  return { access_token: account.access_token, person_urn: account.account_id };
+  return { access_token: account.access_token ?? '', person_urn: account.account_id ?? '' };
 }
 
 export async function getLinkedInUserInfo(userId: string) {

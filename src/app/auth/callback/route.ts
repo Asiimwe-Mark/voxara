@@ -46,11 +46,12 @@ export async function GET(request: NextRequest) {
         body:    JSON.stringify({ referralCode: ref }),
       });
       if (!refRes.ok) {
-        logger.warn("[auth/callback] Referral processing failed:", await refRes.text());
+        const text = await refRes.text();
+        logger.warn("[auth/callback] Referral processing failed:", { detail: text });
       }
     } catch (refErr) {
       // Non-fatal — user still gets in
-      logger.warn("[auth/callback] Referral fetch threw:", { detail: refErr });
+      logger.warn("[auth/callback] Referral fetch threw:", { detail: String(refErr) });
     }
   }
 

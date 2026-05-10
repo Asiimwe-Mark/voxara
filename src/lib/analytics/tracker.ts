@@ -1,8 +1,4 @@
-import { sb } from '@/lib/supabase/admin';
-
-// Cast to any for flexible column usage
-const sb = sb as any;
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin as sb } from '@/lib/supabase/admin';
 
 
 export async function trackViewStart(videoId: string, sessionId: string, data: Record<string, unknown>) {

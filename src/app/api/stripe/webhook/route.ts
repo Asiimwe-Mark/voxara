@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (!paymentAdapter.verifyWebhookSignature(body, signature)) {
-    logger.error('[webhook] Invalid signature for provider', { detail: provider instanceof Error ? (provider as Error).message : String(provider) });
+    logger.error('[webhook] Invalid signature for provider', { detail: String(provider) });
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
@@ -132,7 +132,7 @@ async function handlePaddleWebhook(event: PaddleEvent): Promise<NextResponse> {
   );
 
   if (!userId) {
-    logger.warn('[paddle-webhook] No user_id in event', { detail: eventType instanceof Error ? eventType.message : String(eventType) });
+    logger.warn('[paddle-webhook] No user_id in event', { detail: String(eventType) });
     return NextResponse.json({ received: true });
   }
 
@@ -234,7 +234,7 @@ async function handlePaddleWebhook(event: PaddleEvent): Promise<NextResponse> {
     }
 
     default:
-      logger.info('[paddle-webhook] Unhandled event', { detail: eventType instanceof Error ? (eventType as Error).message : String(eventType) });
+      logger.info('[paddle-webhook] Unhandled event', { detail: String(eventType) });
   }
 
   return NextResponse.json({ received: true });
@@ -246,14 +246,14 @@ async function handleFlutterwaveWebhook(event: FlutterwaveEvent): Promise<NextRe
   const { data, event: eventType, status } = event;
 
   if (status !== 'success') {
-    logger.warn('[fw-webhook] Non-success status', { detail: status instanceof Error ? (status as Error).message : String(status) });
+    logger.warn('[fw-webhook] Non-success status', { detail: String(status) });
     return NextResponse.json({ received: true });
   }
 
   const userId = String(data?.meta?.userId ?? data?.meta?.user_id ?? '');
 
   if (!userId) {
-    logger.warn('[fw-webhook] No user_id in event', { detail: eventType instanceof Error ? (eventType as Error).message : String(eventType) });
+    logger.warn('[fw-webhook] No user_id in event', { detail: String(eventType) });
     return NextResponse.json({ received: true });
   }
 
@@ -311,7 +311,7 @@ async function handleFlutterwaveWebhook(event: FlutterwaveEvent): Promise<NextRe
     }
 
     default:
-      logger.info('[fw-webhook] Unhandled event', { detail: eventType instanceof Error ? eventType.message : String(eventType) });
+      logger.info('[fw-webhook] Unhandled event', { detail: String(eventType) });
   }
 
   return NextResponse.json({ received: true });

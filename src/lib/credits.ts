@@ -1,9 +1,6 @@
 import logger from '@/lib/logger';
 import { createClient } from '@/lib/supabase/server';
-import { sb } from '@/lib/supabase/admin';
-
-// Cast to any to avoid strict Supabase type constraints in this utility module
-const sb = sb as any;
+import { supabaseAdmin as sb } from '@/lib/supabase/admin';
 import { CREDITS_CONFIG } from '@/lib/constants';
 
 /**
@@ -50,7 +47,7 @@ async function triggerAutoTopUpCheck(userId: string): Promise<void> {
   ]);
 
   if (!settings?.enabled || profile == null) return;
-  if ((profile.credits ?? 0) >= settings.threshold) return;
+  if ((profile.credits ?? 0) >= (settings.threshold ?? 0)) return;
 
   // Lazy-import Inngest client to avoid circular deps at module load
   const { inngest } = await import('@/inngest/client');

@@ -10,7 +10,7 @@ export const cancelAvatarPolling = inngest.createFunction(
     name: "Cancel Avatar Polling",
   },
   { event: "avatar/cancel-polling" },
-  async ({ event, step }) => {
+  async ({ event, step }: { event: any; step: any }) => {
     const { avatarId } = event.data;
 
     if (!avatarId) {

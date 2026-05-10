@@ -8,7 +8,7 @@ import { sendAvatarReadyEmail } from '@/lib/email/avatar-notification';
 export const pollAvatarStatus = inngest.createFunction(
   { id: 'poll-avatar-status', name: 'Poll Avatar Status', retries: 10 },
   { event: 'avatar/poll-status' },
-  async ({ event, step }) => {
+  async ({ event, step }: { event: any; step: any }) => {
     const { avatarId, retryCount = 0 } = event.data;
 
     // Step 1: Fetch current avatar state (status + cancellation flag)

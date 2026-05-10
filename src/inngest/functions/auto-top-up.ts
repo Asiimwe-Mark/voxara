@@ -8,7 +8,7 @@ import { sendCreditAlertEmail } from '@/lib/email/service';
 
 
 const paymentAdapter = createPaymentAdapter();
-const provider = env.PAYMENT_PROVIDER;
+const provider = process.env.PAYMENT_PROVIDER ?? 'paddle';
 
 interface TopUpSettings {
   enabled: boolean;
@@ -37,7 +37,7 @@ const CREDIT_PRICES_NGN: Record<number, number> = {
 export const processAutoTopUp = inngest.createFunction(
   { id: 'process-auto-top-up', name: 'Process Auto Top‑Up', retries: 2 },
   { event: 'billing/auto-top-up' },
-  async ({ event, step }) => {
+  async ({ event, step }: { event: any; step: any }) => {
     const { userId } = event.data as { userId: string };
 
     const settings = await step.run('get-settings', async (): Promise<TopUpSettings> => {

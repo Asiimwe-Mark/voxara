@@ -123,20 +123,22 @@ export interface UserVoice {
   sample_audio_url: string | null;
   voice_id: string | null;
   created_at: string;
+  updated_at?: string;
 }
 
 // ======================================================
 // Billing & Subscriptions
 // ======================================================
 
-export interface StripeCustomer {
+export interface PaymentCustomer {
   id: string;
   user_id: string;
   payment_customer_id: string;
+  provider?: string;
   created_at: string;
 }
 
-export interface StripeSubscription {
+export interface PaymentSubscription {
   id: string;
   user_id: string;
   payment_subscription_id: string;

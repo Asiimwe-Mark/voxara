@@ -4,7 +4,15 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Loader2, User } from 'lucide-react';
 
-export function AvatarGallery({ avatars }: { avatars: Array<Record<string, unknown>> }) {
+interface AvatarItem {
+  id: string;
+  name: string;
+  status: string;
+  image_url: string | null;
+  [key: string]: unknown;
+}
+
+export function AvatarGallery({ avatars }: { avatars: AvatarItem[] }) {
   if (!avatars.length) {
     return <Card className="p-8 text-center text-muted-foreground"><User className="h-8 w-8 mx-auto mb-2" />No avatars yet</Card>;
   }

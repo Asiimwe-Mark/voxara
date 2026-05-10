@@ -51,14 +51,14 @@ async function getRefreshedTokens(userId: string): Promise<YouTubeTokens> {
       .eq("platform", "youtube");
     return {
       access_token: credentials.access_token!,
-      refresh_token: credentials.refresh_token || accountData.refresh_token,
-      expiry_date: credentials.expiry_date,
+      refresh_token: credentials.refresh_token || accountData.refresh_token ?? '',
+      expiry_date: credentials.expiry_date ?? null,
     };
   }
 
   return {
-    access_token: accountData.access_token,
-    refresh_token: accountData.refresh_token,
+    access_token: accountData.access_token ?? '',
+    refresh_token: accountData.refresh_token ?? '',
     expiry_date: accountData.token_expires_at ? new Date(accountData.token_expires_at).getTime() : null,
   };
 }

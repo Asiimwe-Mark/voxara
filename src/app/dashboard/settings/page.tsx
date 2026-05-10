@@ -25,6 +25,19 @@ export default async function SettingsPage() {
       .eq("user_id", user.id),
   ]);
 
+  // Cast to expected types
+  const voxaraUser = {
+    id: user.id,
+    email: user.email ?? '',
+  };
+
+  const voxaraProfile = profile ?? {
+    full_name: null,
+    avatar_url: null,
+    credits: 0,
+    plan: 'free'
+  };
+
   return (
     <div className="max-w-3xl space-y-6">
       <div>
@@ -43,7 +56,7 @@ export default async function SettingsPage() {
         </TabsList>
 
         <TabsContent value="profile">
-          <ProfileSettings user={user} profile={profile} />
+          <ProfileSettings user={voxaraUser} profile={voxaraProfile} />
         </TabsContent>
 
         <TabsContent value="accounts">

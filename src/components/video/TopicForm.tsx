@@ -11,8 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 const topicSchema = z.object({
   topic: z.string().min(3, "Topic must be at least 3 characters").max(200, "Topic too long"),
-  tone: z.enum(["casual", "professional", "enthusiastic"]).default("casual"),
-  duration: z.enum(["short", "medium", "long"]).default("medium"),
+  tone: z.enum(["casual", "professional", "enthusiastic"]),
+  duration: z.enum(["short", "medium", "long"]),
 });
 
 export type TopicFormValues = z.infer<typeof topicSchema>;

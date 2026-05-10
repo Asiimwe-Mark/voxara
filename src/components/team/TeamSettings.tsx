@@ -28,7 +28,7 @@ interface Member {
   id: string;
   user_id: string;
   email: string;
-  full_name: string;
+  full_name: string | null;
   role: "owner" | "admin" | "member";
   joined_at: string;
 }
@@ -64,13 +64,13 @@ export function TeamSettings({ organizationId }: TeamSettingsProps) {
 
     if (!error && data) {
       setMembers(
-        data.map((m: Record<string, unknown>) => ({
-          id: m.id,
-          user_id: m.user_id,
-          email: m.profiles?.email,
-          full_name: m.profiles?.full_name,
-          role: m.role,
-          joined_at: m.joined_at,
+        data.map((m: any) => ({
+          id: String(m.id),
+          user_id: String(m.user_id),
+          email: (m.profiles as any)?.email ?? '',
+          full_name: (m.profiles as any)?.full_name ?? null,
+          role: String(m.role),
+          joined_at: String(m.joined_at),
         }))
       );
     }

@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     const url = await getBillingPortalUrl(user.id, returnUrl);
     return NextResponse.json({ url });
   } catch (err) {
-    logger.error('[portal]', err);
+    logger.error('[portal]', { error: err instanceof Error ? err.message : String(err) });
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Portal error' },
       { status: 500 }

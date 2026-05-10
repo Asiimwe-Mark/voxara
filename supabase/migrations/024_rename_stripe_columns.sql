@@ -8,8 +8,19 @@
 BEGIN;
 
 -- profiles table
-ALTER TABLE public.profiles
-  RENAME COLUMN IF EXISTS stripe_customer_id TO payment_customer_id;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'profiles'
+      AND column_name = 'stripe_customer_id'
+  ) THEN
+    ALTER TABLE public.profiles
+      RENAME COLUMN stripe_customer_id TO payment_customer_id;
+  END IF;
+END $$;
 
 -- payment_subscriptions table (if it exists)
 DO $$

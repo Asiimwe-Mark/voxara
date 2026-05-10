@@ -134,7 +134,7 @@ async function handlePaddleWebhook(event: PaddleEvent): Promise<NextResponse> {
     return NextResponse.json({ received: true });
   }
 
-  const adminClient = supabaseAdmin();
+  const adminClient = supabaseAdmin;
 
   switch (eventType) {
     case 'order.created':
@@ -256,7 +256,7 @@ async function handleFlutterwaveWebhook(event: FlutterwaveEvent): Promise<NextRe
     return NextResponse.json({ received: true });
   }
 
-  const adminClient = supabaseAdmin();
+  const adminClient = supabaseAdmin;
 
   switch (eventType) {
     case 'charge.completed': {

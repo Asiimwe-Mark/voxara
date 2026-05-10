@@ -100,7 +100,7 @@ export function getEnv(): Env {
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
-    const issues = result.error.errors
+    const issues = result.error.issues
       .map((e: any) => `  • ${e.path.join('.')}: ${e.message}`)
       .join('\n');
 

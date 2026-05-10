@@ -97,7 +97,7 @@ export function ProfileSettings({ user, profile }: ProfileSettingsProps) {
         {/* Avatar */}
         <div className="flex items-center gap-4">
           <Avatar className="h-16 w-16">
-            <AvatarImage src={profile?.avatar_url} />
+            <AvatarImage src={profile?.avatar_url ?? undefined} />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
           <Button variant="outline" size="sm">

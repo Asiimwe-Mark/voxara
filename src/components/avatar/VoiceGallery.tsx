@@ -4,7 +4,15 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Mic } from 'lucide-react';
 
-export function VoiceGallery({ voices }: { voices: Array<Record<string, unknown>> }) {
+interface VoiceItem {
+  id: string;
+  name: string;
+  status: string;
+  created_at: string;
+  [key: string]: unknown;
+}
+
+export function VoiceGallery({ voices }: { voices: VoiceItem[] }) {
   if (!voices.length) {
     return <Card className="p-8 text-center text-muted-foreground"><Mic className="h-8 w-8 mx-auto mb-2" />No voices yet</Card>;
   }

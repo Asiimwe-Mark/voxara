@@ -12,7 +12,7 @@ const clipSchema = z.object({
   end: z.number().int().positive(),
   type: z.enum(['video', 'audio', 'text', 'image']),
   url: z.string().optional(),
-  properties: z.record(z.unknown()).optional(),
+  properties: z.record(z.string(), z.unknown()).optional(),
 });
 
 const trackSchema = z.object({

@@ -43,7 +43,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         setIsAdmin(data.isAdmin);
         setLoading(false);
       } catch (error) {
-        logger.error('Failed to verify admin access:', error);
+        logger.error('Failed to verify admin access:', { error: String(error) });
         router.push('/dashboard');
       }
     };

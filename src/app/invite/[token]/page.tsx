@@ -73,7 +73,8 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   }
 
   // Email mismatch
-  if (invite.email && invite.email !== user.email) {
+  const i = invite!;
+  if (i.email && i.email !== user.email) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-md text-center">
@@ -81,7 +82,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
             <XCircle className="h-12 w-12 text-destructive mx-auto mb-2" />
             <CardTitle>Wrong Account</CardTitle>
             <CardDescription>
-              This invitation was sent to <strong>{invite.email}</strong>. You are signed in as <strong>{user.email}</strong>.
+              This invitation was sent to <strong>{i.email}</strong>. You are signed in as <strong>{user.email}</strong>.
             </CardDescription>
           </CardHeader>
           <CardFooter className="justify-center gap-2 flex-col sm:flex-row">
@@ -101,14 +102,15 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
     if (!user) redirect("/login");
 
     // Idempotent insert — ignore if already a member
+    const inv = invite!;
     await supabase.from("organization_members").upsert(
-      { organization_id: invite.organization_id, user_id: user.id, role: invite.role },
+      { organization_id: inv.organization_id, user_id: user.id, role: inv.role },
       { onConflict: "organization_id,user_id" }
     );
     await supabase
       .from("organization_invites")
       .update({ accepted_at: new Date().toISOString() })
-      .eq("id", invite.id);
+      .eq("id", inv.id);
 
     redirect("/dashboard/team");
   }
@@ -122,7 +124,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
           </div>
           <CardTitle>Join {orgName}</CardTitle>
           <CardDescription>
-            You&apos;ve been invited to join as <strong className="capitalize">{invite.role}</strong>.
+            You&apos;ve been invited to join as <strong className="capitalize">{invite!.role}</strong>.
           </CardDescription>
         </CardHeader>
         <CardContent>

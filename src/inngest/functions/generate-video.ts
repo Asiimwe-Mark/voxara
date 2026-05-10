@@ -41,7 +41,7 @@ export const generateVideo = inngest.createFunction(
     },
   },
   { event: "video/generate" },
-  async ({ event, step }) => {
+  async ({ event, step }: { event: any; step: any }) => {
     const { videoId, userId, script, title } = event.data;
     // watermark and userPlan are passed in from the render route
     const eventWatermark: boolean = event.data.watermark ?? false;
