@@ -22,7 +22,7 @@ Add every variable from `.env.example`. Required minimums:
 | Variable | Required | Notes |
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | ✅ | From Supabase project settings |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | From Supabase project settings |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | ✅ | From Supabase project settings |
 | `SUPABASE_SERVICE_ROLE_KEY` | ✅ | From Supabase project settings |
 | `NEXT_PUBLIC_APP_URL` | ✅ | Your production domain |
 | `GEMINI_API_KEY` | ✅ | Script generation |

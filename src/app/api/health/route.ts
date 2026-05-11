@@ -26,7 +26,7 @@ export async function GET() {
   } catch { services.database = { status: 'down' }; }
 
   // Check required env vars
-  const missing = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY']
+  const missing = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'SUPABASE_SERVICE_ROLE_KEY']
     .filter(v => !process.env[v]);
   if (missing.length > 0) services.env = { status: 'degraded' };
 

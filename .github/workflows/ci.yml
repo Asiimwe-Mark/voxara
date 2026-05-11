@@ -20,7 +20,7 @@ env:
   NODE_VERSION: '20'
   # Minimal env vars needed for build (real secrets are NOT needed for type-checking)
   NEXT_PUBLIC_SUPABASE_URL: 'https://placeholder.supabase.co'
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: 'placeholder-anon-key-for-build'
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'placeholder-anon-key-for-build'
   NEXT_PUBLIC_APP_URL: 'https://voxara.app'
   SUPABASE_SERVICE_ROLE_KEY: 'placeholder-service-role-key'
   NEXT_PUBLIC_SENTRY_DSN: ''
@@ -81,7 +81,7 @@ jobs:
         run: npx next build
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ env.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ env.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
           NEXT_PUBLIC_APP_URL: ${{ env.NEXT_PUBLIC_APP_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ env.SUPABASE_SERVICE_ROLE_KEY }}
           # Disable Sentry source map upload in CI (no auth token)
@@ -167,7 +167,7 @@ jobs:
 
       - name: npm audit (high+critical)
         run: npm audit --audit-level=high
-        continue-on-error: true  # Warn but don't block (transitive dep vulns)
+        continue-on-error: true # Warn but don't block (transitive dep vulns)
 
       - name: Check for hardcoded secrets
         run: |

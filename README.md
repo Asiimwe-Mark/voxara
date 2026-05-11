@@ -173,7 +173,7 @@ See `.env.example` for the full list with descriptions. Minimum required to star
 | Variable | Required | Description |
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | ✅ | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | Supabase anon/public key |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | ✅ | Supabase anon/public key |
 | `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Supabase service role (server-only) |
 | `GEMINI_API_KEY` | ✅ | Google AI Gemini key |
 | `STRIPE_SECRET_KEY` | ✅ | Stripe secret key |
