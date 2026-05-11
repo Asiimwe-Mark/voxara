@@ -8,7 +8,15 @@
       "Bash(npx supabase *)",
       "Bash(echo \"Failed with code $?\")",
       "Bash(rm src/types/supabase.ts)",
-      "Bash(mv src/types/supabase-new.ts src/types/supabase.ts)"
+      "Bash(mv src/types/supabase-new.ts src/types/supabase.ts)",
+      "PowerShell(Get-ChildItem -Recurse -File | Where-Object { $_.FullName -notmatch 'node_modules|\\\\.git|dist|\\\\.next' } | Select-Object FullName | ForEach-Object { $_.FullName.Replace\\('C:\\\\Users\\\\Asiimwe Mark Amooti\\\\Desktop\\\\voxara\\\\', ''\\) })",
+      "Bash(Get-ChildItem .next -ErrorAction SilentlyContinue)",
+      "Bash(Measure-Object)",
+      "Bash(Select-Object -ExpandProperty Count)",
+      "Bash(NEXT_PUBLIC_APP_URL=http://localhost:3000 npx next build)",
+      "Bash(rm -rf .next)",
+      "Bash(npx next *)",
+      "Bash(echo \"Exit code: $?\")"
     ]
   }
 }

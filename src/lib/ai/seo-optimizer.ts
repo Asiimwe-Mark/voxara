@@ -47,7 +47,18 @@ Return ONLY a valid JSON object with this exact structure (no markdown, no extra
     },
   });
 
-  const responseText = result.text();
+  // FIX: Get text from result - different versions have different APIs
+  const resultAny = result as unknown as { text?: (() => string) | string; output?: string };
+  let responseText = '';
+  if (resultAny.text) {
+    if (typeof resultAny.text === 'function') {
+      responseText = resultAny.text();
+    } else {
+      responseText = resultAny.text;
+    }
+  } else if (resultAny.output) {
+    responseText = resultAny.output;
+  }
 
   // Strip any markdown fences the model may have added
   const jsonMatch = responseText.match(/\{[\s\S]*\}/);

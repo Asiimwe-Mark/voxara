@@ -1,8 +1,7 @@
 import { env } from '@/lib/env';
-import { supabaseAdmin } from '@/lib/supabase/admin';
+import { getAdminClient } from '@/lib/supabase/admin';
 import logger from '@/lib/logger';
 import { inngest } from '@/inngest/client';
-import { createClient } from '@supabase/supabase-js';
 import { createPaymentAdapter } from '@/lib/payment-adapter';
 import { sendCreditAlertEmail } from '@/lib/email/service';
 
@@ -23,47 +22,53 @@ interface UserProfile {
 }
 
 const CREDIT_PRICES: Record<number, number> = {
-  10: 999,   // $9.99
-  25: 1999,  // $19.99
-  50: 2999,  // $29.99
+  10: 999,
+  25: 1999,
+  50: 2999,
 };
 
 const CREDIT_PRICES_NGN: Record<number, number> = {
-  10: 100000,  // ₦1,000
-  25: 250000,  // ₦2,500
-  50: 500000,  // ₦5,000
+  10: 100000,
+  25: 250000,
+  50: 500000,
 };
 
-export const processAutoTopUp = inngest.createFunction(
-  { id: 'process-auto-top-up', name: 'Process Auto Top‑Up', retries: 2 },
+export const processAutoTopUp = (inngest as any).createFunction(
+  { id: 'process-auto-top-up', name: 'Process Auto‑Top‑Up', retries: 2 },
   { event: 'billing/auto-top-up' },
   async ({ event, step }: { event: any; step: any }) => {
+    const supabaseAdmin = getAdminClient();
     const { userId } = event.data as { userId: string };
 
     const settings = await step.run('get-settings', async (): Promise<TopUpSettings> => {
-      const { data } = await supabaseAdmin()
+      const { data } = await supabaseAdmin
         .from('auto_top_up_settings')
         .select('*, profiles(email, credits, full_name)')
         .eq('user_id', userId)
         .single();
       if (!data?.enabled) throw new Error('Auto top‑up not enabled for user');
-      return data as TopUpSettings;
+      // FIX: Cast to TopUpSettings with proper handling
+      return {
+        enabled: data.enabled ?? false,
+        threshold: data.threshold ?? 0,
+        top_up_amount: data.top_up_amount ?? 0,
+      };
     });
 
-    const { data: profile } = await supabaseAdmin()
+    const { data: profile } = await supabaseAdmin
       .from('profiles')
       .select('email, full_name')
       .eq('id', userId)
       .single();
 
     if (!profile?.email) throw new Error('User email not found');
-    const typedProfile = profile as UserProfile;
+    const typedProfile: UserProfile = { email: profile.email, full_name: profile.full_name };
 
     if (provider === 'paddle') {
-      return handlePaddleAutoTopup(userId, settings, typedProfile);
+      return handlePaddleAutoTopup(supabaseAdmin, userId, settings, typedProfile);
     }
     if (provider === 'flutterwave') {
-      return handleFlutterwaveAutoTopup(userId, settings, typedProfile);
+      return handleFlutterwaveAutoTopup(supabaseAdmin, userId, settings, typedProfile);
     }
 
     throw new Error(`Unknown payment provider: ${provider}`);
@@ -71,19 +76,19 @@ export const processAutoTopUp = inngest.createFunction(
 );
 
 async function handlePaddleAutoTopup(
+  supabaseAdmin: ReturnType<typeof getAdminClient>,
   userId: string,
   settings: TopUpSettings,
   profile: UserProfile
 ): Promise<{ success: boolean; provider: string }> {
   const amountInCents = CREDIT_PRICES[settings.top_up_amount] ?? 1999;
 
-  // Award credits and record purchase
-  await supabaseAdmin().rpc('add_credits', {
+  await supabaseAdmin.rpc('add_credits', {
     p_user_id: userId,
     p_credits:  settings.top_up_amount,
   });
 
-  await supabaseAdmin().from('credit_purchases').insert({
+  await supabaseAdmin.from('credit_purchases').insert({
     user_id:           userId,
     credits_purchased: settings.top_up_amount,
     amount_paid:       amountInCents,
@@ -92,7 +97,7 @@ async function handlePaddleAutoTopup(
     status:            'completed',
   });
 
-  const { data: updated } = await supabaseAdmin()
+  const { data: updated } = await supabaseAdmin
     .from('profiles')
     .select('credits')
     .eq('id', userId)
@@ -111,6 +116,7 @@ async function handlePaddleAutoTopup(
 }
 
 async function handleFlutterwaveAutoTopup(
+  supabaseAdmin: ReturnType<typeof getAdminClient>,
   userId: string,
   settings: TopUpSettings,
   profile: UserProfile
@@ -119,11 +125,11 @@ async function handleFlutterwaveAutoTopup(
   const txRef  = `auto-topup-flutterwave-${userId}-${Date.now()}`;
 
   try {
-    const client = paymentAdapter.getProvider() as {
-      initializePayment: (opts: Record<string, unknown>) => Promise<{ status: string; data: { link: string } }>;
-    };
+    const client = paymentAdapter.getProvider();
 
-    const response = await client.initializePayment({
+    const response = await (client as {
+      initializePayment: (opts: { amount: number; email: string; currency?: string; txRef: string; customData?: Record<string, unknown> }) => Promise<{ status: string; data: { link: string } }>;
+    }).initializePayment({
       amount,
       email:      profile.email,
       currency:   'NGN',
@@ -134,7 +140,7 @@ async function handleFlutterwaveAutoTopup(
     if (response.status === 'success') {
       logger.info(`[auto-topup] Flutterwave link generated for ${userId}: ${response.data.link}`);
 
-      await supabaseAdmin().from('pending_credit_purchases').insert({
+      await supabaseAdmin.from('pending_credit_purchases').insert({
         user_id:         userId,
         credits_pending: settings.top_up_amount,
         tx_ref:          txRef,

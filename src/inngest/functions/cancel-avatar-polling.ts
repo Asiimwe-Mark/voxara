@@ -1,23 +1,22 @@
-import { supabaseAdmin } from '@/lib/supabase/admin';
+import { getAdminClient } from '@/lib/supabase/admin';
 import logger from '@/lib/logger';
 import { inngest } from "@/inngest/client";
-import { createClient } from "@supabase/supabase-js";
 
 
-export const cancelAvatarPolling = inngest.createFunction(
+export const cancelAvatarPolling = (inngest as any).createFunction(
   {
     id: "cancel-avatar-polling",
     name: "Cancel Avatar Polling",
   },
   { event: "avatar/cancel-polling" },
   async ({ event, step }: { event: any; step: any }) => {
+    const supabaseAdmin = getAdminClient();
     const { avatarId } = event.data;
 
     if (!avatarId) {
       return { skipped: true, reason: "No avatarId provided" };
     }
 
-    // Update the avatar record to indicate polling should stop
     await step.run("mark-polling-canceled", async () => {
       const { error } = await supabaseAdmin
         .from("user_avatars")

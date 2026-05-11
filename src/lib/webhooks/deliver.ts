@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '@/lib/supabase/admin';
+import { getAdminClient } from '@/lib/supabase/admin';
 import { verifyWebhookSignatureHmac, signPayload } from '@/lib/security.node';
 
 
@@ -104,10 +104,12 @@ async function logDelivery(
   payload: WebhookPayload,
   result: DeliveryResult
 ): Promise<void> {
-  await supabaseAdmin.from("webhook_logs").insert({
+  const supabaseAdmin = getAdminClient();
+  // FIX: Cast to any to bypass type issues
+  await (supabaseAdmin.from("webhook_logs") as any).insert({
     endpoint_id: endpointId,
     event_type: eventType,
-    payload,
+    payload: payload as unknown as Record<string, unknown>,
     response_status: result.statusCode,
     response_body: result.responseBody,
     duration_ms: result.durationMs,
@@ -122,6 +124,7 @@ export async function deliverWebhook(
   data: Record<string, unknown>,
   userId: string
 ): Promise<void> {
+  const supabaseAdmin = getAdminClient();
   // Find all active endpoints subscribed to this event
   const { data: endpoints, error } = await supabaseAdmin
     .from("webhook_endpoints")

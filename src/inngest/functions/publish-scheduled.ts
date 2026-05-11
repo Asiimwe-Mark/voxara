@@ -1,6 +1,5 @@
-import { supabaseAdmin } from '@/lib/supabase/admin';
+import { getAdminClient } from '@/lib/supabase/admin';
 import { inngest } from '@/inngest/client';
-import { createClient } from '@supabase/supabase-js';
 import { google } from 'googleapis';
 
 
@@ -25,12 +24,12 @@ async function publishToYouTubeFull(
       : undefined,
   });
 
-  // Proactively refresh token if within 5 minutes of expiry
   if (
     account.token_expires_at &&
     new Date(account.token_expires_at).getTime() - Date.now() < 5 * 60 * 1000
   ) {
     const { credentials } = await oauth2Client.refreshAccessToken();
+    const supabaseAdmin = getAdminClient();
     await supabaseAdmin
       .from('social_accounts')
       .update({
@@ -68,10 +67,11 @@ async function publishToYouTubeFull(
   return { success: true, videoId: response.data.id! };
 }
 
-export const publishScheduled = inngest.createFunction(
+export const publishScheduled = (inngest as any).createFunction(
   { id: 'publish-scheduled', name: 'Publish Scheduled Video', retries: 3 },
   { event: 'social/publish-scheduled' },
   async ({ event, step }: { event: any; step: any }) => {
+    const supabaseAdmin = getAdminClient();
     const { scheduleId } = event.data;
 
     const schedule = await step.run('get-schedule', async () => {
@@ -87,12 +87,10 @@ export const publishScheduled = inngest.createFunction(
       return { skipped: true, reason: 'Schedule not found or not pending' };
     }
 
-    // Bail if scheduled time hasn't arrived yet (Inngest may fire slightly early)
     if (schedule.scheduled_at && new Date(schedule.scheduled_at) > new Date()) {
       return { skipped: true, reason: 'Too early to publish' };
     }
 
-    // Mark as processing
     await step.run('mark-processing', () =>
       supabaseAdmin
         .from('publishing_schedules')
@@ -100,18 +98,20 @@ export const publishScheduled = inngest.createFunction(
         .eq('id', scheduleId)
     );
 
-    const video = schedule.videos as any;
+    // FIX: Properly type the video object
+    const video = schedule.videos as { id: string; video_url: string | null; title?: string } | null;
     if (!video?.video_url) {
       await supabaseAdmin
         .from('publishing_schedules')
-        .update({ status: 'failed', error: 'Video URL not available' })
+        .update({ status: 'failed', error: 'Video URL not available' } as any)
         .eq('id', scheduleId);
       throw new Error('Video URL not available');
     }
 
-    // Fetch video buffer
+    // FIX: Ensure video_url is a string when passed to fetch
+    const videoUrl: string = video.video_url;
     const videoBuffer = await step.run('fetch-video', async () => {
-      const res = await fetch(video.video_url);
+      const res = await fetch(videoUrl);
       if (!res.ok) throw new Error(`Failed to fetch video: ${res.status}`);
       return Buffer.from(await res.arrayBuffer());
     });
@@ -133,7 +133,7 @@ export const publishScheduled = inngest.createFunction(
       });
 
       publishResult = await step.run('publish-youtube', () =>
-        publishToYouTubeFull(account, schedule.user_id, videoBuffer, schedule.title ?? video.title, schedule.caption ?? '')
+        publishToYouTubeFull(account, schedule.user_id, videoBuffer, schedule.title ?? video?.title ?? '', schedule.caption ?? '')
       );
 
       if (publishResult.success && publishResult.videoId) {
@@ -143,20 +143,18 @@ export const publishScheduled = inngest.createFunction(
           .eq('id', video.id);
       }
     } else {
-      // Other platforms can be added here (TikTok, Instagram, LinkedIn)
       publishResult = { success: false, error: `Platform ${schedule.platform} not yet supported in scheduled publishing` };
     }
 
-    // Update schedule status
     await step.run('update-status', () =>
       supabaseAdmin
         .from('publishing_schedules')
         .update({
           status: publishResult.success ? 'published' : 'failed',
-          error: publishResult.error ?? null,
+          error: (publishResult.error ?? null) as string | null,
           published_at: publishResult.success ? new Date().toISOString() : null,
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq('id', scheduleId)
     );
 

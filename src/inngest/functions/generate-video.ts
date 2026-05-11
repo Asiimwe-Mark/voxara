@@ -1,7 +1,6 @@
-import { supabaseAdmin } from '@/lib/supabase/admin';
+import { getAdminClient } from '@/lib/supabase/admin';
 import logger from '@/lib/logger';
 import { inngest } from "@/inngest/client";
-import { createClient } from "@supabase/supabase-js";
 import Mux from "@mux/mux-node";
 import { generateVoiceover, extractKeywords } from "@/features/video/services/voiceover";
 import { fetchStockFootage } from "@/features/video/services/visuals";
@@ -21,17 +20,18 @@ function getMuxClient() {
   return new Mux({ tokenId: process.env.MUX_TOKEN_ID, tokenSecret: process.env.MUX_TOKEN_SECRET });
 }
 
-export const generateVideo = inngest.createFunction(
+export const generateVideo = (inngest as any).createFunction(
   {
     id: "generate-video",
     name: "Generate Video",
     retries: 3,
     timeouts: { finish: "10m" },
-    onFailure: async ({ event, error }) => {
+    onFailure: async ({ event, error }: { event: any; error: Error }) => {
+      const supabaseAdmin = getAdminClient();
       const videoId = event.data.event?.data?.videoId;
       const userId = event.data.event?.data?.userId;
       if (videoId) {
-        await (supabaseAdmin as any).from("videos")
+        await supabaseAdmin.from("videos")
           .update({ status: "failed", updated_at: new Date().toISOString() })
           .eq("id", videoId);
         if (userId) {
@@ -42,13 +42,13 @@ export const generateVideo = inngest.createFunction(
   },
   { event: "video/generate" },
   async ({ event, step }: { event: any; step: any }) => {
+    const supabaseAdmin = getAdminClient();
     const { videoId, userId, script, title } = event.data;
-    // watermark and userPlan are passed in from the render route
     const eventWatermark: boolean = event.data.watermark ?? false;
     const eventUserPlan: PlanType = (event.data.userPlan as PlanType) ?? "free";
 
     const video = await step.run("fetch-video", async () => {
-      const { data, error } = await (supabaseAdmin as any).from("videos")
+      const { data, error } = await supabaseAdmin.from("videos")
         .select("*, user_avatars(*), user_voices(*)")
         .eq("id", videoId)
         .single();
@@ -56,10 +56,9 @@ export const generateVideo = inngest.createFunction(
       return data;
     });
 
-    // Fetch plan — use event data if provided, otherwise query DB
     const userPlan = await step.run("fetch-user-plan", async () => {
       if (eventUserPlan && eventUserPlan !== "free") return eventUserPlan;
-      const { data } = await (supabaseAdmin as any).from("profiles")
+      const { data } = await supabaseAdmin.from("profiles")
         .select("plan")
         .eq("id", userId)
         .single();
@@ -67,7 +66,8 @@ export const generateVideo = inngest.createFunction(
     });
 
     await step.run("mark-processing", async () => {
-      await (supabaseAdmin as any).update({ status: "processing", updated_at: new Date().toISOString() })
+      // FIX: Use proper update call
+      await supabaseAdmin.from("videos").update({ status: "processing", updated_at: new Date().toISOString() })
         .eq("id", videoId);
     });
 
@@ -75,9 +75,6 @@ export const generateVideo = inngest.createFunction(
 
     if (video.avatar_id && video.user_avatars?.avatar_model_id) {
       const avatarModelId = video.user_avatars.avatar_model_id;
-
-      // COST SAVING: Free users get HeyGen built-in voice (free).
-      // Pro/Agency users get their saved ElevenLabs voice (~$0.09/video).
       const heygenVoiceConfig = buildHeyGenVoiceConfig(userPlan, video.voice_id ?? null);
 
       let avatarResult = await step.run("generate-heygen", async () => {
@@ -103,7 +100,6 @@ export const generateVideo = inngest.createFunction(
       finalVideoUrl = avatarResult.videoUrl;
 
     } else {
-      // Faceless: Edge-TTS for free users (already free), ElevenLabs for paid
       const audioUrl = await step.run("generate-voiceover", async () => {
         const voiceDecision = resolveVoiceProvider(userPlan, video.voice_id, "en");
         return await generateVoiceover(script, userId, videoId, { voice: voiceDecision.voiceId });
@@ -131,8 +127,6 @@ export const generateVideo = inngest.createFunction(
       finalVideoUrl = outputPath.startsWith("http") ? outputPath : `${appUrl}${outputPath}`;
     }
 
-    // COST SAVING: Mux ($89+/month) only for Pro/Agency.
-    // Free tier videos served direct from Supabase — identical playback, zero cost.
     const useMux = shouldUseMux(userPlan);
 
     if (useMux) {
@@ -142,6 +136,9 @@ export const generateVideo = inngest.createFunction(
           new_asset_settings: { playback_policy: ["public"], mp4_support: "standard" },
           cors_origin: "*",
         });
+        // FIX: Handle undefined finalVideoUrl
+        if (!finalVideoUrl) throw new Error('No video URL to upload');
+        if (!upload.url) throw new Error('Mux upload URL is missing');
         const response = await fetch(finalVideoUrl);
         if (!response.ok) throw new Error(`Failed to fetch video for Mux: ${response.status}`);
         const blob = await response.blob();
@@ -157,7 +154,7 @@ export const generateVideo = inngest.createFunction(
       });
 
       await step.run("update-database", async () => {
-        await (supabaseAdmin as any).from("videos").update({
+        await supabaseAdmin.from("videos").update({
           status: "ready",
           mux_asset_id: muxAsset.assetId,
           mux_playback_id: muxAsset.playbackId ?? null,
@@ -179,9 +176,8 @@ export const generateVideo = inngest.createFunction(
       return { success: true, videoId, playbackId: muxAsset.playbackId };
 
     } else {
-      // Free tier: direct URL, no Mux cost
       await step.run("update-database", async () => {
-        await (supabaseAdmin as any).from("videos").update({
+        await supabaseAdmin.from("videos").update({
           status: "ready",
           mux_asset_id: null,
           mux_playback_id: null,

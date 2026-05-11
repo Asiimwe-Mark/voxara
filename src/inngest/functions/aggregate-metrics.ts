@@ -1,12 +1,12 @@
-import { supabaseAdmin } from '@/lib/supabase/admin';
+import { getAdminClient } from '@/lib/supabase/admin';
 import { inngest } from '@/inngest/client';
-import { createClient } from '@supabase/supabase-js';
 
 
-export const aggregateVideoMetrics = inngest.createFunction(
+export const aggregateVideoMetrics = (inngest as any).createFunction(
   { id: 'aggregate-metrics', name: 'Aggregate Video Metrics' },
   { cron: '0 0 * * *' },
   async ({ step, event }: { step: any; event: any }) => {
+    const supabaseAdmin = getAdminClient();
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const dateStr = yesterday.toISOString().split('T')[0];
@@ -17,12 +17,12 @@ export const aggregateVideoMetrics = inngest.createFunction(
         .select('video_id, videos(user_id)')
         .gte('start_time', `${dateStr}T00:00:00Z`)
         .lte('start_time', `${dateStr}T23:59:59Z`);
-      return [...new Set(data?.map(d => d.video_id))];
+      return [...new Set(data?.map((d: { video_id: string }) => d.video_id))];
     });
 
     for (const videoId of videos || []) {
       await step.run(`aggregate-${videoId}`, async () => {
-        const { data: video } = await (supabaseAdmin as any).from('videos').select('user_id').eq('id', videoId).single();
+        const { data: video } = await supabaseAdmin.from('videos').select('user_id').eq('id', videoId).single();
         if (!video) return;
 
         const { data: sessions } = await supabaseAdmin
@@ -35,12 +35,15 @@ export const aggregateVideoMetrics = inngest.createFunction(
         if (!sessions?.length) return;
 
         const views = sessions.length;
-        const totalWatchTime = sessions.reduce((sum, s) => sum + (s.watch_duration || 0), 0);
-        const avgPercentage = sessions.reduce((sum, s) => sum + (s.watch_percentage || 0), 0) / views;
-        const clicks = sessions.filter(s => s.playback_events?.some((e: { type: string }) => e.type === 'click')).length;
+        const totalWatchTime = sessions.reduce((sum, s) => sum + (s.watch_duration ?? 0), 0);
+        const avgPercentage = sessions.reduce((sum, s) => sum + (s.watch_percentage ?? 0), 0) / views;
+        const clicks = sessions.filter((s: { playback_events: unknown }) => {
+          const events = s.playback_events as Array<{ type: string }> | undefined;
+          return events?.some((e) => e.type === 'click');
+        }).length;
         const ctr = views > 0 ? (clicks / views) * 100 : 0;
 
-        await (supabaseAdmin as any).from('video_metrics').upsert({
+        await supabaseAdmin.from('video_metrics').upsert({
           video_id: videoId,
           user_id: video.user_id,
           date: dateStr,
@@ -49,9 +52,9 @@ export const aggregateVideoMetrics = inngest.createFunction(
           average_view_percentage: avgPercentage,
           clicks,
           ctr,
-          retention_30s: sessions.filter(s => s.watch_duration >= 30).length,
-          retention_60s: sessions.filter(s => s.watch_duration >= 60).length,
-          retention_complete: sessions.filter(s => s.watch_percentage >= 95).length,
+          retention_30s: sessions.filter((s: { watch_duration: number | null }) => (s.watch_duration ?? 0) >= 30).length,
+          retention_60s: sessions.filter((s: { watch_duration: number | null }) => (s.watch_duration ?? 0) >= 60).length,
+          retention_complete: sessions.filter((s: { watch_percentage: number | null }) => (s.watch_percentage ?? 0) >= 95).length,
         }, { onConflict: 'video_id,date' });
       });
     }

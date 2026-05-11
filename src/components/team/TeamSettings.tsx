@@ -63,13 +63,14 @@ export function TeamSettings({ organizationId }: TeamSettingsProps) {
       .order("joined_at", { ascending: true });
 
     if (!error && data) {
+      // FIX: Cast role to proper type
       setMembers(
         data.map((m: any) => ({
           id: String(m.id),
           user_id: String(m.user_id),
           email: (m.profiles as any)?.email ?? '',
           full_name: (m.profiles as any)?.full_name ?? null,
-          role: String(m.role),
+          role: String(m.role) as "owner" | "admin" | "member",
           joined_at: String(m.joined_at),
         }))
       );

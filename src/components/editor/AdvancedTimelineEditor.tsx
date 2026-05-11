@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Player, PlayerRef } from '@remotion/player'
-import { voxaraComposition } from '@/remotion/voxaraComposition'
+// FIX: Import from correct path
+import { RootComposition } from '@/remotion/FacelessVideoComposition'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -134,13 +135,17 @@ export function AdvancedTimelineEditor({
   }
 
   function initializeDefaultTracks(data: Record<string, unknown>) {
+    // FIX: Properly type the footage_urls and audio_url from data
+    const footageUrls = (data.footage_urls as string[] | undefined) || [];
+    const audioUrl = data.audio_url as string | undefined;
+
     const defaultTracks: TimelineTrack[] = [
       {
         id: 'video-track',
         name: 'Video',
         type: 'video',
         volume: 1,
-        clips: (data.footage_urls || []).map((url: string, index: number) => ({
+        clips: footageUrls.map((url: string, index: number) => ({
           id: `clip-${Date.now()}-${index}`,
           trackId: 'video-track',
           start: index * 180, // 6 seconds per clip at 30fps
@@ -155,7 +160,7 @@ export function AdvancedTimelineEditor({
         name: 'Audio',
         type: 'audio',
         volume: 1,
-        clips: data.audio_url
+        clips: audioUrl
           ? [
               {
                 id: `audio-${Date.now()}`,
@@ -163,7 +168,7 @@ export function AdvancedTimelineEditor({
                 start: 0,
                 end: durationInFrames,
                 type: 'audio' as const,
-                url: data.audio_url,
+                url: audioUrl,
                 properties: {},
               },
             ]
@@ -468,7 +473,7 @@ export function AdvancedTimelineEditor({
         <div className="max-w-4xl w-full aspect-video rounded-lg overflow-hidden">
           <Player
             ref={playerRef}
-            component={voxaraComposition}
+            component={RootComposition}
             inputProps={{
               script,
               audioUrl,
@@ -484,7 +489,8 @@ export function AdvancedTimelineEditor({
             compositionWidth={1920}
             compositionHeight={1080}
             controls={false}
-            onFrameUpdate={({ frame }) => handleFrameUpdate(frame)}
+            // FIX: Use correct prop name - autoPlay not autoplay
+            autoPlay={isPlaying}
           />
         </div>
       </div>

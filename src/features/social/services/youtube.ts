@@ -51,7 +51,8 @@ async function getRefreshedTokens(userId: string): Promise<YouTubeTokens> {
       .eq("platform", "youtube");
     return {
       access_token: credentials.access_token!,
-      refresh_token: credentials.refresh_token || accountData.refresh_token ?? '',
+      // FIX: Add parentheses to fix mixed || and ?? operators
+      refresh_token: (credentials.refresh_token || accountData.refresh_token) ?? '',
       expiry_date: credentials.expiry_date ?? null,
     };
   }

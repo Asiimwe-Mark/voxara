@@ -1,6 +1,5 @@
-import { supabaseAdmin } from '@/lib/supabase/admin';
+import { getAdminClient } from '@/lib/supabase/admin';
 import logger from '@/lib/logger';
-import { createClient } from '@supabase/supabase-js';
 
 
 export interface WebhookLogEntry {
@@ -11,6 +10,7 @@ export interface WebhookLogEntry {
   status: 'success' | 'failure';
   errorMessage?: string;
   metadata?: Record<string, unknown>;
+  endpointId?: string;
 }
 
 /**
@@ -18,7 +18,9 @@ export interface WebhookLogEntry {
  */
 export async function logWebhookEvent(entry: WebhookLogEntry) {
   try {
-    await (supabaseAdmin as any).from('webhook_logs').insert({
+    const supabaseAdmin = getAdminClient();
+    // FIX: Cast to any to bypass type issues
+    await (supabaseAdmin.from('webhook_logs') as any).insert({
       provider: entry.provider,
       event_type: entry.eventType,
       user_id: entry.userId,
@@ -29,7 +31,6 @@ export async function logWebhookEvent(entry: WebhookLogEntry) {
       created_at: new Date().toISOString(),
     });
   } catch (err) {
-    // If logging fails, just log to console to avoid throwing
     logger.error('[WebhookLogger] Failed to log webhook event', { detail: err instanceof Error ? err.message : String(err) });
   }
 }
@@ -46,6 +47,7 @@ export async function getWebhookLogs(
   }
 ) {
   try {
+    const supabaseAdmin = getAdminClient();
     let query = supabaseAdmin
       .from('webhook_logs')
       .select('*')
@@ -60,11 +62,11 @@ export async function getWebhookLogs(
 
     const limit = filter?.limit || 50;
     const offset = filter?.offset || 0;
-    
+
     query = query.limit(limit).range(offset, offset + limit - 1);
 
     const { data, error } = await query;
-    
+
     if (error) throw error;
     return data || [];
   } catch (err) {
@@ -78,6 +80,7 @@ export async function getWebhookLogs(
  */
 export async function getWebhookStats(hours: number = 24) {
   try {
+    const supabaseAdmin = getAdminClient();
     const since = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
 
     const { data } = await supabaseAdmin
@@ -90,15 +93,13 @@ export async function getWebhookStats(hours: number = 24) {
       success: data?.filter(d => d.status === 'success').length || 0,
       failure: data?.filter(d => d.status === 'failure').length || 0,
       byProvider: {
-        
         'flutterwave': 0,
-        
       } as Record<string, number>,
     };
 
     data?.forEach(d => {
-      if (d.provider in stats.byProvider) {
-        stats.byProvider[d.provider as any]++;
+      if (d.provider && d.provider in stats.byProvider) {
+        stats.byProvider[d.provider as 'paddle' | 'flutterwave']++;
       }
     });
 
@@ -124,7 +125,6 @@ export async function alertOnWebhookFailure(
       timestamp: new Date().toISOString(),
     });
 
-    // Send admin alert email via Resend when webhook keeps failing
     const adminEmail = process.env.ADMIN_ALERT_EMAIL ?? process.env.RESEND_FROM_EMAIL;
     if (adminEmail && process.env.RESEND_API_KEY) {
       try {
@@ -137,7 +137,7 @@ export async function alertOnWebhookFailure(
           text: [
             `Webhook delivery failed repeatedly.`,
             `Event: ${entry.eventType}`,
-            `Endpoint: ${entry.endpointId}`,
+            `Endpoint: ${entry.endpointId ?? 'unknown'}`,
             `Error: ${entry.errorMessage}`,
             `Time: ${new Date().toISOString()}`,
           ].join('\n'),
