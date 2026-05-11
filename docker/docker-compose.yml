@@ -6,7 +6,7 @@ services:
   # ======================================================
   supabase-db:
     image: supabase/postgres:15.6.1.143
-    container_name: faceless-supabase-db
+    container_name: voxara-supabase-db
     restart: unless-stopped
     ports:
       - '54322:5432'
@@ -24,7 +24,7 @@ services:
 
   supabase-studio:
     image: supabase/studio:2025.04.14-sha-0b9f2f5
-    container_name: faceless-supabase-studio
+    container_name: voxara-supabase-studio
     restart: unless-stopped
     ports:
       - '54323:3000'
@@ -43,7 +43,7 @@ services:
 
   supabase-kong:
     image: kong:3.8.0
-    container_name: faceless-supabase-kong
+    container_name: voxara-supabase-kong
     restart: unless-stopped
     ports:
       - '54321:8000'
@@ -62,7 +62,7 @@ services:
 
   supabase-auth:
     image: supabase/gotrue:v2.174.0
-    container_name: faceless-supabase-auth
+    container_name: voxara-supabase-auth
     restart: unless-stopped
     environment:
       GOTRUE_API_HOST: 0.0.0.0
@@ -91,7 +91,7 @@ services:
 
   supabase-rest:
     image: postgrest/postgrest:v12.2.3
-    container_name: faceless-supabase-rest
+    container_name: voxara-supabase-rest
     restart: unless-stopped
     environment:
       PGRST_DB_URI: postgres://authenticator:postgres@supabase-db:5432/postgres
@@ -106,7 +106,7 @@ services:
 
   supabase-realtime:
     image: supabase/realtime:v2.34.9
-    container_name: faceless-supabase-realtime
+    container_name: voxara-supabase-realtime
     restart: unless-stopped
     environment:
       PORT: 4000
@@ -128,11 +128,11 @@ services:
 
   supabase-storage:
     image: supabase/storage-api:v1.22.3
-    container_name: faceless-supabase-storage
+    container_name: voxara-supabase-storage
     restart: unless-stopped
     environment:
-      ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
-      SERVICE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGmc96R2wBZ3g0nCwO9Wg3PpLqzC6bJ4P4B4bH4bH4b
+      ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBnY2ZzeHhjb2xydnJwanFqaGJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0OTEwOTIsImV4cCI6MjA5NDA2NzA5Mn0.V7ie202TyOGmrmf0_Qf_Q-HuXykDXgr7txw466m04ls
+      SERVICE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBnY2ZzeHhjb2xydnJwanFqaGJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODQ5MTA5MiwiZXhwIjoyMDk0MDY3MDkyfQ.DxazMKEJMGOfBE7FGkxCZpBf0avJLGGraOLhGsnt_0I
       POSTGREST_URL: http://supabase-rest:3000
       DATABASE_URL: postgres://supabase_storage_admin:postgres@supabase-db:5432/postgres
       FILE_SIZE_LIMIT: 52428800
@@ -151,7 +151,7 @@ services:
 
   supabase-meta:
     image: supabase/postgres-meta:v0.86.0
-    container_name: faceless-supabase-meta
+    container_name: voxara-supabase-meta
     restart: unless-stopped
     environment:
       PG_META_PORT: 8080
@@ -166,7 +166,7 @@ services:
 
   supabase-imgproxy:
     image: darthsim/imgproxy:v3.24.0
-    container_name: faceless-supabase-imgproxy
+    container_name: voxara-supabase-imgproxy
     restart: unless-stopped
     environment:
       IMGPROXY_BIND: ':5001'
@@ -184,7 +184,7 @@ services:
   # ======================================================
   mailpit:
     image: axllent/mailpit:latest
-    container_name: faceless-mailpit
+    container_name: voxara-mailpit
     restart: unless-stopped
     ports:
       - '54324:8025' # Web UI
@@ -195,7 +195,7 @@ services:
   # ======================================================
   redis:
     image: redis:7-alpine
-    container_name: faceless-redis
+    container_name: voxara-redis
     restart: unless-stopped
     ports:
       - '6379:6379'
@@ -210,7 +210,7 @@ services:
   #   build:
   #     context: .
   #     dockerfile: Dockerfile
-  #   container_name: faceless-app
+  #   container_name: voxara-app
   #   restart: unless-stopped
   #   ports:
   #     - "3000:3000"
