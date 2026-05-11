@@ -36,9 +36,9 @@ function SidebarProvider({
   children: React.ReactNode
   defaultOpen?: boolean
 }) {
-  const [open, setOpen] = useState(defaultOpen)
-  const [collapsed, setCollapsed] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
+  const [open, setOpen] = React.useState(defaultOpen)
+  const [collapsed, setCollapsed] = React.useState(false)
+  const [isMobile, setIsMobile] = React.useState(false)
 
   React.useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)')
