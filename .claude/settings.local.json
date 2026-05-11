@@ -16,7 +16,10 @@
       "Bash(NEXT_PUBLIC_APP_URL=http://localhost:3000 npx next build)",
       "Bash(rm -rf .next)",
       "Bash(npx next *)",
-      "Bash(echo \"Exit code: $?\")"
+      "Bash(echo \"Exit code: $?\")",
+      "Bash(powershell *)",
+      "Bash(Select-Object -First 50)",
+      "Bash(Select-Object -First 30)"
     ]
   }
 }

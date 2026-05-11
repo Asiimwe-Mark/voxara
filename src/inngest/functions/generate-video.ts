@@ -26,6 +26,7 @@ export const generateVideo = (inngest as any).createFunction(
     name: "Generate Video",
     retries: 3,
     timeouts: { finish: "10m" },
+    triggers: { event: "video/generate" },
     onFailure: async ({ event, error }: { event: any; error: Error }) => {
       const supabaseAdmin = getAdminClient();
       const videoId = event.data.event?.data?.videoId;
@@ -40,7 +41,6 @@ export const generateVideo = (inngest as any).createFunction(
       }
     },
   },
-  { event: "video/generate" },
   async ({ event, step }: { event: any; step: any }) => {
     const supabaseAdmin = getAdminClient();
     const { videoId, userId, script, title } = event.data;

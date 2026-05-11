@@ -68,8 +68,7 @@ async function publishToYouTubeFull(
 }
 
 export const publishScheduled = (inngest as any).createFunction(
-  { id: 'publish-scheduled', name: 'Publish Scheduled Video', retries: 3 },
-  { event: 'social/publish-scheduled' },
+  { id: 'publish-scheduled', name: 'Publish Scheduled Video', retries: 3, triggers: { event: 'social/publish-scheduled' } },
   async ({ event, step }: { event: any; step: any }) => {
     const supabaseAdmin = getAdminClient();
     const { scheduleId } = event.data;

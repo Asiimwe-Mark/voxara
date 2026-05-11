@@ -5,8 +5,7 @@ import { sendAvatarReadyEmail } from '@/lib/email/avatar-notification';
 
 
 export const pollAvatarStatus = (inngest as any).createFunction(
-  { id: 'poll-avatar-status', name: 'Poll Avatar Status', retries: 10 },
-  { event: 'avatar/poll-status' },
+  { id: 'poll-avatar-status', name: 'Poll Avatar Status', retries: 10, triggers: { event: 'avatar/poll-status' } },
   async ({ event, step }: { event: any; step: any }) => {
     const supabaseAdmin = getAdminClient();
     const { avatarId, retryCount = 0 } = event.data;

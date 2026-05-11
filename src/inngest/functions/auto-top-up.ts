@@ -34,8 +34,7 @@ const CREDIT_PRICES_NGN: Record<number, number> = {
 };
 
 export const processAutoTopUp = (inngest as any).createFunction(
-  { id: 'process-auto-top-up', name: 'Process Auto‑Top‑Up', retries: 2 },
-  { event: 'billing/auto-top-up' },
+  { id: 'process-auto-top-up', name: 'Process Auto‑Top‑Up', retries: 2, triggers: { event: 'billing/auto-top-up' } },
   async ({ event, step }: { event: any; step: any }) => {
     const supabaseAdmin = getAdminClient();
     const { userId } = event.data as { userId: string };

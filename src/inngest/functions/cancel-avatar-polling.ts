@@ -7,8 +7,8 @@ export const cancelAvatarPolling = (inngest as any).createFunction(
   {
     id: "cancel-avatar-polling",
     name: "Cancel Avatar Polling",
+    triggers: { event: "avatar/cancel-polling" },
   },
-  { event: "avatar/cancel-polling" },
   async ({ event, step }: { event: any; step: any }) => {
     const supabaseAdmin = getAdminClient();
     const { avatarId } = event.data;
