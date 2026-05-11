@@ -1,10 +1,9 @@
 import { getAdminClient } from '@/lib/supabase/admin';
 import logger from '@/lib/logger';
 import { inngest } from "@/inngest/client";
-import { createFunction } from 'inngest';
 
 
-export const cancelAvatarPolling = createFunction(
+export const cancelAvatarPolling = inngest.createFunction(
   {
     id: "cancel-avatar-polling",
     name: "Cancel Avatar Polling",

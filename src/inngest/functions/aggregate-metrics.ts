@@ -1,11 +1,10 @@
 import { getAdminClient } from '@/lib/supabase/admin';
 import { inngest } from '@/inngest/client';
-import { createFunction } from 'inngest';
+import { cron } from 'inngest';
 
 
-export const aggregateVideoMetrics = createFunction(
-  { id: 'aggregate-metrics', name: 'Aggregate Video Metrics' },
-  { cron: '0 0 * * *' },
+export const aggregateVideoMetrics = inngest.createFunction(
+  { id: 'aggregate-metrics', name: 'Aggregate Video Metrics', triggers: [cron('0 0 * * *')] },
   async ({ step, event }: { step: any; event: any }) => {
     const supabaseAdmin = getAdminClient();
     const yesterday = new Date();

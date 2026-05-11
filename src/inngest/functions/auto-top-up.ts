@@ -2,7 +2,6 @@ import { env } from '@/lib/env';
 import { getAdminClient } from '@/lib/supabase/admin';
 import logger from '@/lib/logger';
 import { inngest } from '@/inngest/client';
-import { createFunction } from 'inngest';
 import { createPaymentAdapter } from '@/lib/payment-adapter';
 import { sendCreditAlertEmail } from '@/lib/email/service';
 
@@ -34,7 +33,7 @@ const CREDIT_PRICES_NGN: Record<number, number> = {
   50: 500000,
 };
 
-export const processAutoTopUp = createFunction(
+export const processAutoTopUp = inngest.createFunction(
   { id: 'process-auto-top-up', name: 'Process Auto‑Top‑Up', retries: 2, triggers: { event: 'billing/auto-top-up' } },
   async ({ event, step }: { event: any; step: any }) => {
     const supabaseAdmin = getAdminClient();

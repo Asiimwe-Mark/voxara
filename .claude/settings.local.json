@@ -25,7 +25,10 @@
       "Bash(xargs rm -f)",
       "Bash(Get-ChildItem -Path \"src/app/api\" -Recurse -File -Filter \"*.ts\")",
       "Bash(Select-Object -ExpandProperty FullName)",
-      "Bash(Get-Content *)"
+      "Bash(Get-Content *)",
+      "Bash(npm list *)",
+      "Bash(node *)",
+      "Bash(findstr /I \"exports\")"
     ]
   }
 }
