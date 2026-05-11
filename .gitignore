@@ -27,3 +27,6 @@
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+ 
+ docker-compose.yml
+Dockerfile
