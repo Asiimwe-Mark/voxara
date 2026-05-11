@@ -160,7 +160,7 @@ export function AnalyticsDashboard({ plan }: { plan: string }) {
                 <div className="space-y-0">
                   {data.topVideos.map((v, i) => (
                     <div
-                      key={v.video_id}
+                      key={`${v.video_id}-${i}`}
                       className={`flex items-center justify-between py-3 gap-4 ${i < data.topVideos.length - 1 ? "border-b" : ""}`}
                     >
                       <div className="flex items-center gap-3 min-w-0">

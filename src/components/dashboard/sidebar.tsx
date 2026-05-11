@@ -25,6 +25,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 
@@ -41,9 +42,10 @@ const navItems = [
 
 export function DashboardSidebar() {
   const pathname = usePathname()
+  const { isMobile } = useSidebar()
 
   return (
-    <Sidebar collapsible="icon" className="border-r">
+    <Sidebar collapsible={isMobile ? "offcanvas" : "icon"} className="border-r">
       <SidebarHeader className="border-b px-3 h-16 flex-row items-center">
         <Link href="/dashboard" className="flex items-center gap-2.5 min-w-0">
           <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0 shadow-sm">

@@ -1,0 +1,282 @@
+-- ============================================================
+-- 032_comprehensive_security_fix.sql
+--
+-- Comprehensive fix for all remaining lint issues:
+-- 1. Fix ALL auth.uid() / auth.jwt() in RLS policies to use subquery
+-- 2. Fix all SECURITY DEFINER to SECURITY INVOKER
+-- 3. Fix search_path in all functions
+-- 4. Fix Multiple Permissive Policies
+-- 5. Fix Public Can Execute SECURITY DEFINER Function
+-- ============================================================
+
+BEGIN;
+
+-- ============================================================
+-- FIX 1: Stripe tables (stripe_customers, stripe_subscriptions) were dropped in migration 020 - skip
+-- ============================================================
+
+-- ============================================================
+-- FIX 2: Fix add_credits in 002_billing.sql to SECURITY INVOKER
+-- ============================================================
+DROP FUNCTION IF EXISTS public.add_credits(UUID, INT);
+CREATE OR REPLACE FUNCTION public.add_credits(
+  p_user_id UUID,
+  p_credits INT
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public
+AS $$
+BEGIN
+  IF p_credits IS NULL OR p_credits <= 0 THEN
+    RAISE EXCEPTION 'Credits must be positive';
+  END IF;
+
+  UPDATE public.profiles
+  SET credits = credits + p_credits,
+      updated_at = NOW()
+  WHERE id = p_user_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Profile not found for user %', p_user_id;
+  END IF;
+END;
+$$;
+
+-- Fix deduct_credits in 002_billing.sql to SECURITY INVOKER
+DROP FUNCTION IF EXISTS public.deduct_credits(UUID, INT);
+CREATE OR REPLACE FUNCTION public.deduct_credits(
+  p_user_id UUID,
+  p_credits INT DEFAULT 1
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public
+AS $$
+DECLARE
+  v_credits INT;
+BEGIN
+  IF p_credits IS NULL OR p_credits <= 0 THEN
+    RAISE EXCEPTION 'Credits must be positive';
+  END IF;
+
+  SELECT credits INTO v_credits
+  FROM public.profiles
+  WHERE id = p_user_id
+  FOR UPDATE;
+
+  IF v_credits IS NULL OR v_credits < p_credits THEN
+    RETURN FALSE;
+  END IF;
+
+  UPDATE public.profiles
+  SET credits = credits - p_credits,
+      updated_at = NOW()
+  WHERE id = p_user_id;
+
+  INSERT INTO public.credit_transactions(user_id, amount, reason, metadata)
+  VALUES (p_user_id, -p_credits, 'video_render', '{}'::jsonb);
+
+  RETURN TRUE;
+END;
+$$;
+
+-- ============================================================
+-- FIX 3: Profiles policies in 001_initial_schema.sql
+-- ============================================================
+DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
+CREATE POLICY "Users can view own profile" ON public.profiles
+  FOR SELECT USING ((select auth.uid()) = id);
+
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
+CREATE POLICY "Users can update own profile" ON public.profiles
+  FOR UPDATE USING ((select auth.uid()) = id);
+
+-- ============================================================
+-- FIX 4: Videos policies in 001_initial_schema.sql
+-- ============================================================
+DROP POLICY IF EXISTS "Users can view own videos" ON public.videos;
+CREATE POLICY "Users can view own videos" ON public.videos
+  FOR SELECT USING ((select auth.uid()) = user_id AND deleted_at IS NULL);
+
+DROP POLICY IF EXISTS "Users can insert own videos" ON public.videos;
+CREATE POLICY "Users can insert own videos" ON public.videos
+  FOR INSERT WITH CHECK ((select auth.uid()) = user_id);
+
+DROP POLICY IF EXISTS "Users can update own videos" ON public.videos;
+CREATE POLICY "Users can update own videos" ON public.videos
+  FOR UPDATE USING ((select auth.uid()) = user_id);
+
+DROP POLICY IF EXISTS "Users can delete own videos" ON public.videos;
+CREATE POLICY "Users can delete own videos" ON public.videos
+  FOR DELETE USING ((select auth.uid()) = user_id);
+
+-- ============================================================
+-- FIX 5: Analytics policies (005_analytics.sql)
+-- ============================================================
+DROP POLICY IF EXISTS "Users can view own video metrics" ON public.video_metrics;
+CREATE POLICY "Users can view own video metrics" ON public.video_metrics
+  FOR SELECT USING ((select auth.uid()) = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own video metrics" ON public.video_metrics;
+CREATE POLICY "Users can insert own video metrics" ON public.video_metrics
+  FOR INSERT WITH CHECK (
+    EXISTS (SELECT 1 FROM public.videos WHERE id = video_id AND user_id = (select auth.uid()))
+  );
+
+DROP POLICY IF EXISTS "Users can manage own A/B experiments" ON public.ab_experiments;
+CREATE POLICY "Users can manage own A/B experiments" ON public.ab_experiments
+  FOR ALL USING ((select auth.uid()) = user_id);
+
+DROP POLICY IF EXISTS "Users can view own SEO performance" ON public.seo_performance;
+CREATE POLICY "Users can view own SEO performance" ON public.seo_performance
+  FOR SELECT USING ((select auth.uid()) = user_id);
+
+-- ============================================================
+-- FIX 6: Marketplace policies (006_marketplace.sql)
+-- ============================================================
+DROP POLICY IF EXISTS "Users can manage own creator account" ON public.creator_accounts;
+CREATE POLICY "Users can manage own creator account" ON public.creator_accounts
+  FOR ALL USING ((select auth.uid()) = user_id);
+
+DROP POLICY IF EXISTS "Creators can manage own templates" ON public.video_templates;
+CREATE POLICY "Creators can manage own templates" ON public.video_templates
+  FOR ALL USING ((select auth.uid()) = creator_id);
+
+DROP POLICY IF EXISTS "Buyers can view own purchases" ON public.template_purchases;
+CREATE POLICY "Buyers can view own purchases" ON public.template_purchases
+  FOR SELECT USING ((select auth.uid()) = buyer_id);
+
+DROP POLICY IF EXISTS "Users can manage own social accounts" ON public.social_accounts;
+CREATE POLICY "Users can manage own social accounts" ON public.social_accounts
+  FOR ALL USING ((select auth.uid()) = user_id);
+
+DROP POLICY IF EXISTS "Users can manage own publishing schedules" ON public.publishing_schedules;
+CREATE POLICY "Users can manage own publishing schedules" ON public.publishing_schedules
+  FOR ALL USING ((select auth.uid()) = user_id);
+
+-- ============================================================
+-- FIX 7: More functions from 003, 004, 005, 006, 007, 008, 009, etc.
+-- ============================================================
+
+-- Functions in 003_avatars_voices.sql - already fixed via 029
+
+-- Functions in 004_teams.sql - create_organization already fixed
+
+-- Functions in 005_analytics.sql
+DROP FUNCTION IF EXISTS public.get_video_analytics(UUID);
+CREATE OR REPLACE FUNCTION public.get_video_analytics(
+  p_video_id UUID
+)
+RETURNS TABLE(
+  date DATE,
+  views INT,
+  unique_viewers INT,
+  watch_time_seconds BIGINT,
+  average_view_percentage DECIMAL
+)
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    vm.date,
+    vm.views,
+    vm.unique_viewers,
+    vm.watch_time_seconds,
+    vm.average_view_percentage
+  FROM public.video_metrics vm
+  WHERE vm.video_id = p_video_id
+    AND vm.user_id = (select auth.uid())
+  ORDER BY vm.date DESC;
+END;
+$$;
+
+-- ============================================================
+-- FIX 8: Function permissions - revoke from anon, grant to authenticated
+-- ============================================================
+
+-- Credit operations - anon cannot call these
+REVOKE EXECUTE ON FUNCTION public.add_credits(UUID, INT) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.deduct_credits(UUID, INT) FROM anon;
+
+-- Only authenticated can call
+GRANT EXECUTE ON FUNCTION public.add_credits(UUID, INT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.deduct_credits(UUID, INT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_video_analytics(UUID) TO authenticated;
+
+-- Service role gets full access
+GRANT EXECUTE ON FUNCTION public.add_credits(UUID, INT) TO service_role;
+GRANT EXECUTE ON FUNCTION public.deduct_credits(UUID, INT) TO service_role;
+
+-- ============================================================
+-- FIX 9: Ensure search_path is set correctly on all functions
+-- ============================================================
+
+-- update_updated_at_column - add search_path
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql
+SET search_path = public;
+
+-- handle_new_user - already has security definer and search_path
+
+-- ============================================================
+-- FIX 10: Stripe tables were dropped in migration 020 - skip
+-- ============================================================
+
+-- ============================================================
+-- FIX 11: Fix duplicate permissive policies (Multiple Permissive)
+-- Remove any duplicate permissive policies
+-- ============================================================
+
+-- Check and remove duplicate policies on credit_purchases
+DROP POLICY IF EXISTS "Users view own purchases" ON public.credit_purchases;
+DROP POLICY IF EXISTS "Users can view own credit purchases" ON public.credit_purchases;
+CREATE POLICY "Users view own credit purchases" ON public.credit_purchases
+  FOR SELECT USING ((select auth.uid()) = user_id);
+
+-- Check and remove duplicate policies on auto_top_up_settings
+DROP POLICY IF EXISTS "Users can manage own auto top-up" ON public.auto_top_up_settings;
+DROP POLICY IF EXISTS "Users can view own auto top-up" ON public.auto_top_up_settings;
+CREATE POLICY "Users can manage own auto top-up" ON public.auto_top_up_settings
+  FOR ALL USING ((select auth.uid()) = user_id);
+
+-- Check video_templates for duplicate policies
+DROP POLICY IF EXISTS "Anyone can view published templates" ON public.video_templates;
+CREATE POLICY "Anyone can view published templates" ON public.video_templates
+  FOR SELECT USING (status = 'published');
+
+DROP POLICY IF EXISTS "Service role full access" ON public.video_templates;
+CREATE POLICY "Service role full access" ON public.video_templates
+  FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- Check template_purchases
+DROP POLICY IF EXISTS "Service role full access" ON public.template_purchases;
+CREATE POLICY "Service role full access" ON public.template_purchases
+  FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- Check social_accounts
+DROP POLICY IF EXISTS "Service role full access" ON public.social_accounts;
+CREATE POLICY "Service role full access" ON public.social_accounts
+  FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- Check publishing_schedules
+DROP POLICY IF EXISTS "Service role full access" ON public.publishing_schedules;
+CREATE POLICY "Service role full access" ON public.publishing_schedules
+  FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- Check credit_packs
+DROP POLICY IF EXISTS "Service role full access" ON public.credit_packs;
+CREATE POLICY "Service role full access" ON public.credit_packs
+  FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+COMMIT;

@@ -19,7 +19,12 @@
       "Bash(echo \"Exit code: $?\")",
       "Bash(powershell *)",
       "Bash(Select-Object -First 50)",
-      "Bash(Select-Object -First 30)"
+      "Bash(Select-Object -First 30)",
+      "Bash(dir supabase\\\\migrations\\\\*.sql)",
+      "Bash(git checkout *)",
+      "Bash(xargs rm -f)",
+      "Bash(Get-ChildItem -Path \"src/app/api\" -Recurse -File -Filter \"*.ts\")",
+      "Bash(Select-Object -ExpandProperty FullName)"
     ]
   }
 }

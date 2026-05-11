@@ -218,10 +218,12 @@ function MeshBg() {
 
 /* ─── Nav ───────────────────────────────────────────────────── */
 function Nav({ scrolled }: { scrolled: boolean }) {
+  const [menuOpen, setMenuOpen] = React.useState(false);
+
   return (
     <nav style={{
       position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-      padding: "0 32px",
+      padding: "0 max(16px, 5vw)",
       height: "72px",
       display: "flex", alignItems: "center", justifyContent: "space-between",
       background: scrolled ? "rgba(4,4,10,0.88)" : "transparent",
@@ -246,8 +248,8 @@ function Nav({ scrolled }: { scrolled: boolean }) {
         </span>
       </div>
 
-      {/* Links */}
-      <div style={{ display: "flex", alignItems: "center", gap: "36px" }}>
+      {/* Desktop Links */}
+      <div className="nav-links" style={{ display: "flex", alignItems: "center", gap: "max(20px, 4vw)" }}>
         {["Features", "Pricing", "Use Cases", "FAQ"].map((item) => (
           <a
             key={item}
@@ -265,8 +267,8 @@ function Nav({ scrolled }: { scrolled: boolean }) {
         ))}
       </div>
 
-      {/* CTA */}
-      <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+      {/* Desktop CTA */}
+      <div className="nav-cta" style={{ display: "flex", gap: "12px", alignItems: "center" }}>
         <a href="/login" style={{
           color: C.muted, fontSize: "14px", fontWeight: 500,
           textDecoration: "none", padding: "8px 16px",
@@ -287,6 +289,77 @@ function Nav({ scrolled }: { scrolled: boolean }) {
           Start free →
         </a>
       </div>
+
+      {/* Mobile Menu Toggle */}
+      <button
+        className="mobile-menu-btn"
+        onClick={() => setMenuOpen(!menuOpen)}
+        style={{
+          display: "none",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          padding: "8px",
+        }}
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={C.text} strokeWidth="2">
+          {menuOpen ? (
+            <path d="M6 6l12 12M6 18L18 6" />
+          ) : (
+            <path d="M3 12h18M3 6h18M3 18h18" />
+          )}
+        </svg>
+      </button>
+
+      {/* Mobile Menu Dropdown */}
+      {menuOpen && (
+        <div className="mobile-menu" style={{
+          position: "absolute",
+          top: "72px",
+          left: "0",
+          right: "0",
+          background: "rgba(4,4,10,0.98)",
+          backdropFilter: "blur(24px)",
+          borderBottom: `1px solid ${C.border}`,
+          padding: "20px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+        }}>
+          {["Features", "Pricing", "Use Cases", "FAQ"].map((item) => (
+            <a
+              key={item}
+              href={`#${item.toLowerCase().replace(" ", "-")}`}
+              onClick={() => setMenuOpen(false)}
+              style={{
+                color: C.muted, fontSize: "16px", fontWeight: 500,
+                textDecoration: "none",
+              }}
+            >
+              {item}
+            </a>
+          ))}
+          <hr style={{ border: "none", borderTop: `1px solid ${C.border}` }} />
+          <a href="/login" style={{ color: C.muted, fontSize: "16px", textDecoration: "none" }}>
+            Sign in
+          </a>
+          <a href="/signup" style={{
+            background: `linear-gradient(135deg, ${C.accent}, ${C.accentB})`,
+            color: "white", fontSize: "14px", fontWeight: 600,
+            textDecoration: "none", padding: "12px 22px", borderRadius: "10px",
+            textAlign: "center",
+          }}>
+            Start free →
+          </a>
+        </div>
+      )}
+
+      <style>{`
+        @media (max-width: 768px) {
+          .nav-links, .nav-cta { display: none !important; }
+          .mobile-menu-btn { display: block !important; }
+        }
+      `}</style>
     </nav>
   );
 }
@@ -717,6 +790,8 @@ export default function LandingPage() {
         <MeshBg />
         <Particles />
 
+        <Nav scrolled={scrolled} />
+
         {/* Cursor spotlight */}
         <div style={{
           position: "fixed",
@@ -727,12 +802,10 @@ export default function LandingPage() {
           transition: "left 0.1s linear, top 0.1s linear",
         }} />
 
-        <Nav scrolled={scrolled} />
-
         {/* ── HERO ─────────────────────────────────────────────── */}
         <section style={{
           position: "relative", zIndex: 10,
-          padding: "180px 32px 120px",
+          padding: "120px max(16px, 5vw) 80px",
           maxWidth: "1200px", margin: "0 auto",
           textAlign: "center",
         }}>
@@ -886,16 +959,18 @@ export default function LandingPage() {
                 position: "absolute", bottom: "30%", left: "10%", right: "10%",
                 display: "flex", alignItems: "center", gap: "3px", height: "60px",
               }}>
-                {Array.from({ length: 60 }, (_, i) => (
+                {Array.from({ length: 60 }, (_, i) => {
+                  const heights = [20, 35, 48, 55, 60, 58, 52, 44, 36, 25, 28, 40, 52, 58, 60, 56, 48, 38, 30, 22];
+                  return (
                   <div key={i} style={{
                     flex: 1,
-                    height: `${20 + Math.abs(Math.sin(i * 0.4) * 40)}%`,
+                    height: `${heights[i % heights.length]}%`,
                     background: `linear-gradient(180deg, ${C.accent}88, ${C.accentB}44)`,
                     borderRadius: "2px",
                     animation: `drift ${0.8 + (i % 5) * 0.2}s ease-in-out infinite`,
                     animationDelay: `${i * 0.05}s`,
                   }} />
-                ))}
+                );})}
               </div>
 
               {/* Play button */}
@@ -1270,13 +1345,13 @@ export default function LandingPage() {
         {/* ── FOOTER ────────────────────────────────────────── */}
         <footer style={{
           position: "relative", zIndex: 10,
-          padding: "48px 32px",
+          padding: "32px max(16px, 5vw)",
           borderTop: `1px solid ${C.border}`,
           maxWidth: "1200px", margin: "0 auto",
           display: "flex", justifyContent: "space-between", alignItems: "center",
           flexWrap: "wrap", gap: "20px",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
             <div style={{
               width: 30, height: 30, borderRadius: "8px",
               background: `linear-gradient(135deg, ${C.accent}, ${C.accentB})`,
@@ -1287,12 +1362,12 @@ export default function LandingPage() {
               </svg>
             </div>
             <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: "16px" }}>voxara</span>
-            <span style={{ fontSize: "13px", color: C.muted, marginLeft: "16px" }}>
+            <span style={{ fontSize: "13px", color: C.muted, marginLeft: "max(0px, 8px)" }}>
               © 2025 Voxara. All rights reserved.
             </span>
           </div>
 
-          <div style={{ display: "flex", gap: "28px" }}>
+          <div style={{ display: "flex", gap: "max(16px, 4vw)", flexWrap: "wrap" }}>
             {["Privacy", "Terms", "Cookies", "Contact"].map(link => (
               <a key={link} href={`/legal/${link.toLowerCase()}`} style={{
                 fontSize: "13px", color: C.muted, textDecoration: "none",

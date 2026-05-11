@@ -11,6 +11,7 @@ import {
   Sparkles,
   Sun,
   Moon,
+  PanelLeft,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -26,6 +27,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { createClient } from '@/lib/supabase/client'
 import { useTheme } from 'next-themes'
+import { useSidebar } from '@/components/ui/sidebar'
 
 const PAGE_TITLES: Record<string, string> = {
   '/dashboard': 'My Videos',
@@ -69,8 +71,23 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
     agency: 'bg-purple-500 text-white',
   }
 
+  const { isMobile, setOpen } = useSidebar()
+
   return (
     <header className="flex h-14 sm:h-16 items-center justify-between border-b bg-background px-3 sm:px-6 shrink-0 overflow-hidden">
+      {/* Mobile sidebar toggle */}
+      {isMobile && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 mr-2 md:hidden"
+          onClick={() => setOpen(true)}
+        >
+          <PanelLeft className="h-4 w-4" />
+          <span className="sr-only">Open sidebar</span>
+        </Button>
+      )}
+
       <h1 className="text-base sm:text-lg font-semibold truncate">
         {pageTitle}
       </h1>

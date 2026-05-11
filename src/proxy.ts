@@ -17,7 +17,7 @@ if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) 
   });
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // Validate origin for API requests
   if (request.nextUrl.pathname.startsWith("/api/") && !isValidOrigin(request)) {
     return NextResponse.json(
