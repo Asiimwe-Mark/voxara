@@ -218,7 +218,7 @@ function MeshBg() {
 
 /* ─── Nav ───────────────────────────────────────────────────── */
 function Nav({ scrolled }: { scrolled: boolean }) {
-  const [menuOpen, setMenuOpen] = React.useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <nav style={{
