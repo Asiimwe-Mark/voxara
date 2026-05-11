@@ -1,6 +1,7 @@
 import { getAdminClient } from '@/lib/supabase/admin';
 import logger from '@/lib/logger';
 import { inngest } from "@/inngest/client";
+import { createFunction } from 'inngest';
 import Mux from "@mux/mux-node";
 import { generateVoiceover, extractKeywords } from "@/features/video/services/voiceover";
 import { fetchStockFootage } from "@/features/video/services/visuals";
@@ -20,7 +21,7 @@ function getMuxClient() {
   return new Mux({ tokenId: process.env.MUX_TOKEN_ID, tokenSecret: process.env.MUX_TOKEN_SECRET });
 }
 
-export const generateVideo = (inngest as any).createFunction(
+export const generateVideo = createFunction(
   {
     id: "generate-video",
     name: "Generate Video",

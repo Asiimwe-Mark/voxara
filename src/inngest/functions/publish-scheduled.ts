@@ -1,6 +1,7 @@
 import { getAdminClient } from '@/lib/supabase/admin';
 import { inngest } from '@/inngest/client';
 import { google } from 'googleapis';
+import { createFunction } from 'inngest';
 
 
 async function publishToYouTubeFull(
@@ -67,7 +68,7 @@ async function publishToYouTubeFull(
   return { success: true, videoId: response.data.id! };
 }
 
-export const publishScheduled = (inngest as any).createFunction(
+export const publishScheduled = createFunction(
   { id: 'publish-scheduled', name: 'Publish Scheduled Video', retries: 3, triggers: { event: 'social/publish-scheduled' } },
   async ({ event, step }: { event: any; step: any }) => {
     const supabaseAdmin = getAdminClient();

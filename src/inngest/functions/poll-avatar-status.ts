@@ -1,10 +1,11 @@
 import { getAdminClient } from '@/lib/supabase/admin';
 import { inngest } from '@/inngest/client';
+import { createFunction } from 'inngest';
 import { checkHeyGenAvatarStatus } from '@/features/avatar/services/heygen';
 import { sendAvatarReadyEmail } from '@/lib/email/avatar-notification';
 
 
-export const pollAvatarStatus = (inngest as any).createFunction(
+export const pollAvatarStatus = createFunction(
   { id: 'poll-avatar-status', name: 'Poll Avatar Status', retries: 10, triggers: { event: 'avatar/poll-status' } },
   async ({ event, step }: { event: any; step: any }) => {
     const supabaseAdmin = getAdminClient();
