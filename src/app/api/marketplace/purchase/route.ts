@@ -29,8 +29,8 @@ export async function POST(request: NextRequest) {
   // Free templates — record the download and preserve the buyer record
   if (template.price === 0) {
     await supabase.from('template_purchases').upsert(
-      { buyer_id: user.id, template_id: template.id, amount_paid: 0 },
-      { onConflict: ['buyer_id', 'template_id'] }
+      { buyer_id: user.id, template_id: template.id, amount_paid: 0 } as never,
+      { onConflict: 'buyer_id_template_id' }
     );
     await supabase.rpc('increment_template_downloads', { template_id: template.id });
     return NextResponse.json({ success: true, free: true });
