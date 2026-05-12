@@ -9,7 +9,7 @@ export function requireAdminEnv(): void {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error('SUPABASE_SERVICE_ROLE_KEY is required');
   }
-  if (!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
-    throw new Error('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY is required');
+  if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY is required');
   }
 }

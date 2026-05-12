@@ -18,7 +18,7 @@ const envSchema = z.object({
 
   // Supabase (required)
   NEXT_PUBLIC_SUPABASE_URL: z.string().url('NEXT_PUBLIC_SUPABASE_URL must be a valid URL'),
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(10, 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY is too short'),
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(10, 'NEXT_PUBLIC_SUPABASE_ANON_KEY is too short'),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(10, 'SUPABASE_SERVICE_ROLE_KEY is too short'),
 
   // AI (at least Gemini OR Claude required)

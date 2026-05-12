@@ -20,7 +20,7 @@ env:
   NODE_VERSION: '20'
   # Minimal env vars needed for build (real secrets are NOT needed for type-checking)
   NEXT_PUBLIC_SUPABASE_URL: 'https://placeholder.supabase.co'
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'placeholder-anon-key-for-build'
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: 'placeholder-anon-key-for-build'
   NEXT_PUBLIC_APP_URL: 'https://voxara.app'
   SUPABASE_SERVICE_ROLE_KEY: 'placeholder-service-role-key'
   NEXT_PUBLIC_SENTRY_DSN: ''

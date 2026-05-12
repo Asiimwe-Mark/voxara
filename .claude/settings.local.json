@@ -28,7 +28,10 @@
       "Bash(Get-Content *)",
       "Bash(npm list *)",
       "Bash(node *)",
-      "Bash(findstr /I \"exports\")"
+      "Bash(findstr /I \"exports\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Asiimwe Mark Amooti\\\\Desktop\\\\voxara\" -Filter \".env*\" -File)",
+      "Bash(Select-Object Name)",
+      "Bash(taskkill *)"
     ]
   }
 }
