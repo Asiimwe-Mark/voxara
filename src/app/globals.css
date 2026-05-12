@@ -208,20 +208,32 @@
 
   /* Hover elevation effect */
   .hover-lift {
-    @apply hover:shadow-lg hover:scale-105 transition-smooth;
+    @apply hover:shadow-lg hover:scale-105;
+    transition-property: all;
+    transition-duration: 200ms;
+    transition-timing-function: ease-out;
   }
 
   .hover-lift-sm {
-    @apply hover:shadow-md hover:scale-102 transition-smooth;
+    @apply hover:shadow-md hover:scale-102;
+    transition-property: all;
+    transition-duration: 200ms;
+    transition-timing-function: ease-out;
   }
 
   /* Premium card styles */
   .card-premium {
-    @apply rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm hover:shadow-md transition-smooth;
+    @apply rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm hover:shadow-md;
+    transition-property: all;
+    transition-duration: 200ms;
+    transition-timing-function: ease-out;
   }
 
   .card-elevated {
-    @apply rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-md hover:shadow-lg transition-smooth;
+    @apply rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-md hover:shadow-lg;
+    transition-property: all;
+    transition-duration: 200ms;
+    transition-timing-function: ease-out;
   }
 
   /* Focus ring utilities */
@@ -283,7 +295,10 @@
 
   /* Form utilities */
   .input-premium {
-    @apply px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-smooth;
+    @apply px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary;
+    transition-property: all;
+    transition-duration: 200ms;
+    transition-timing-function: ease-out;
   }
 
   /* Badge styles */
