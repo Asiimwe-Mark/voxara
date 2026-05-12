@@ -5,7 +5,6 @@ import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { VideoCard } from '@/components/dashboard/video-card'
-import { Badge } from '@/components/ui/badge'
 import { ShareForCredits } from '@/components/credits/ShareForCredits'
 import { ReferralCard } from '@/components/credits/ReferralCard'
 
@@ -37,143 +36,167 @@ export default async function DashboardPage() {
     videos?.filter((v) => v.status === 'processing').length ?? 0
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <div className="p-4 sm:p-6 md:p-8 space-y-8">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
+        <div className="space-y-2">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
             {profile?.full_name
               ? `Welcome back, ${profile.full_name.split(' ')[0]}`
               : 'My Videos'}
-          </h2>
-          <p className="text-muted-foreground text-xs sm:text-sm mt-1 sm:mt-0.5">
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             {videos?.length
-              ? `${videos.length} video${videos.length === 1 ? '' : 's'} · ${profile?.credits ?? 0} credits remaining`
+              ? `${videos.length} video${videos.length === 1 ? '' : 's'} created · ${profile?.credits ?? 0} credits available`
               : 'Create your first AI video — no camera needed'}
           </p>
         </div>
-        <Button asChild size="sm" className="w-full sm:w-auto">
+        <Button asChild size="lg" className="w-full sm:w-auto">
           <Link href="/dashboard/create">
-            <PlusCircle className="mr-2 h-4 w-4" />
+            <PlusCircle className="h-4 w-4" />
             New Video
           </Link>
         </Button>
       </div>
 
-      {/* Stats bar */}
-      {(videos?.length ?? 0) > 0 && (
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          <Card className="border-none shadow-none bg-slate-50 dark:bg-slate-900">
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-                <Video className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                <span className="hidden xs:inline">Total Videos</span>
-                <span className="xs:hidden">Total</span>
-              </div>
-              <p className="text-xl sm:text-2xl font-bold tabular-nums">
-                {videos?.length ?? 0}
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="border-none shadow-none bg-emerald-50 dark:bg-emerald-950/30">
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex items-center gap-2 text-emerald-600 text-xs mb-1">
-                <TrendingUp className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                Ready
-              </div>
-              <p className="text-xl sm:text-2xl font-bold tabular-nums text-emerald-700 dark:text-emerald-400">
-                {readyCount}
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="border-none shadow-none bg-amber-50 dark:bg-amber-950/30">
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex items-center gap-2 text-amber-600 text-xs mb-1">
-                <Zap className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                <span className="hidden xs:inline">Processing</span>
-                <span className="xs:hidden">Proc</span>
-              </div>
-              <p className="text-2xl font-bold tabular-nums text-amber-700 dark:text-amber-400">
-                {processingCount}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Low-credit alert */}
+      {/* Low-credit Alert */}
       {(profile?.credits ?? 0) <= 2 && profile?.plan === 'free' && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/40 px-3 sm:px-4 py-3 flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 xs:gap-4">
-          <p className="text-xs sm:text-sm text-amber-800 dark:text-amber-300 font-medium">
-            ⚠️ You have only {profile?.credits ?? 0} credit
-            {profile?.credits === 1 ? '' : 's'} left.
+        <div className="rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          <p className="text-sm text-amber-800 dark:text-amber-300 font-medium">
+            ⚠️ Low credits: You have only {profile?.credits ?? 0} credit
+            {(profile?.credits ?? 0) === 1 ? '' : 's'} remaining.
           </p>
           <Button
             size="sm"
             variant="outline"
             asChild
-            className="w-full xs:w-auto border-amber-300 hover:bg-amber-100 dark:border-amber-700 text-xs sm:text-sm"
+            className="border-amber-300 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/30 w-full sm:w-auto"
           >
             <Link href="/dashboard/billing">
-              <Sparkles className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+              <Sparkles className="mr-2 h-4 w-4" />
               Buy Credits
             </Link>
           </Button>
         </div>
       )}
 
-      {/* Free-tier growth widgets — visible only to free users */}
-      {profile?.plan === 'free' && (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <ReferralCard />
-          {videos && videos.length > 0 && (
-            <ShareForCredits
-              videoId={videos[0].id}
-              videoUrl={videos[0].video_url ?? ''}
-              videoTitle={videos[0].title ?? 'My Video'}
-              currentCredits={profile?.credits ?? 0}
-            />
-          )}
+      {/* Stats Grid */}
+      {(videos?.length ?? 0) > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+          <Card className="card-premium">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs sm:text-sm text-muted-foreground font-medium mb-2">
+                    Total Videos
+                  </p>
+                  <p className="text-3xl sm:text-4xl font-bold tabular-nums">
+                    {videos?.length ?? 0}
+                  </p>
+                </div>
+                <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Video className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="card-premium">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs sm:text-sm text-muted-foreground font-medium mb-2">
+                    Ready to Share
+                  </p>
+                  <p className="text-3xl sm:text-4xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+                    {readyCount}
+                  </p>
+                </div>
+                <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg bg-emerald-100 dark:bg-emerald-950/30 flex items-center justify-center flex-shrink-0">
+                  <TrendingUp className="h-6 w-6 sm:h-7 sm:w-7 text-emerald-600 dark:text-emerald-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="card-premium">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs sm:text-sm text-muted-foreground font-medium mb-2">
+                    Processing
+                  </p>
+                  <p className="text-3xl sm:text-4xl font-bold tabular-nums text-amber-600 dark:text-amber-400">
+                    {processingCount}
+                  </p>
+                </div>
+                <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg bg-amber-100 dark:bg-amber-950/30 flex items-center justify-center flex-shrink-0">
+                  <Zap className="h-6 w-6 sm:h-7 sm:w-7 text-amber-600 dark:text-amber-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
 
-      {/* Video grid or empty state */}
-      {videos && videos.length > 0 ? (
-        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {videos.map((video) => (
-            <VideoCard key={video.id} video={video} />
-          ))}
+      {/* Videos Section */}
+      {(videos?.length ?? 0) > 0 ? (
+        <div>
+          <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 flex items-center gap-2">
+            <Video className="h-5 w-5 text-primary" />
+            Your Videos
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {videos.map((video) => (
+              <VideoCard key={video.id} video={video} />
+            ))}
+          </div>
         </div>
       ) : (
-        <Card className="border-dashed border-2">
-          <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16 md:py-20 text-center px-4">
-            <div className="h-12 sm:h-16 w-12 sm:w-16 rounded-full bg-primary/10 flex items-center justify-center mb-3 sm:mb-5">
-              <Sparkles className="h-6 sm:h-8 w-6 sm:w-8 text-primary" />
-            </div>
-            <h3 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2">
-              No videos yet
-            </h3>
-            <p className="text-muted-foreground text-xs sm:text-sm max-w-xs mb-4 sm:mb-6">
-              Create your first faceless video with AI — enter a topic and we'll
-              handle the script, voiceover, footage, and editing.
-            </p>
+        <div className="empty-state border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-lg">
+          <div className="empty-state-icon">
+            <Sparkles className="h-full w-full" />
+          </div>
+          <h3 className="empty-state-title">No videos yet</h3>
+          <p className="empty-state-description">
+            Create your first faceless video with AI — enter a topic and we'll
+            handle the script, voiceover, footage, and editing.
+          </p>
+          <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
             <Button asChild size="lg">
               <Link href="/dashboard/create">
-                <PlusCircle className="mr-2 h-4 w-4" />
+                <PlusCircle className="h-4 w-4" />
                 Create Your First Video
               </Link>
             </Button>
             {profile?.plan === 'free' && (
-              <p className="text-xs text-muted-foreground mt-4">
+              <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
                 Free plan includes {profile?.credits ?? 1} credit.{' '}
-                Share your videos to earn up to 5 more/month —{' '}
-                <Link href="/pricing" className="underline hover:text-primary">
-                  or upgrade for unlimited.
+                <br className="sm:hidden" />
+                <Link
+                  href="/pricing"
+                  className="text-primary hover:underline font-medium"
+                >
+                  Upgrade for unlimited or share to earn more.
                 </Link>
               </p>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+      )}
+
+      {/* Growth Widgets for Free Users */}
+      {profile?.plan === 'free' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-200 dark:border-slate-800">
+          <div>
+            <h3 className="text-sm font-semibold mb-4">Earn Free Credits</h3>
+            <ReferralCard />
+          </div>
+          {videos && videos.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold mb-4">Share to Earn</h3>
+              <ShareForCredits />
+            </div>
+          )}
+        </div>
       )}
     </div>
   )

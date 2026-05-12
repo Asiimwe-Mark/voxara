@@ -32,6 +32,29 @@
   --sidebar-accent-foreground: hsl(240 5.9% 10%);
   --sidebar-border: hsl(220 13% 91%);
   --sidebar-ring: hsl(217.2 91.2% 59.8%);
+
+  /* ── Spacing scale (premium hierarchy) ────────────────────── */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  --spacing-3xl: 4rem;
+  
+  /* ── Shadow/Elevation system (subtle, premium) ───────────────── */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+  
+  /* ── Border radius system ──────────────────────────────────── */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
 }
 
 .dark {
@@ -83,12 +106,297 @@
     scroll-behavior: smooth;
   }
 
-  /* Focus-visible outlines only for keyboard nav */
+  /* Focus-visible outlines for keyboard nav (enterprise accessible) */
   :focus-visible {
     outline: 2px solid var(--color-ring);
     outline-offset: 2px;
   }
+
+  /* ── Typography hierarchy ──────────────────────────────────── */
+  h1 {
+    @apply text-4xl md:text-5xl font-bold tracking-tight leading-none;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl font-bold tracking-tight leading-tight;
+  }
+
+  h3 {
+    @apply text-2xl font-bold tracking-tight leading-tight;
+  }
+
+  h4 {
+    @apply text-xl font-semibold tracking-tight leading-snug;
+  }
+
+  h5 {
+    @apply text-lg font-semibold tracking-tight leading-snug;
+  }
+
+  h6 {
+    @apply text-base font-semibold tracking-tight;
+  }
+
+  p {
+    @apply leading-relaxed;
+  }
+
+  small {
+    @apply text-sm text-muted-foreground;
+  }
+
+  code {
+    @apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono;
+  }
+
+  /* ── Links ──────────────────────────────────────────────────── */
+  a {
+    @apply text-primary hover:text-primary/80 transition-colors duration-150;
+  }
+
+  /* ── Selection ──────────────────────────────────────────────── */
+  ::selection {
+    @apply bg-primary text-primary-foreground;
+  }
+
+  /* ── Scrollbar styling (modern, subtle) ────────────────────── */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 dark:bg-slate-700 rounded-full hover:bg-slate-400 dark:hover:bg-slate-600 transition-colors;
+  }
+
+  /* ── Reduce motion for accessibility ──────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }
+
+/* ── Animation & Motion system (premium, subtle) ──────────────────── */
+@layer components {
+  /* Smooth transitions */
+  .transition-smooth {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  .transition-smooth-fast {
+    @apply transition-all duration-150 ease-out;
+  }
+
+  .transition-smooth-slow {
+    @apply transition-all duration-300 ease-out;
+  }
+
+  /* Hover elevation effect */
+  .hover-lift {
+    @apply hover:shadow-lg hover:scale-105 transition-smooth;
+  }
+
+  .hover-lift-sm {
+    @apply hover:shadow-md hover:scale-102 transition-smooth;
+  }
+
+  /* Premium card styles */
+  .card-premium {
+    @apply rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm hover:shadow-md transition-smooth;
+  }
+
+  .card-elevated {
+    @apply rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-md hover:shadow-lg transition-smooth;
+  }
+
+  /* Focus ring utilities */
+  .focus-ring {
+    @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary;
+  }
+
+  /* Container constraints for responsive layouts */
+  .container-sm {
+    @apply max-w-screen-sm mx-auto;
+  }
+
+  .container-md {
+    @apply max-w-screen-md mx-auto;
+  }
+
+  .container-lg {
+    @apply max-w-screen-lg mx-auto;
+  }
+
+  .container-xl {
+    @apply max-w-screen-xl mx-auto;
+  }
+
+  .container-2xl {
+    @apply max-w-screen-2xl mx-auto;
+  }
+
+  /* Visual separators */
+  .divider-subtle {
+    @apply border-t border-slate-100 dark:border-slate-900;
+  }
+
+  .divider-light {
+    @apply border-t border-slate-200 dark:border-slate-800;
+  }
+
+  /* Empty state styling */
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-12 px-4 text-center;
+  }
+
+  .empty-state-icon {
+    @apply h-12 w-12 text-muted-foreground/40 mb-4;
+  }
+
+  .empty-state-title {
+    @apply text-lg font-semibold text-foreground mb-2;
+  }
+
+  .empty-state-description {
+    @apply text-sm text-muted-foreground max-w-sm;
+  }
+
+  /* Loading state */
+  .skeleton-pulse {
+    @apply animate-pulse bg-slate-200 dark:bg-slate-800 rounded;
+  }
+
+  /* Form utilities */
+  .input-premium {
+    @apply px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-smooth;
+  }
+
+  /* Badge styles */
+  .badge-primary {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary;
+  }
+
+  .badge-secondary {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300;
+  }
+
+  .badge-success {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400;
+  }
+
+  .badge-warning {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400;
+  }
+
+  .badge-danger {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400;
+  }
+
+  /* Text utilities */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* Animation keyframes */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 300ms ease-out;
+  }
+
+  .animate-slideInUp {
+    animation: slideInUp 400ms ease-out;
+  }
+
+  .animate-slideInDown {
+    animation: slideInDown 400ms ease-out;
+  }
+
+  .animate-slideInLeft {
+    animation: slideInLeft 400ms ease-out;
+  }
+
+  .animate-slideInRight {
+    animation: slideInRight 400ms ease-out;
+  }
+
+  .animate-scaleIn {
+    animation: scaleIn 300ms ease-out;
+  }
+}
+
 
 /* ── Utility: gradient text ───────────────────────────────── */
 .gradient-text {
