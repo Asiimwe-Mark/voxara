@@ -740,7 +740,7 @@ const STATS = [
 const PLANS = [
   {
     name: "Free", price: 0, description: "Perfect for trying out the platform",
-    features: ["3 videos/month", "720p quality", "Watermark", "Basic voices", "Community access"],
+    features: ["1 video/month", "720p quality", "Watermark", "Basic voices", "Community access"],
     cta: "Get started free", href: "/signup",
   },
   {
@@ -897,7 +897,7 @@ export default function LandingPage() {
           }}>
             {[
               { icon: "🔒", text: "No credit card required" },
-              { icon: "🎬", text: "3 free videos per month" },
+              { icon: "🎬", text: "1 free video per month" },
               { icon: "⚡", text: "Generate in 5 minutes" },
             ].map(({ icon, text }) => (
               <div key={text} style={{

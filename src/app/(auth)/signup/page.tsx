@@ -37,7 +37,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>
 
 const PERKS = [
-  '3 free AI videos per month',
+  '1 free AI video per month',
   'No camera or editing skills required',
   'Publish to YouTube, TikTok, Instagram',
 ]
