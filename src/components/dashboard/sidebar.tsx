@@ -12,6 +12,7 @@ import {
   Users,
   BarChart3,
   Zap,
+  X,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -27,6 +28,7 @@ import {
   SidebarRail,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 const navItems = [
@@ -42,11 +44,11 @@ const navItems = [
 
 export function DashboardSidebar() {
   const pathname = usePathname()
-  const { isMobile } = useSidebar()
+  const { isMobile, setOpen } = useSidebar()
 
   return (
-    <Sidebar collapsible={isMobile ? "offcanvas" : "icon"} className="border-r">
-      <SidebarHeader className="border-b px-3 h-16 flex-row items-center">
+    <Sidebar collapsible={isMobile ? 'offcanvas' : 'icon'} className="border-r">
+      <SidebarHeader className="border-b px-3 h-16 flex items-center justify-between gap-3">
         <Link href="/dashboard" className="flex items-center gap-2.5 min-w-0">
           <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0 shadow-sm">
             <Zap className="h-4 w-4 text-primary-foreground" />
@@ -55,6 +57,17 @@ export function DashboardSidebar() {
             <span className="text-sm font-bold tracking-tight">voxara</span>
           </div>
         </Link>
+        {isMobile && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9"
+            onClick={() => setOpen(false)}
+            aria-label="Close sidebar"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </SidebarHeader>
 
       <SidebarContent className="py-2">
@@ -77,6 +90,7 @@ export function DashboardSidebar() {
                     >
                       <Link
                         href={item.href}
+                        onClick={() => isMobile && setOpen(false)}
                         className={cn(
                           'flex items-center gap-2.5 rounded-md transition-colors',
                           isActive && 'font-medium'
@@ -95,11 +109,18 @@ export function DashboardSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t px-3 py-3">
-        <p className="text-xs text-muted-foreground/60 text-center truncate">
-          © {new Date().getFullYear()} voxara
-        </p>
+        <div className="flex flex-col gap-2 text-xs text-muted-foreground/70">
+          <p className="text-center truncate">
+            © {new Date().getFullYear()} voxara
+          </p>
+          {!isMobile && (
+            <p className="text-center text-[11px] leading-none">
+              Designed for high-performance teams.
+            </p>
+          )}
+        </div>
       </SidebarFooter>
-      <SidebarRail />
+      {!isMobile && <SidebarRail />}
     </Sidebar>
   )
 }

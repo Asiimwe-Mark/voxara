@@ -1,42 +1,51 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ProfileSettings } from "@/components/settings/ProfileSettings";
-import { ConnectedAccounts } from "@/components/settings/ConnectedAccounts";
-import { ApiKeyManager } from "@/components/settings/ApiKeyManager";
-import { DangerZone } from "@/components/settings/DangerZone";
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ProfileSettings } from '@/components/settings/ProfileSettings'
+import { ConnectedAccounts } from '@/components/settings/ConnectedAccounts'
+import { ApiKeyManager } from '@/components/settings/ApiKeyManager'
+import { DangerZone } from '@/components/settings/DangerZone'
+import { WorkspaceSettings } from '@/components/settings/WorkspaceSettings'
 
-export const metadata = { title: "Settings" };
+export const metadata = { title: 'Settings' }
 
-export default async function SettingsPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+interface SettingsPageProps {
+  searchParams: { tab?: string }
+}
+
+export default async function SettingsPage({
+  searchParams,
+}: SettingsPageProps) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
   const [{ data: profile }, { data: socialAccounts }] = await Promise.all([
     supabase
-      .from("profiles")
-      .select("full_name, email, avatar_url, credits, plan")
-      .eq("id", user.id)
+      .from('profiles')
+      .select('full_name, email, avatar_url, credits, plan')
+      .eq('id', user.id)
       .single(),
     supabase
-      .from("social_accounts")
-      .select("id, platform, account_name")
-      .eq("user_id", user.id),
-  ]);
+      .from('social_accounts')
+      .select('id, platform, account_name')
+      .eq('user_id', user.id),
+  ])
 
   // Cast to expected types
   const voxaraUser = {
     id: user.id,
     email: user.email ?? '',
-  };
+  }
 
   const voxaraProfile = profile ?? {
     full_name: null,
     avatar_url: null,
     credits: 0,
-    plan: 'free'
-  };
+    plan: 'free',
+  }
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -47,20 +56,38 @@ export default async function SettingsPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
+      <Tabs
+        defaultValue={
+          searchParams.tab === 'workspace' ? 'workspace' : 'profile'
+        }
+        className="space-y-6"
+      >
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
           <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="workspace">Workspace</TabsTrigger>
           <TabsTrigger value="accounts">Social</TabsTrigger>
           <TabsTrigger value="api">API Keys</TabsTrigger>
-          <TabsTrigger value="danger" className="text-destructive data-[state=active]:text-destructive">Danger</TabsTrigger>
+          <TabsTrigger
+            value="danger"
+            className="text-destructive data-[state=active]:text-destructive"
+          >
+            Danger
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
           <ProfileSettings user={voxaraUser} profile={voxaraProfile} />
         </TabsContent>
 
+        <TabsContent value="workspace">
+          <WorkspaceSettings plan={voxaraProfile.plan ?? 'free'} />
+        </TabsContent>
+
         <TabsContent value="accounts">
-          <ConnectedAccounts userId={user.id} initialAccounts={socialAccounts ?? []} />
+          <ConnectedAccounts
+            userId={user.id}
+            initialAccounts={socialAccounts ?? []}
+          />
         </TabsContent>
 
         <TabsContent value="api">
@@ -72,5 +99,5 @@ export default async function SettingsPage() {
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }

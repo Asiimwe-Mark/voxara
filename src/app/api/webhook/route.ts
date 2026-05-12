@@ -140,9 +140,23 @@ async function handlePaddleWebhook(event: PaddleEvent): Promise<NextResponse> {
     case 'order.created':
     case 'order.completed': {
       const credits = Number(data?.custom_data?.credits ?? 0);
-      const total   = data.total ?? 0;
+      const purchaseType = String(data?.custom_data?.type ?? '');
+      const total = data.total ?? 0;
 
-      if (credits > 0) {
+      if (purchaseType === 'template_purchase') {
+        const templateId = String(data?.custom_data?.template_id ?? '');
+        if (templateId) {
+          await adminClient.from('template_purchases').upsert(
+            {
+              buyer_id: userId,
+              template_id: templateId,
+              amount_paid: total,
+            },
+            { onConflict: ['buyer_id', 'template_id'] }
+          );
+          await adminClient.rpc('increment_template_downloads', { template_id: templateId });
+        }
+      } else if (credits > 0) {
         await adminClient.rpc('add_credits', { p_user_id: userId, p_credits: credits });
         await adminClient.from('credit_purchases').insert({
           user_id: userId,
@@ -261,9 +275,23 @@ async function handleFlutterwaveWebhook(event: FlutterwaveEvent): Promise<NextRe
   switch (eventType) {
     case 'charge.completed': {
       const { amount, currency, id } = data;
+      const purchaseType = String(data?.meta?.type ?? '');
       const credits = Number(data?.meta?.credits ?? 0);
 
-      if (credits > 0) {
+      if (purchaseType === 'template_purchase') {
+        const templateId = String(data?.meta?.template_id ?? '');
+        if (templateId) {
+          await adminClient.from('template_purchases').upsert(
+            {
+              buyer_id: userId,
+              template_id: templateId,
+              amount_paid: amount,
+            },
+            { onConflict: ['buyer_id', 'template_id'] }
+          );
+          await adminClient.rpc('increment_template_downloads', { template_id: templateId });
+        }
+      } else if (credits > 0) {
         await adminClient.rpc('add_credits', { p_user_id: userId, p_credits: credits });
         await adminClient.from('credit_purchases').insert({
           user_id:          userId,

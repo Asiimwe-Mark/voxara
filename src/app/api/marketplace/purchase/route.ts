@@ -26,17 +26,23 @@ export async function POST(request: NextRequest) {
 
   if (!template) return NextResponse.json({ error: 'Template not found' }, { status: 404 });
 
-  // Free templates — just record the download
+  // Free templates — record the download and preserve the buyer record
   if (template.price === 0) {
     await supabase.from('template_purchases').upsert(
-      { user_id: user.id, template_id: template.id, amount_paid: 0 },
-      { onConflict: 'user_id,template_id' }
+      { buyer_id: user.id, template_id: template.id, amount_paid: 0 },
+      { onConflict: ['buyer_id', 'template_id'] }
     );
     await supabase.rpc('increment_template_downloads', { template_id: template.id });
     return NextResponse.json({ success: true, free: true });
   }
 
-  // Paid templates — create checkout session via payment adapter
+  // Paid templates — limit support to Flutterwave for arbitrary marketplace amounts
+  if (((process.env.PAYMENT_PROVIDER ?? 'paddle').toLowerCase()) === 'paddle') {
+    return NextResponse.json({
+      error: 'Paid marketplace purchases are not supported with Paddle. Use Flutterwave or configure Paddle price IDs for marketplace products.',
+    }, { status: 400 });
+  }
+
   try {
     const { data: userData } = await supabase.auth.getUser();
     const email = userData.user?.email;

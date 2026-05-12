@@ -1,1388 +1,572 @@
-"use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+'use client'
 
-/* ─── Colour tokens ─────────────────────────────────────────── */
-const C = {
-  bg: "#04040a",
-  surface: "#0c0c18",
-  border: "rgba(255,255,255,0.06)",
-  borderHover: "rgba(120,100,255,0.4)",
-  accent: "#7b5cff",
-  accentB: "#ff5ca8",
-  accentC: "#5cf0ff",
-  text: "#f0eeff",
-  muted: "rgba(240,238,255,0.45)",
-  glow: "rgba(123,92,255,0.18)",
-};
+import { useState } from 'react'
+import Link from 'next/link'
+import { Sparkles, ShieldCheck, Film, Users, X, Menu } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 
-/* ─── Keyframes injected once ───────────────────────────────── */
-const CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+const navLinks = [
+  { label: 'Features', href: '#features' },
+  { label: 'Testimonials', href: '#testimonials' },
+  { label: 'Pricing', href: '#pricing' },
+  { label: 'Use Cases', href: '#use-cases' },
+  { label: 'FAQ', href: '#faq' },
+]
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: ${C.bg};
-    color: ${C.text};
-    font-family: 'DM Sans', sans-serif;
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  @keyframes drift {
-    0%,100% { transform: translateY(0px) rotate(0deg); }
-    33%      { transform: translateY(-22px) rotate(1.5deg); }
-    66%      { transform: translateY(12px) rotate(-1deg); }
-  }
-  @keyframes pulse-ring {
-    0%   { transform: scale(0.8); opacity: 1; }
-    100% { transform: scale(2.4); opacity: 0; }
-  }
-  @keyframes shimmer {
-    0%   { background-position: -200% center; }
-    100% { background-position: 200% center; }
-  }
-  @keyframes float-particle {
-    0%   { transform: translateY(100vh) translateX(0px) scale(0); opacity: 0; }
-    10%  { opacity: 1; }
-    90%  { opacity: 0.6; }
-    100% { transform: translateY(-10vh) translateX(60px) scale(1); opacity: 0; }
-  }
-  @keyframes spin-slow {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
-  }
-  @keyframes fade-up {
-    from { opacity: 0; transform: translateY(40px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes scale-in {
-    from { opacity: 0; transform: scale(0.92); }
-    to   { opacity: 1; transform: scale(1); }
-  }
-  @keyframes slide-right {
-    from { opacity: 0; transform: translateX(-30px); }
-    to   { opacity: 1; transform: translateX(0); }
-  }
-  @keyframes marquee {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-50%); }
-  }
-  @keyframes noise {
-    0%,100% { transform: translate(0,0); }
-    10%  { transform: translate(-2px,-2px); }
-    20%  { transform: translate(2px,2px); }
-    30%  { transform: translate(-1px,2px); }
-    40%  { transform: translate(2px,-1px); }
-    50%  { transform: translate(-2px,1px); }
-    60%  { transform: translate(1px,2px); }
-    70%  { transform: translate(-1px,-2px); }
-    80%  { transform: translate(2px,1px); }
-    90%  { transform: translate(-2px,2px); }
-  }
-  @keyframes border-glow {
-    0%,100% { border-color: rgba(123,92,255,0.3); box-shadow: 0 0 20px rgba(123,92,255,0.1); }
-    50%     { border-color: rgba(255,92,168,0.4); box-shadow: 0 0 30px rgba(255,92,168,0.15); }
-  }
-  @keyframes count-up {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .animate-fade-up    { animation: fade-up 0.7s cubic-bezier(.22,1,.36,1) both; }
-  .animate-scale-in   { animation: scale-in 0.6s cubic-bezier(.22,1,.36,1) both; }
-  .animate-slide-right{ animation: slide-right 0.6s cubic-bezier(.22,1,.36,1) both; }
-
-  .shimmer-text {
-    background: linear-gradient(90deg, ${C.text} 0%, ${C.accent} 30%, ${C.accentB} 55%, ${C.accentC} 70%, ${C.text} 100%);
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: shimmer 4s linear infinite;
-  }
-
-  .noise-overlay::after {
-    content: '';
-    position: fixed; inset: -200%;
-    width: 400%; height: 400%;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    opacity: 0.028;
-    pointer-events: none;
-    animation: noise 0.15s steps(1) infinite;
-    z-index: 9999;
-    mix-blend-mode: overlay;
-  }
-
-  .magnetic-btn {
-    position: relative;
-    transition: transform 0.15s cubic-bezier(.22,1,.36,1);
-    cursor: pointer;
-  }
-  .magnetic-btn:hover { transform: translateY(-2px); }
-
-  .card-hover {
-    transition: transform 0.35s cubic-bezier(.22,1,.36,1),
-                border-color 0.35s ease,
-                box-shadow 0.35s ease;
-  }
-  .card-hover:hover {
-    transform: translateY(-6px);
-    border-color: rgba(123,92,255,0.35) !important;
-    box-shadow: 0 24px 60px rgba(123,92,255,0.12), 0 0 0 1px rgba(123,92,255,0.15);
-  }
-
-  .glow-line {
-    position: absolute; inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(123,92,255,0.6), transparent);
-    transform: translateX(-100%);
-    transition: transform 0.5s ease;
-  }
-  *:hover > .glow-line { transform: translateX(100%); }
-
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: ${C.bg}; }
-  ::-webkit-scrollbar-thumb { background: ${C.accent}; border-radius: 2px; }
-`;
-
-/* ─── Particle System ───────────────────────────────────────── */
-function Particles() {
-  const particles = Array.from({ length: 18 }, (_, i) => ({
-    id: i,
-    left: `${5 + (i * 5.3) % 90}%`,
-    delay: `${(i * 1.1) % 8}s`,
-    duration: `${8 + (i * 0.7) % 12}s`,
-    size: `${1.5 + (i * 0.3) % 3}px`,
-    color: i % 3 === 0 ? C.accent : i % 3 === 1 ? C.accentB : C.accentC,
-  }));
-  return (
-    <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 1 }}>
-      {particles.map((p) => (
-        <div
-          key={p.id}
-          style={{
-            position: "absolute",
-            left: p.left,
-            bottom: 0,
-            width: p.size,
-            height: p.size,
-            borderRadius: "50%",
-            background: p.color,
-            boxShadow: `0 0 8px 2px ${p.color}`,
-            animation: `float-particle ${p.duration} ${p.delay} linear infinite`,
-            opacity: 0,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-/* ─── Mesh gradient background ──────────────────────────────── */
-function MeshBg() {
-  return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 0, overflow: "hidden", pointerEvents: "none" }}>
-      <div style={{
-        position: "absolute", width: "900px", height: "900px",
-        top: "-300px", left: "-200px",
-        background: "radial-gradient(circle, rgba(123,92,255,0.12) 0%, transparent 65%)",
-        animation: "drift 14s ease-in-out infinite",
-      }} />
-      <div style={{
-        position: "absolute", width: "700px", height: "700px",
-        top: "200px", right: "-150px",
-        background: "radial-gradient(circle, rgba(255,92,168,0.09) 0%, transparent 65%)",
-        animation: "drift 18s ease-in-out infinite reverse",
-        animationDelay: "-5s",
-      }} />
-      <div style={{
-        position: "absolute", width: "600px", height: "600px",
-        bottom: "100px", left: "30%",
-        background: "radial-gradient(circle, rgba(92,240,255,0.07) 0%, transparent 65%)",
-        animation: "drift 22s ease-in-out infinite",
-        animationDelay: "-10s",
-      }} />
-      {/* Grid overlay */}
-      <div style={{
-        position: "absolute", inset: 0,
-        backgroundImage: `linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
-                          linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px)`,
-        backgroundSize: "60px 60px",
-        maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent)",
-      }} />
-    </div>
-  );
-}
-
-/* ─── Nav ───────────────────────────────────────────────────── */
-function Nav({ scrolled }: { scrolled: boolean }) {
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  return (
-    <nav style={{
-      position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-      padding: "0 max(16px, 5vw)",
-      height: "72px",
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      background: scrolled ? "rgba(4,4,10,0.88)" : "transparent",
-      backdropFilter: scrolled ? "blur(24px)" : "none",
-      borderBottom: scrolled ? `1px solid ${C.border}` : "none",
-      transition: "all 0.4s cubic-bezier(.22,1,.36,1)",
-    }}>
-      {/* Logo */}
-      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-        <div style={{
-          width: 36, height: 36, borderRadius: "10px",
-          background: `linear-gradient(135deg, ${C.accent}, ${C.accentB})`,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: `0 0 20px rgba(123,92,255,0.4)`,
-        }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-            <polygon points="5 3 19 12 5 21 5 3"/>
-          </svg>
-        </div>
-        <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: "20px", letterSpacing: "-0.5px" }}>
-          voxara
-        </span>
-      </div>
-
-      {/* Desktop Links */}
-      <div className="nav-links" style={{ display: "flex", alignItems: "center", gap: "max(20px, 4vw)" }}>
-        {["Features", "Pricing", "Use Cases", "FAQ"].map((item) => (
-          <a
-            key={item}
-            href={`#${item.toLowerCase().replace(" ", "-")}`}
-            style={{
-              color: C.muted, fontSize: "14px", fontWeight: 500,
-              textDecoration: "none", letterSpacing: "0.02em",
-              transition: "color 0.2s",
-            }}
-            onMouseEnter={e => (e.target as HTMLElement).style.color = C.text}
-            onMouseLeave={e => (e.target as HTMLElement).style.color = C.muted}
-          >
-            {item}
-          </a>
-        ))}
-      </div>
-
-      {/* Desktop CTA */}
-      <div className="nav-cta" style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-        <a href="/login" style={{
-          color: C.muted, fontSize: "14px", fontWeight: 500,
-          textDecoration: "none", padding: "8px 16px",
-          transition: "color 0.2s",
-        }}
-          onMouseEnter={e => (e.target as HTMLElement).style.color = C.text}
-          onMouseLeave={e => (e.target as HTMLElement).style.color = C.muted}
-        >
-          Sign in
-        </a>
-        <a href="/signup" className="magnetic-btn" style={{
-          background: `linear-gradient(135deg, ${C.accent}, ${C.accentB})`,
-          color: "white", fontSize: "14px", fontWeight: 600,
-          textDecoration: "none", padding: "9px 22px", borderRadius: "10px",
-          boxShadow: `0 0 24px rgba(123,92,255,0.35)`,
-          letterSpacing: "0.02em",
-        }}>
-          Start free →
-        </a>
-      </div>
-
-      {/* Mobile Menu Toggle */}
-      <button
-        className="mobile-menu-btn"
-        onClick={() => setMenuOpen(!menuOpen)}
-        style={{
-          display: "none",
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          padding: "8px",
-        }}
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={C.text} strokeWidth="2">
-          {menuOpen ? (
-            <path d="M6 6l12 12M6 18L18 6" />
-          ) : (
-            <path d="M3 12h18M3 6h18M3 18h18" />
-          )}
-        </svg>
-      </button>
-
-      {/* Mobile Menu Dropdown */}
-      {menuOpen && (
-        <div className="mobile-menu" style={{
-          position: "absolute",
-          top: "72px",
-          left: "0",
-          right: "0",
-          background: "rgba(4,4,10,0.98)",
-          backdropFilter: "blur(24px)",
-          borderBottom: `1px solid ${C.border}`,
-          padding: "20px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "16px",
-        }}>
-          {["Features", "Pricing", "Use Cases", "FAQ"].map((item) => (
-            <a
-              key={item}
-              href={`#${item.toLowerCase().replace(" ", "-")}`}
-              onClick={() => setMenuOpen(false)}
-              style={{
-                color: C.muted, fontSize: "16px", fontWeight: 500,
-                textDecoration: "none",
-              }}
-            >
-              {item}
-            </a>
-          ))}
-          <hr style={{ border: "none", borderTop: `1px solid ${C.border}` }} />
-          <a href="/login" style={{ color: C.muted, fontSize: "16px", textDecoration: "none" }}>
-            Sign in
-          </a>
-          <a href="/signup" style={{
-            background: `linear-gradient(135deg, ${C.accent}, ${C.accentB})`,
-            color: "white", fontSize: "14px", fontWeight: 600,
-            textDecoration: "none", padding: "12px 22px", borderRadius: "10px",
-            textAlign: "center",
-          }}>
-            Start free →
-          </a>
-        </div>
-      )}
-
-      <style>{`
-        @media (max-width: 768px) {
-          .nav-links, .nav-cta { display: none !important; }
-          .mobile-menu-btn { display: block !important; }
-        }
-      `}</style>
-    </nav>
-  );
-}
-
-/* ─── useInView ─────────────────────────────────────────────── */
-function useInView(threshold = 0.15) {
-  const ref = useRef(null);
-  const [inView, setInView] = useState(false);
-  useEffect(() => {
-    if (!ref.current) return;
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setInView(true); }, { threshold });
-    obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, [threshold]);
-  return [ref, inView];
-}
-
-/* ─── Animated Counter ──────────────────────────────────────── */
-function Counter({ target, suffix = "", prefix = "" }: { target: string; suffix?: string; prefix?: string }) {
-  const [count, setCount] = useState(0);
-  const [ref, inView] = useInView(0.3);
-  useEffect(() => {
-    if (!inView) return;
-    const num = parseFloat(target.replace(/[^0-9.]/g, ""));
-    const duration = 1800;
-    const steps = 60;
-    const inc = num / steps;
-    let cur = 0;
-    const timer = setInterval(() => {
-      cur = Math.min(cur + inc, num);
-      setCount(Math.floor(cur));
-      if (cur >= num) clearInterval(timer);
-    }, duration / steps);
-    return () => clearInterval(timer);
-  }, [inView, target]);
-
-  const display = target.includes("M") ? `${count}M` :
-                  target.includes("K") ? `${count}K` :
-                  target.includes("%") ? `${count}%` : `${count}`;
-
-  return (
-    <span ref={ref as any} style={{
-      fontFamily: "Syne, sans-serif", fontWeight: 800,
-      fontSize: "clamp(2rem, 5vw, 3.5rem)",
-      background: `linear-gradient(135deg, ${C.accent}, ${C.accentC})`,
-      WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-      display: "block",
-      animation: inView ? "count-up 0.6s cubic-bezier(.22,1,.36,1) both" : "none",
-    }}>
-      {prefix}{display}{suffix}
-    </span>
-  );
-}
-
-/* ─── Section wrapper with scroll reveal ────────────────────── */
-function Reveal({ children, delay = 0, style = {} }: { children: React.ReactNode; delay?: number; style?: React.CSSProperties }) {
-  const [ref, inView] = useInView();
-  return (
-    <div
-      ref={ref as any}
-      style={{
-        opacity: inView ? 1 : 0,
-        transform: inView ? "translateY(0)" : "translateY(40px)",
-        transition: `opacity 0.7s cubic-bezier(.22,1,.36,1) ${delay}ms, transform 0.7s cubic-bezier(.22,1,.36,1) ${delay}ms`,
-        ...style,
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
-/* ─── Pill badge ─────────────────────────────────────────────── */
-function Pill({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{
-      display: "inline-flex", alignItems: "center", gap: "8px",
-      padding: "6px 16px", borderRadius: "100px",
-      border: `1px solid rgba(123,92,255,0.3)`,
-      background: "rgba(123,92,255,0.08)",
-      fontSize: "13px", color: C.accent, fontWeight: 500,
-      letterSpacing: "0.05em", marginBottom: "28px",
-      backdropFilter: "blur(12px)",
-    }}>
-      <span style={{
-        width: 6, height: 6, borderRadius: "50%",
-        background: C.accent, boxShadow: `0 0 8px ${C.accent}`,
-        animation: "pulse-ring 2s ease-out infinite",
-        display: "inline-block",
-      }} />
-      {children}
-    </div>
-  );
-}
-
-/* ─── Feature card ──────────────────────────────────────────── */
-function FeatureCard({ icon, title, desc, color, delay }: { icon: React.ReactNode; title: string; desc: string; color: string; delay: number }) {
-  return (
-    <Reveal delay={delay}>
-      <div className="card-hover" style={{
-        padding: "32px", borderRadius: "20px",
-        border: `1px solid ${C.border}`,
-        background: `linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)`,
-        backdropFilter: "blur(12px)",
-        height: "100%",
-        position: "relative", overflow: "hidden",
-      }}>
-        {/* Top accent line */}
-        <div style={{
-          position: "absolute", top: 0, left: "20%", right: "20%", height: "1px",
-          background: `linear-gradient(90deg, transparent, ${color}, transparent)`,
-        }} />
-
-        {/* Icon */}
-        <div style={{
-          width: 52, height: 52, borderRadius: "14px",
-          background: `linear-gradient(135deg, ${color}22, ${color}11)`,
-          border: `1px solid ${color}33`,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          marginBottom: "20px",
-          fontSize: "22px",
-        }}>
-          {icon}
-        </div>
-
-        <h3 style={{
-          fontFamily: "Syne, sans-serif", fontWeight: 700,
-          fontSize: "17px", marginBottom: "10px", color: C.text,
-        }}>
-          {title}
-        </h3>
-        <p style={{ fontSize: "14px", lineHeight: "1.7", color: C.muted }}>
-          {desc}
-        </p>
-      </div>
-    </Reveal>
-  );
-}
-
-/* ─── Pricing card ──────────────────────────────────────────── */
-function PricingCard({ plan, highlighted, delay }: { plan: any; highlighted: boolean; delay: number }) {
-  return (
-    <Reveal delay={delay}>
-      <div className="card-hover" style={{
-        padding: "36px 32px",
-        borderRadius: "24px",
-        border: highlighted ? `1px solid rgba(123,92,255,0.5)` : `1px solid ${C.border}`,
-        background: highlighted
-          ? `linear-gradient(145deg, rgba(123,92,255,0.15), rgba(255,92,168,0.08), rgba(92,240,255,0.05))`
-          : `linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))`,
-        backdropFilter: "blur(20px)",
-        position: "relative", overflow: "hidden",
-        boxShadow: highlighted ? `0 0 60px rgba(123,92,255,0.15), inset 0 1px 0 rgba(255,255,255,0.08)` : "none",
-        transform: highlighted ? "scale(1.03)" : "scale(1)",
-        height: "100%", display: "flex", flexDirection: "column",
-      }}>
-        {highlighted && (
-          <>
-            <div style={{
-              position: "absolute", top: 0, left: 0, right: 0, height: "2px",
-              background: `linear-gradient(90deg, ${C.accent}, ${C.accentB}, ${C.accentC})`,
-            }} />
-            <div style={{
-              position: "absolute", top: "16px", right: "16px",
-              padding: "4px 12px", borderRadius: "100px",
-              background: `linear-gradient(135deg, ${C.accent}, ${C.accentB})`,
-              fontSize: "11px", fontWeight: 700, color: "white",
-              letterSpacing: "0.08em",
-            }}>
-              MOST POPULAR
-            </div>
-          </>
-        )}
-
-        <div style={{ marginBottom: "8px" }}>
-          <span style={{
-            fontFamily: "Syne, sans-serif", fontWeight: 800,
-            fontSize: "22px", color: C.text,
-          }}>{plan.name}</span>
-        </div>
-        <p style={{ fontSize: "13px", color: C.muted, marginBottom: "28px" }}>
-          {plan.description}
-        </p>
-
-        <div style={{ marginBottom: "28px" }}>
-          <span style={{
-            fontFamily: "Syne, sans-serif", fontWeight: 800,
-            fontSize: "52px", color: C.text, lineHeight: 1,
-          }}>${plan.price}</span>
-          {plan.price > 0 && (
-            <span style={{ fontSize: "14px", color: C.muted, marginLeft: "8px" }}>/mo</span>
-          )}
-        </div>
-
-        <ul style={{ listStyle: "none", marginBottom: "32px", flex: 1, display: "flex", flexDirection: "column", gap: "13px" }}>
-          {plan.features.map((f: string) => (
-            <li key={f} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px", color: C.muted }}>
-              <span style={{
-                width: 18, height: 18, borderRadius: "50%",
-                background: highlighted ? `linear-gradient(135deg, ${C.accent}, ${C.accentB})` : "rgba(123,92,255,0.2)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                flexShrink: 0,
-              }}>
-                <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
-                  <path d="M1 3.5L3.5 6L8 1" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
-              </span>
-              {f}
-            </li>
-          ))}
-        </ul>
-
-        <a href={plan.href} className="magnetic-btn" style={{
-          display: "block", textAlign: "center",
-          padding: "14px 28px", borderRadius: "12px",
-          background: highlighted
-            ? `linear-gradient(135deg, ${C.accent}, ${C.accentB})`
-            : `rgba(255,255,255,0.06)`,
-          border: highlighted ? "none" : `1px solid ${C.border}`,
-          color: "white", fontSize: "15px", fontWeight: 600,
-          textDecoration: "none",
-          boxShadow: highlighted ? `0 0 30px rgba(123,92,255,0.4)` : "none",
-          letterSpacing: "0.02em",
-          transition: "all 0.2s ease",
-        }}>
-          {plan.cta}
-        </a>
-      </div>
-    </Reveal>
-  );
-}
-
-/* ─── Marquee logos ─────────────────────────────────────────── */
-function LogoMarquee() {
-  const logos = ["Google Gemini", "ElevenLabs", "HeyGen", "D-ID", "Synthesia", "Mux", "Pexels", "Paddle"];
-  const doubled = [...logos, ...logos];
-  return (
-    <div style={{
-      overflow: "hidden", padding: "24px 0",
-      borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`,
-      background: "rgba(255,255,255,0.015)",
-      position: "relative",
-    }}>
-      <div style={{ display: "flex", animation: "marquee 20s linear infinite", width: "max-content" }}>
-        {doubled.map((name, i) => (
-          <div key={i} style={{
-            display: "flex", alignItems: "center", gap: "10px",
-            padding: "0 36px",
-            whiteSpace: "nowrap",
-          }}>
-            <div style={{
-              width: 8, height: 8, borderRadius: "50%",
-              background: `linear-gradient(135deg, ${C.accent}, ${C.accentB})`,
-              flexShrink: 0,
-            }} />
-            <span style={{
-              fontFamily: "Syne, sans-serif", fontWeight: 600,
-              fontSize: "14px", color: C.muted, letterSpacing: "0.04em",
-            }}>
-              {name}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ─── Testimonial card ───────────────────────────────────────── */
-function TestimonialCard({ name, role, text, initials, delay }: { name: string; role: string; text: string; initials: string; delay: number }) {
-  return (
-    <Reveal delay={delay}>
-      <div className="card-hover" style={{
-        padding: "28px",
-        borderRadius: "20px",
-        border: `1px solid ${C.border}`,
-        background: "linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))",
-        backdropFilter: "blur(12px)",
-        height: "100%",
-      }}>
-        {/* Stars */}
-        <div style={{ display: "flex", gap: "4px", marginBottom: "16px" }}>
-          {[1,2,3,4,5].map(i => (
-            <span key={i} style={{ fontSize: "13px", color: "#fbbf24" }}>★</span>
-          ))}
-        </div>
-
-        <p style={{
-          fontSize: "14px", lineHeight: "1.75", color: C.muted,
-          fontStyle: "italic", marginBottom: "20px",
-        }}>
-          "{text}"
-        </p>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{
-            width: 40, height: 40, borderRadius: "50%",
-            background: `linear-gradient(135deg, ${C.accent}, ${C.accentB})`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: "13px", fontWeight: 700, color: "white",
-            flexShrink: 0,
-          }}>
-            {initials}
-          </div>
-          <div>
-            <div style={{ fontWeight: 600, fontSize: "14px", color: C.text }}>{name}</div>
-            <div style={{ fontSize: "12px", color: C.muted }}>{role}</div>
-          </div>
-        </div>
-      </div>
-    </Reveal>
-  );
-}
-
-/* ─── FAQ ────────────────────────────────────────────────────── */
-function FAQItem({ q, a, delay }: { q: string; a: string; delay: number }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <Reveal delay={delay}>
-      <div
-        onClick={() => setOpen(!open)}
-        style={{
-          padding: "22px 28px",
-          borderRadius: "16px",
-          border: `1px solid ${open ? "rgba(123,92,255,0.3)" : C.border}`,
-          background: open ? "rgba(123,92,255,0.05)" : "rgba(255,255,255,0.02)",
-          cursor: "pointer",
-          transition: "all 0.3s ease",
-          backdropFilter: "blur(12px)",
-        }}
-      >
-        <div style={{
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-          gap: "16px",
-        }}>
-          <span style={{
-            fontFamily: "Syne, sans-serif", fontWeight: 600,
-            fontSize: "15px", color: C.text,
-          }}>{q}</span>
-          <span style={{
-            width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
-            background: open ? `linear-gradient(135deg, ${C.accent}, ${C.accentB})` : "rgba(255,255,255,0.06)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: "16px", color: "white", fontWeight: 300,
-            transition: "all 0.3s ease",
-            transform: open ? "rotate(45deg)" : "rotate(0deg)",
-          }}>+</span>
-        </div>
-        {open && (
-          <p style={{
-            marginTop: "14px", fontSize: "14px", lineHeight: "1.7",
-            color: C.muted,
-            animation: "fade-up 0.3s ease both",
-          }}>{a}</p>
-        )}
-      </div>
-    </Reveal>
-  );
-}
-
-/* ─── Data ───────────────────────────────────────────────────── */
-const FEATURES = [
-  { icon: "✦", color: C.accent,  title: "AI Script Generation",   desc: "Powered by Google Gemini Flash. Generate engaging, platform-optimised scripts from any topic in seconds — with tone, length, and style customisation." },
-  { icon: "◈", color: C.accentB, title: "AI Voice Cloning",        desc: "ElevenLabs voice technology. Clone your voice or choose from 500+ natural-sounding voices in 90+ languages for any audience." },
-  { icon: "◉", color: C.accentC, title: "Photorealistic Avatars",  desc: "HeyGen, D-ID & Synthesia. Create photorealistic AI avatars that speak with facial expressions, gestures, and lip sync." },
-  { icon: "◆", color: "#f59e0b", title: "One-Click Publishing",    desc: "Auto-publish to YouTube, TikTok, and Instagram with scheduling, built-in SEO metadata, and platform-specific formatting." },
-  { icon: "◇", color: "#22d3ee", title: "Real-Time Analytics",     desc: "Deep cross-platform analytics. Track views, retention, engagement, and CTR from every publishing channel in one unified dashboard." },
-  { icon: "◎", color: "#a78bfa", title: "Template Marketplace",    desc: "Buy and sell video templates. Create once, monetise infinitely. Earn passive income from your best-performing video formats." },
-];
-
-const STATS = [
-  { number: "50K",   suffix: "+", label: "Videos Created",    prefix: "" },
-  { number: "500",   suffix: "M+", label: "Total Views",       prefix: "" },
-  { number: "95",    suffix: "%", label: "Satisfaction Rate",  prefix: "" },
-  { number: "24",    suffix: "/7", label: "Support",           prefix: "" },
-];
-
-const PLANS = [
+const featureList = [
   {
-    name: "Free", price: 0, description: "Perfect for trying out the platform",
-    features: ["1 video/month", "720p quality", "Watermark", "Basic voices", "Community access"],
-    cta: "Get started free", href: "/signup",
+    title: 'AI script & storyboard',
+    description:
+      'Generate polished, brand-safe scripts and storyboards with one click, then deploy them to video instantly.',
+    icon: Sparkles,
+    accent: 'from-primary to-sky-400',
   },
   {
-    name: "Pro", price: 29, description: "Most popular for content creators",
-    features: ["30 videos/month", "1080p quality", "No watermark", "Voice cloning", "All avatars", "Priority support", "Scheduling", "API access"],
-    cta: "Start Pro", href: "/signup?plan=pro",
+    title: 'Studio-quality voices',
+    description:
+      'Choose from 500+ premium voices, clone your own voice, and localise videos in 90+ languages.',
+    icon: ShieldCheck,
+    accent: 'from-emerald-500 to-cyan-400',
   },
   {
-    name: "Agency", price: 99, description: "For teams and agencies",
-    features: ["100+ videos/month", "4K quality", "White-label", "Team workspace (5)", "Full API access", "Dedicated support", "Custom branding", "Priority rendering"],
-    cta: "Start Agency", href: "/signup?plan=agency",
+    title: 'Premium visual templates',
+    description:
+      'Access high-converting templates, animated scenes, and adaptive layouts built for modern brands.',
+    icon: Film,
+    accent: 'from-violet-500 to-fuchsia-500',
   },
-];
+  {
+    title: 'Team workflow & approval',
+    description:
+      'Collaborate across teams with shared projects, comments, review flows, and usage controls.',
+    icon: Users,
+    accent: 'from-amber-500 to-orange-400',
+  },
+]
 
-const TESTIMONIALS = [
-  { name: "Sarah M.", role: "YouTube Creator", initials: "SM", text: "I went from 0 to 100k subscribers in 6 months. The quality is unbelievable — my audience can't tell it's AI-generated." },
-  { name: "James D.", role: "Marketing Agency Owner", initials: "JD", text: "We use it for all our clients' video ads. The ROI has been incredible and clients love the turnaround time. Total game changer." },
-  { name: "Emma L.", role: "E-Commerce Brand", initials: "EL", text: "Product demo videos that used to take weeks now take hours. Our conversion rate increased by 35% in the first month." },
-];
+const stats = [
+  { value: '50K+', label: 'Videos Created' },
+  { value: '500M+', label: 'Views Delivered' },
+  { value: '95%', label: 'Customer Satisfaction' },
+  { value: '24/7', label: 'Global Support' },
+]
 
-const FAQS = [
-  { q: "How long does it take to generate a video?", a: "Most videos are generated within 5–15 minutes depending on length and complexity. You'll receive a notification the moment it's ready." },
-  { q: "Can I use these videos commercially?", a: "Yes! All videos generated with paid plans are yours to use commercially. Free plan videos include a watermark. You retain full rights." },
-  { q: "What video quality can I get?", a: "Free: 720p | Pro: 1080p | Agency: 4K. All videos include auto-captions and are optimised per platform." },
-  { q: "Do you offer API access?", a: "Yes, Pro and Agency plans include full API access. Programmatically generate videos and integrate Voxara into your own applications." },
-  { q: "What if I run out of credits?", a: "Purchase additional credits anytime. Auto-top-up is available on Pro and Agency plans so you never run dry mid-project." },
-];
+const plans = [
+  {
+    name: 'Free',
+    price: '0',
+    description:
+      'Try Voxara with essential video credits and watermark-free starter exports.',
+    features: [
+      '1 video / month',
+      '720p HD',
+      'Starter voice library',
+      'Community support',
+    ],
+    button: 'Get started',
+    href: '/signup',
+    featured: false,
+  },
+  {
+    name: 'Pro',
+    price: '29',
+    description:
+      'For creators and small teams who need more output, premium voices, and advanced publishing.',
+    features: [
+      '30 videos / month',
+      '1080p',
+      'Voice cloning',
+      'API access',
+      'Priority render',
+    ],
+    button: 'Start Pro',
+    href: '/signup?plan=pro',
+    featured: true,
+  },
+  {
+    name: 'Agency',
+    price: '99',
+    description:
+      'Enterprise-ready video production for agencies, brands, and growth teams.',
+    features: [
+      '100+ videos / month',
+      '4K export',
+      'White-label',
+      'Team seats',
+      'Dedicated support',
+    ],
+    button: 'Start Agency',
+    href: '/signup?plan=agency',
+    featured: false,
+  },
+]
 
-/* ─── MAIN APP ───────────────────────────────────────────────── */
+const faqs = [
+  {
+    question: 'How fast can I publish a video?',
+    answer:
+      'Most projects are ready in under 15 minutes with automated voice, captions, and stock footage assembled for your selected format.',
+  },
+  {
+    question: 'Can I use generated videos commercially?',
+    answer:
+      'Yes — paid plans include commercial usage rights. Free plan videos include a small watermark for evaluation purposes.',
+  },
+  {
+    question: 'Do you offer API integration?',
+    answer:
+      'Pro and Agency include API access for production workflows, custom automation, and branded publishing pipelines.',
+  },
+  {
+    question: 'What support is included?',
+    answer:
+      'Pro gets priority support, and Agency gets a dedicated success contact plus onboarding resources.',
+  },
+]
+
+const testimonials = [
+  {
+    quote:
+      'Voxara gave our team a reliable video engine for demand-gen campaigns. We now publish twice as many ads with higher engagement and zero production bottlenecks.',
+    name: 'Maya R.',
+    role: 'CMO, Growth House',
+  },
+  {
+    quote:
+      'The quality and speed is outstanding. Every campaign feels polished, and the platform keeps our creative process lean and scalable.',
+    name: 'Jared K.',
+    role: 'Founder, ScaleStudio',
+  },
+  {
+    quote:
+      'From briefing to launch in minutes — Voxara removes the friction we used to have with freelance production, without sacrificing brand quality.',
+    name: 'Priya S.',
+    role: 'Head of Creative, BrightTech',
+  },
+]
+
 export default function LandingPage() {
-  const [scrolled, setScrolled] = useState(false);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    const onMouse = (e: MouseEvent) => setMousePos({ x: e.clientX, y: e.clientY });
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("mousemove", onMouse, { passive: true });
-    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("mousemove", onMouse); };
-  }, []);
+  const [menuOpen, setMenuOpen] = useState(false)
 
   return (
-    <>
-      <style>{CSS}</style>
-      <div className="noise-overlay" style={{ position: "relative", minHeight: "100vh" }}>
-
-        <MeshBg />
-        <Particles />
-
-        <Nav scrolled={scrolled} />
-
-        {/* Cursor spotlight */}
-        <div style={{
-          position: "fixed",
-          left: mousePos.x - 200, top: mousePos.y - 200,
-          width: 400, height: 400, borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(123,92,255,0.06) 0%, transparent 70%)",
-          pointerEvents: "none", zIndex: 2,
-          transition: "left 0.1s linear, top 0.1s linear",
-        }} />
-
-        {/* ── HERO ─────────────────────────────────────────────── */}
-        <section style={{
-          position: "relative", zIndex: 10,
-          padding: "120px max(16px, 5vw) 80px",
-          maxWidth: "1200px", margin: "0 auto",
-          textAlign: "center",
-        }}>
-          <div className="animate-fade-up" style={{ animationDelay: "0ms" }}>
-            <Pill>Powered by Gemini · ElevenLabs · HeyGen · D-ID</Pill>
-          </div>
-
-          <h1 className="animate-fade-up" style={{
-            animationDelay: "80ms",
-            fontFamily: "Syne, sans-serif", fontWeight: 800,
-            fontSize: "clamp(3rem, 8vw, 7rem)",
-            lineHeight: 1.04, letterSpacing: "-0.03em",
-            marginBottom: "28px",
-          }}>
-            <span className="shimmer-text">Create Viral</span>
-            <br />
-            <span style={{ color: C.text }}>AI Videos in</span>
-            <br />
-            <span style={{
-              background: `linear-gradient(135deg, ${C.accentB}, ${C.accent})`,
-              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-            }}>Minutes.</span>
-          </h1>
-
-          <p className="animate-fade-up" style={{
-            animationDelay: "160ms",
-            fontSize: "clamp(1rem, 2.5vw, 1.25rem)",
-            lineHeight: 1.7, color: C.muted,
-            maxWidth: "620px", margin: "0 auto 48px",
-          }}>
-            Turn any topic into a polished, professional video with AI voiceover,
-            avatars, and stock footage. No camera. No editing. No limits.
-          </p>
-
-          <div className="animate-fade-up" style={{
-            animationDelay: "240ms",
-            display: "flex", flexWrap: "wrap",
-            justifyContent: "center", gap: "14px",
-            marginBottom: "64px",
-          }}>
-            {/* Primary CTA */}
-            <a href="/signup" className="magnetic-btn" style={{
-              display: "inline-flex", alignItems: "center", gap: "10px",
-              padding: "16px 36px", borderRadius: "14px",
-              background: `linear-gradient(135deg, ${C.accent}, ${C.accentB})`,
-              color: "white", fontSize: "16px", fontWeight: 700,
-              textDecoration: "none", letterSpacing: "0.02em",
-              boxShadow: `0 0 40px rgba(123,92,255,0.45), 0 0 80px rgba(123,92,255,0.15)`,
-              position: "relative", overflow: "hidden",
-            }}>
-              <span style={{
-                position: "absolute", inset: 0,
-                background: "linear-gradient(135deg, rgba(255,255,255,0.15), transparent)",
-              }} />
-              Start Creating Free
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M5 12h14M12 5l7 7-7 7"/>
-              </svg>
-            </a>
-
-            {/* Secondary CTA */}
-            <a href="#features" className="magnetic-btn" style={{
-              display: "inline-flex", alignItems: "center", gap: "10px",
-              padding: "16px 32px", borderRadius: "14px",
-              background: "rgba(255,255,255,0.05)",
-              border: `1px solid ${C.border}`,
-              backdropFilter: "blur(12px)",
-              color: C.text, fontSize: "16px", fontWeight: 600,
-              textDecoration: "none", letterSpacing: "0.02em",
-            }}>
-              <div style={{
-                width: 28, height: 28, borderRadius: "50%",
-                background: "rgba(255,255,255,0.1)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <svg width="10" height="12" viewBox="0 0 10 12" fill="white">
-                  <path d="M0 0L10 6L0 12Z"/>
-                </svg>
-              </div>
-              See How It Works
-            </a>
-          </div>
-
-          {/* Trust signals */}
-          <div className="animate-fade-up" style={{
-            animationDelay: "320ms",
-            display: "flex", flexWrap: "wrap",
-            justifyContent: "center", gap: "28px", marginBottom: "80px",
-          }}>
-            {[
-              { icon: "🔒", text: "No credit card required" },
-              { icon: "🎬", text: "1 free video per month" },
-              { icon: "⚡", text: "Generate in 5 minutes" },
-            ].map(({ icon, text }) => (
-              <div key={text} style={{
-                display: "flex", alignItems: "center", gap: "8px",
-                fontSize: "13px", color: C.muted,
-              }}>
-                <span>{icon}</span> {text}
-              </div>
-            ))}
-          </div>
-
-          {/* Hero preview window */}
-          <div className="animate-scale-in" style={{
-            animationDelay: "400ms",
-            maxWidth: "960px", margin: "0 auto",
-            borderRadius: "24px",
-            border: `1px solid ${C.border}`,
-            background: "linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01))",
-            backdropFilter: "blur(20px)",
-            padding: "4px",
-            boxShadow: `0 40px 120px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.08)`,
-          }}>
-            {/* Window chrome */}
-            <div style={{
-              padding: "14px 20px",
-              borderBottom: `1px solid ${C.border}`,
-              display: "flex", alignItems: "center", gap: "8px",
-            }}>
-              {["#ff5f57", "#febc2e", "#28c840"].map(c => (
-                <div key={c} style={{ width: 12, height: 12, borderRadius: "50%", background: c }} />
-              ))}
-              <div style={{
-                flex: 1, margin: "0 16px",
-                height: "26px", borderRadius: "6px",
-                background: "rgba(255,255,255,0.04)",
-                display: "flex", alignItems: "center", paddingLeft: "12px",
-              }}>
-                <span style={{ fontSize: "11px", color: C.muted }}>app.voxara.app/studio</span>
-              </div>
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-50 border-b border-border/70 bg-background/95 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-md shadow-primary/20">
+              <Sparkles className="h-5 w-5" />
             </div>
+            <div>
+              <p className="text-lg font-semibold tracking-tight">voxara</p>
+              <p className="text-xs text-muted-foreground">AI video studio</p>
+            </div>
+          </Link>
 
-            {/* Video area */}
-            <div style={{
-              aspectRatio: "16/9",
-              background: "linear-gradient(135deg, #06061a, #0d0818, #04040c)",
-              borderRadius: "0 0 20px 20px",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              position: "relative", overflow: "hidden",
-            }}>
-              {/* Grid pattern in video */}
-              <div style={{
-                position: "absolute", inset: 0,
-                backgroundImage: `linear-gradient(rgba(123,92,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(123,92,255,0.04) 1px, transparent 1px)`,
-                backgroundSize: "40px 40px",
-              }} />
-
-              {/* Waveform visualization */}
-              <div style={{
-                position: "absolute", bottom: "30%", left: "10%", right: "10%",
-                display: "flex", alignItems: "center", gap: "3px", height: "60px",
-              }}>
-                {Array.from({ length: 60 }, (_, i) => {
-                  const heights = [20, 35, 48, 55, 60, 58, 52, 44, 36, 25, 28, 40, 52, 58, 60, 56, 48, 38, 30, 22];
-                  return (
-                  <div key={i} style={{
-                    flex: 1,
-                    height: `${heights[i % heights.length]}%`,
-                    background: `linear-gradient(180deg, ${C.accent}88, ${C.accentB}44)`,
-                    borderRadius: "2px",
-                    animation: `drift ${0.8 + (i % 5) * 0.2}s ease-in-out infinite`,
-                    animationDelay: `${i * 0.05}s`,
-                  }} />
-                );})}
-              </div>
-
-              {/* Play button */}
-              <div style={{
-                width: 72, height: 72, borderRadius: "50%",
-                background: "rgba(255,255,255,0.1)",
-                backdropFilter: "blur(20px)",
-                border: "2px solid rgba(255,255,255,0.2)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", zIndex: 2,
-                boxShadow: `0 0 40px rgba(123,92,255,0.3)`,
-                transition: "all 0.3s ease",
-              }}
-                onMouseEnter={e => { e.currentTarget.style.background = "rgba(123,92,255,0.3)"; e.currentTarget.style.transform = "scale(1.1)"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.transform = "scale(1)"; }}
+          <nav className="hidden items-center gap-8 text-sm font-medium text-muted-foreground md:flex">
+            {navLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="transition-colors hover:text-foreground"
               >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                  <path d="M5 3l14 9-14 9V3z"/>
-                </svg>
-              </div>
-
-              {/* Status pill */}
-              <div style={{
-                position: "absolute", bottom: 20, right: 20,
-                padding: "6px 14px", borderRadius: "100px",
-                background: "rgba(0,0,0,0.6)", backdropFilter: "blur(12px)",
-                border: `1px solid ${C.border}`,
-                display: "flex", alignItems: "center", gap: "8px",
-                fontSize: "12px", color: C.muted,
-              }}>
-                <span style={{
-                  width: 7, height: 7, borderRadius: "50%",
-                  background: "#4ade80",
-                  boxShadow: "0 0 8px #4ade80",
-                  animation: "pulse-ring 2s ease-out infinite",
-                }} />
-                Sample video · Generated with Voxara
-              </div>
-
-              {/* Corner gradient */}
-              <div style={{
-                position: "absolute", inset: 0,
-                background: "radial-gradient(ellipse at 20% 80%, rgba(123,92,255,0.08), transparent 50%)",
-              }} />
-            </div>
-          </div>
-        </section>
-
-        {/* ── LOGO MARQUEE ───────────────────────────────────── */}
-        <LogoMarquee />
-
-        {/* ── STATS ─────────────────────────────────────────── */}
-        <section style={{
-          position: "relative", zIndex: 10,
-          padding: "100px 32px",
-          maxWidth: "1200px", margin: "0 auto",
-        }}>
-          <div style={{
-            display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
-            gap: "2px",
-            borderRadius: "24px", overflow: "hidden",
-            border: `1px solid ${C.border}`,
-          }}>
-            {STATS.map(({ number, suffix, label, prefix }, i) => (
-              <div key={label} style={{
-                padding: "48px 32px",
-                background: i % 2 === 0 ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.015)",
-                borderRight: i < 3 ? `1px solid ${C.border}` : "none",
-                textAlign: "center",
-                backdropFilter: "blur(12px)",
-              }}>
-                <Counter target={`${number}${suffix}`} prefix={prefix} />
-                <p style={{ fontSize: "13px", color: C.muted, marginTop: "8px", letterSpacing: "0.05em" }}>
-                  {label}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── FEATURES ──────────────────────────────────────── */}
-        <section id="features" style={{
-          position: "relative", zIndex: 10,
-          padding: "80px 32px 120px",
-          maxWidth: "1200px", margin: "0 auto",
-        }}>
-          <Reveal>
-            <div style={{ textAlign: "center", marginBottom: "72px" }}>
-              <Pill>Platform Capabilities</Pill>
-              <h2 style={{
-                fontFamily: "Syne, sans-serif", fontWeight: 800,
-                fontSize: "clamp(2rem, 5vw, 3.5rem)",
-                letterSpacing: "-0.03em", lineHeight: 1.1,
-                marginBottom: "20px",
-              }}>
-                Everything you need to{" "}
-                <span style={{
-                  background: `linear-gradient(135deg, ${C.accent}, ${C.accentC})`,
-                  WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-                }}>go viral</span>
-              </h2>
-              <p style={{ fontSize: "16px", color: C.muted, maxWidth: "560px", margin: "0 auto", lineHeight: 1.7 }}>
-                Powered by the latest AI and enterprise infrastructure. Used by 50K+ creators worldwide.
-              </p>
-            </div>
-          </Reveal>
-
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: "20px",
-          }}>
-            {FEATURES.map((f, i) => (
-              <FeatureCard key={f.title} {...f} delay={i * 80} />
-            ))}
-          </div>
-        </section>
-
-        {/* ── HOW IT WORKS ──────────────────────────────────── */}
-        <section style={{
-          position: "relative", zIndex: 10,
-          padding: "80px 32px 120px",
-          background: "rgba(255,255,255,0.01)",
-          borderTop: `1px solid ${C.border}`,
-          borderBottom: `1px solid ${C.border}`,
-        }}>
-          <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-            <Reveal>
-              <div style={{ textAlign: "center", marginBottom: "72px" }}>
-                <Pill>Simple Process</Pill>
-                <h2 style={{
-                  fontFamily: "Syne, sans-serif", fontWeight: 800,
-                  fontSize: "clamp(2rem, 5vw, 3.5rem)",
-                  letterSpacing: "-0.03em", lineHeight: 1.1,
-                }}>
-                  From idea to video{" "}
-                  <span style={{
-                    background: `linear-gradient(135deg, ${C.accentB}, ${C.accent})`,
-                    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-                  }}>in 3 steps</span>
-                </h2>
-              </div>
-            </Reveal>
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "2px", position: "relative" }}>
-              {[
-                { num: "01", title: "Describe your video", desc: "Enter a topic, paste a URL, or choose a template. Our AI understands context, audience, and intent.", color: C.accent },
-                { num: "02", title: "Customise & generate", desc: "Pick your voice, avatar, language, and style. Hit generate — our pipeline handles everything else.", color: C.accentB },
-                { num: "03", title: "Publish everywhere", desc: "One-click publishing to YouTube, TikTok, and Instagram with auto-optimised metadata and scheduling.", color: C.accentC },
-              ].map((step, i) => (
-                <Reveal key={step.num} delay={i * 120}>
-                  <div style={{
-                    padding: "48px 36px",
-                    background: "rgba(255,255,255,0.02)",
-                    borderRight: i < 2 ? `1px solid ${C.border}` : "none",
-                    position: "relative",
-                  }}>
-                    <div style={{
-                      fontFamily: "Syne, sans-serif", fontWeight: 800,
-                      fontSize: "80px", lineHeight: 1,
-                      color: "rgba(255,255,255,0.04)",
-                      marginBottom: "-16px",
-                      userSelect: "none",
-                    }}>
-                      {step.num}
-                    </div>
-                    <h3 style={{
-                      fontFamily: "Syne, sans-serif", fontWeight: 700,
-                      fontSize: "20px", color: C.text,
-                      marginBottom: "14px",
-                      position: "relative",
-                    }}>
-                      <span style={{
-                        display: "inline-block", width: 8, height: 8, borderRadius: "50%",
-                        background: step.color, marginRight: "10px",
-                        boxShadow: `0 0 10px ${step.color}`,
-                        verticalAlign: "middle",
-                      }} />
-                      {step.title}
-                    </h3>
-                    <p style={{ fontSize: "14px", color: C.muted, lineHeight: "1.7" }}>{step.desc}</p>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── TESTIMONIALS ──────────────────────────────────── */}
-        <section style={{
-          position: "relative", zIndex: 10,
-          padding: "100px 32px",
-          maxWidth: "1200px", margin: "0 auto",
-        }}>
-          <Reveal>
-            <div style={{ textAlign: "center", marginBottom: "72px" }}>
-              <Pill>Social Proof</Pill>
-              <h2 style={{
-                fontFamily: "Syne, sans-serif", fontWeight: 800,
-                fontSize: "clamp(2rem, 5vw, 3.5rem)",
-                letterSpacing: "-0.03em",
-              }}>
-                Trusted by{" "}
-                <span style={{
-                  background: `linear-gradient(135deg, ${C.accent}, ${C.accentB})`,
-                  WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-                }}>50K+ creators</span>
-              </h2>
-            </div>
-          </Reveal>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
-            {TESTIMONIALS.map((t, i) => (
-              <TestimonialCard key={t.name} {...t} delay={i * 100} />
-            ))}
-          </div>
-        </section>
-
-        {/* ── PRICING ───────────────────────────────────────── */}
-        <section id="pricing" style={{
-          position: "relative", zIndex: 10,
-          padding: "80px 32px 120px",
-          borderTop: `1px solid ${C.border}`,
-          background: "rgba(255,255,255,0.01)",
-        }}>
-          <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
-            <Reveal>
-              <div style={{ textAlign: "center", marginBottom: "72px" }}>
-                <Pill>Pricing</Pill>
-                <h2 style={{
-                  fontFamily: "Syne, sans-serif", fontWeight: 800,
-                  fontSize: "clamp(2rem, 5vw, 3.5rem)",
-                  letterSpacing: "-0.03em", lineHeight: 1.1,
-                  marginBottom: "20px",
-                }}>
-                  Simple, transparent{" "}
-                  <span style={{
-                    background: `linear-gradient(135deg, ${C.accentC}, ${C.accent})`,
-                    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-                  }}>pricing</span>
-                </h2>
-                <p style={{ fontSize: "16px", color: C.muted, maxWidth: "480px", margin: "0 auto" }}>
-                  Start free and scale as you grow. No surprises. Cancel anytime.
-                </p>
-              </div>
-            </Reveal>
-
-            <div style={{
-              display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
-              gap: "20px", alignItems: "start",
-            }}>
-              {PLANS.map((plan, i) => (
-                <PricingCard key={plan.name} plan={plan} highlighted={i === 1} delay={i * 100} />
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── FAQ ───────────────────────────────────────────── */}
-        <section id="faq" style={{
-          position: "relative", zIndex: 10,
-          padding: "100px 32px",
-          maxWidth: "800px", margin: "0 auto",
-        }}>
-          <Reveal>
-            <div style={{ textAlign: "center", marginBottom: "60px" }}>
-              <Pill>Got Questions?</Pill>
-              <h2 style={{
-                fontFamily: "Syne, sans-serif", fontWeight: 800,
-                fontSize: "clamp(2rem, 5vw, 3rem)",
-                letterSpacing: "-0.03em",
-              }}>
-                Frequently asked questions
-              </h2>
-            </div>
-          </Reveal>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            {FAQS.map((faq, i) => (
-              <FAQItem key={faq.q} {...faq} delay={i * 60} />
-            ))}
-          </div>
-        </section>
-
-        {/* ── FINAL CTA ─────────────────────────────────────── */}
-        <section style={{
-          position: "relative", zIndex: 10,
-          padding: "120px 32px",
-          overflow: "hidden",
-        }}>
-          {/* Big background glow */}
-          <div style={{
-            position: "absolute", inset: 0,
-            background: `radial-gradient(ellipse 70% 60% at 50% 50%, rgba(123,92,255,0.12), transparent)`,
-          }} />
-          <div style={{
-            position: "absolute", top: 0, left: 0, right: 0, height: "1px",
-            background: `linear-gradient(90deg, transparent, ${C.accent}, ${C.accentB}, ${C.accentC}, transparent)`,
-          }} />
-
-          {/* Spinning ring */}
-          <div style={{
-            position: "absolute", width: "600px", height: "600px",
-            border: "1px solid rgba(123,92,255,0.08)",
-            borderRadius: "50%",
-            top: "50%", left: "50%",
-            transform: "translate(-50%, -50%)",
-            animation: "spin-slow 30s linear infinite",
-          }} />
-          <div style={{
-            position: "absolute", width: "400px", height: "400px",
-            border: "1px solid rgba(255,92,168,0.06)",
-            borderRadius: "50%",
-            top: "50%", left: "50%",
-            transform: "translate(-50%, -50%)",
-            animation: "spin-slow 20s linear infinite reverse",
-          }} />
-
-          <Reveal>
-            <div style={{ textAlign: "center", position: "relative" }}>
-              <h2 style={{
-                fontFamily: "Syne, sans-serif", fontWeight: 800,
-                fontSize: "clamp(2.5rem, 7vw, 5.5rem)",
-                letterSpacing: "-0.04em", lineHeight: 1.05,
-                marginBottom: "24px",
-              }}>
-                <span className="shimmer-text">Ready to go viral?</span>
-              </h2>
-              <p style={{
-                fontSize: "18px", color: C.muted, marginBottom: "52px",
-                maxWidth: "480px", margin: "0 auto 52px", lineHeight: 1.7,
-              }}>
-                Join 50,000+ creators, agencies, and businesses already using Voxara to grow their audience.
-              </p>
-
-              <div style={{ display: "flex", justifyContent: "center", gap: "16px", flexWrap: "wrap" }}>
-                <a href="/signup" className="magnetic-btn" style={{
-                  display: "inline-flex", alignItems: "center", gap: "12px",
-                  padding: "18px 44px", borderRadius: "16px",
-                  background: `linear-gradient(135deg, ${C.accent}, ${C.accentB})`,
-                  color: "white", fontSize: "17px", fontWeight: 700,
-                  textDecoration: "none", letterSpacing: "0.02em",
-                  boxShadow: `0 0 60px rgba(123,92,255,0.5), 0 0 120px rgba(123,92,255,0.2)`,
-                  position: "relative", overflow: "hidden",
-                }}>
-                  <span style={{
-                    position: "absolute", inset: 0,
-                    background: "linear-gradient(135deg, rgba(255,255,255,0.12), transparent)",
-                  }} />
-                  Create your first video — it's free
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M5 12h14M12 5l7 7-7 7"/>
-                  </svg>
-                </a>
-
-                <a href="mailto:sales@voxara.app" className="magnetic-btn" style={{
-                  display: "inline-flex", alignItems: "center", gap: "10px",
-                  padding: "18px 36px", borderRadius: "16px",
-                  background: "rgba(255,255,255,0.04)",
-                  border: `1px solid ${C.border}`,
-                  backdropFilter: "blur(12px)",
-                  color: C.text, fontSize: "17px", fontWeight: 600,
-                  textDecoration: "none",
-                }}>
-                  Talk to sales
-                </a>
-              </div>
-            </div>
-          </Reveal>
-        </section>
-
-        {/* ── FOOTER ────────────────────────────────────────── */}
-        <footer style={{
-          position: "relative", zIndex: 10,
-          padding: "32px max(16px, 5vw)",
-          borderTop: `1px solid ${C.border}`,
-          maxWidth: "1200px", margin: "0 auto",
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-          flexWrap: "wrap", gap: "20px",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-            <div style={{
-              width: 30, height: 30, borderRadius: "8px",
-              background: `linear-gradient(135deg, ${C.accent}, ${C.accentB})`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                <polygon points="5 3 19 12 5 21 5 3"/>
-              </svg>
-            </div>
-            <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: "16px" }}>voxara</span>
-            <span style={{ fontSize: "13px", color: C.muted, marginLeft: "max(0px, 8px)" }}>
-              © 2025 Voxara. All rights reserved.
-            </span>
-          </div>
-
-          <div style={{ display: "flex", gap: "max(16px, 4vw)", flexWrap: "wrap" }}>
-            {["Privacy", "Terms", "Cookies", "Contact"].map(link => (
-              <a key={link} href={`/legal/${link.toLowerCase()}`} style={{
-                fontSize: "13px", color: C.muted, textDecoration: "none",
-                transition: "color 0.2s",
-              }}
-                onMouseEnter={e => (e.target as HTMLElement).style.color = C.text}
-                onMouseLeave={e => (e.target as HTMLElement).style.color = C.muted}
-              >
-                {link}
+                {link.label}
               </a>
             ))}
-          </div>
-        </footer>
+          </nav>
 
-      </div>
-    </>
-  );
+          <div className="hidden items-center gap-3 md:flex">
+            <Link
+              href="/login"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Sign in
+            </Link>
+            <Button asChild size="sm">
+              <Link href="/signup">Start free</Link>
+            </Button>
+          </div>
+
+          <Button
+            size="icon"
+            variant="ghost"
+            className="md:hidden"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          >
+            {menuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </Button>
+        </div>
+
+        {menuOpen && (
+          <div className="border-t border-border/70 bg-background/95 px-4 py-4 sm:px-6 md:hidden">
+            <div className="flex flex-col gap-3 text-sm font-medium text-muted-foreground">
+              {navLinks.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className="block rounded-2xl px-3 py-2 transition-colors hover:bg-primary/10 hover:text-foreground"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+            <div className="mt-4 flex flex-col gap-3">
+              <Link
+                href="/login"
+                className="rounded-2xl px-4 py-3 text-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Sign in
+              </Link>
+              <Button asChild className="w-full">
+                <Link href="/signup">Start free</Link>
+              </Button>
+            </div>
+          </div>
+        )}
+      </header>
+
+      <main className="mx-auto max-w-7xl px-4 pb-20 pt-10 sm:px-6 lg:px-8">
+        <section className="grid gap-10 lg:grid-cols-[1.05fr_.95fr] lg:items-center">
+          <div className="space-y-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm text-primary shadow-sm shadow-primary/10">
+              <Sparkles className="h-4 w-4" />
+              <span>Built for high-growth teams and modern brands</span>
+            </div>
+
+            <div className="space-y-4">
+              <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-foreground sm:text-5xl xl:text-6xl">
+                Launch premium AI videos with speed, scale, and standout
+                quality.
+              </h1>
+              <p className="max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
+                Voxara transforms your ideas into studio-grade videos with
+                script writing, voice synthesis, avatar animation, and
+                publishing workflows — all in one intelligent platform.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Button asChild size="lg" className="min-w-[12rem]">
+                <Link href="/signup">Start free</Link>
+              </Button>
+              <Button
+                variant="outline"
+                asChild
+                size="lg"
+                className="min-w-[12rem]"
+              >
+                <Link href="/pricing">View pricing</Link>
+              </Button>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-3xl border border-border/80 bg-card p-5 shadow-sm">
+                <p className="text-sm uppercase tracking-[0.24em] text-primary">
+                  Fast results
+                </p>
+                <p className="mt-3 text-lg font-semibold text-foreground">
+                  From brief to final video in under 15 minutes.
+                </p>
+              </div>
+              <div className="rounded-3xl border border-border/80 bg-card p-5 shadow-sm">
+                <p className="text-sm uppercase tracking-[0.24em] text-primary">
+                  Creative control
+                </p>
+                <p className="mt-3 text-lg font-semibold text-foreground">
+                  Custom voice, brand palette, and story style for every
+                  project.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative overflow-hidden rounded-[32px] border border-border/80 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6 shadow-[0_30px_120px_rgba(15,23,42,0.35)]">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.18),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(14,165,233,0.16),_transparent_30%)]" />
+            <div className="relative grid gap-6 rounded-[28px] border border-white/5 bg-slate-950/75 p-6">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-3 text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                  <span>Live preview</span>
+                  <Badge className="rounded-full px-3 py-1 text-[11px]">
+                    New
+                  </Badge>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    AI Video Project
+                  </p>
+                  <h2 className="text-2xl font-semibold tracking-tight text-white">
+                    Social launch ad
+                  </h2>
+                </div>
+              </div>
+              <div className="rounded-3xl border border-white/10 bg-slate-950/90 p-5">
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span>Scene 3 of 8</span>
+                  <span>2:14</span>
+                </div>
+                <div className="mt-4 h-48 rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800" />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-3xl bg-slate-950/90 p-4 text-sm text-muted-foreground">
+                  <p className="font-semibold text-white">Voice</p>
+                  <p className="mt-2">Pro Voice · Emma</p>
+                </div>
+                <div className="rounded-3xl bg-slate-950/90 p-4 text-sm text-muted-foreground">
+                  <p className="font-semibold text-white">Format</p>
+                  <p className="mt-2">16:9 / Social-ready</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-4 rounded-[32px] border border-border/80 bg-card p-6 shadow-sm sm:grid-cols-2 lg:grid-cols-4">
+          {stats.map((item) => (
+            <div
+              key={item.label}
+              className="rounded-3xl bg-background/80 p-6 text-center"
+            >
+              <p className="text-3xl font-semibold tracking-tight text-foreground">
+                {item.value}
+              </p>
+              <p className="mt-3 text-sm text-muted-foreground">{item.label}</p>
+            </div>
+          ))}
+        </section>
+
+        <section id="features" className="py-16">
+          <div className="mx-auto max-w-3xl space-y-4 text-center">
+            <Badge className="mx-auto rounded-full px-4 py-2 text-sm uppercase tracking-[0.26em] text-primary/90">
+              Enterprise AI video
+            </Badge>
+            <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              Built for creators, marketers, and enterprise teams.
+            </h2>
+            <p className="text-base leading-7 text-muted-foreground">
+              Everything your team needs to plan, produce, and publish
+              high-impact video campaigns without creative bottlenecks.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-6 md:grid-cols-2">
+            {featureList.map((feature) => {
+              const Icon = feature.icon
+              return (
+                <Card
+                  key={feature.title}
+                  className="overflow-hidden border-transparent bg-gradient-to-br from-slate-950/95 to-slate-900/95 p-6 shadow-lg shadow-slate-950/5"
+                >
+                  <div
+                    className={`flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-br ${feature.accent} text-white shadow-lg shadow-primary/20`}
+                  >
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <div className="mt-6 space-y-3">
+                    <h3 className="text-xl font-semibold text-foreground">
+                      {feature.title}
+                    </h3>
+                    <p className="text-sm leading-6 text-muted-foreground">
+                      {feature.description}
+                    </p>
+                  </div>
+                </Card>
+              )
+            })}
+          </div>
+        </section>
+
+        <section id="use-cases" className="py-16">
+          <div className="grid gap-8 lg:grid-cols-[1.1fr_.9fr] lg:items-center">
+            <div className="space-y-4">
+              <p className="text-sm uppercase tracking-[0.3em] text-primary">
+                Use cases
+              </p>
+              <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+                Scale every campaign with confident storytelling.
+              </h2>
+              <p className="max-w-2xl text-base leading-7 text-muted-foreground">
+                Whether you’re launching a product, building brand awareness, or
+                running performance ads, Voxara automates the video workflow
+                with consistent quality.
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {[
+                'Product launches',
+                'Performance ads',
+                'Sales enablement',
+                'Social growth',
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="rounded-3xl border border-border/80 bg-card p-6"
+                >
+                  <p className="text-sm font-medium text-foreground">{item}</p>
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    Turn your brief into a ready-to-publish video without
+                    creative overhead.
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="testimonials" className="py-16">
+          <div className="mx-auto max-w-3xl space-y-4 text-center">
+            <Badge className="mx-auto rounded-full px-4 py-2 text-sm uppercase tracking-[0.26em] text-primary/90">
+              Testimonials
+            </Badge>
+            <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              Trusted by high-growth marketing teams.
+            </h2>
+            <p className="text-base leading-7 text-muted-foreground">
+              Hear from brands that scaled video production with premium speed,
+              voice quality, and consistent creative standards.
+            </p>
+          </div>
+          <div className="mt-10 grid gap-6 lg:grid-cols-3">
+            {testimonials.map((item) => (
+              <Card
+                key={item.name}
+                className="rounded-[28px] border border-border/80 bg-card p-6 shadow-lg shadow-slate-950/10"
+              >
+                <p className="text-sm leading-7 text-muted-foreground">
+                  “{item.quote}”
+                </p>
+                <div className="mt-6 space-y-1">
+                  <p className="font-semibold text-foreground">{item.name}</p>
+                  <p className="text-sm text-muted-foreground">{item.role}</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        <section className="py-16">
+          <div className="rounded-[32px] border border-border/80 bg-card p-8 shadow-sm">
+            <div className="grid gap-8 lg:grid-cols-[1.2fr_.8fr] lg:items-center">
+              <div>
+                <p className="text-sm uppercase tracking-[0.28em] text-primary">
+                  Trusted by teams
+                </p>
+                <h2 className="mt-4 text-3xl font-semibold text-foreground sm:text-4xl">
+                  Enterprise-grade creatives with a polished production
+                  pipeline.
+                </h2>
+                <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
+                  Build a consistent brand voice and accelerate production
+                  across every channel — from ads to explainers.
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {['Google Gemini', 'ElevenLabs', 'HeyGen', 'Mux'].map(
+                  (logo) => (
+                    <div
+                      key={logo}
+                      className="rounded-3xl border border-border/80 bg-background/80 p-4 text-sm font-semibold text-foreground"
+                    >
+                      {logo}
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="pricing" className="py-16">
+          <div className="mx-auto max-w-3xl space-y-4 text-center">
+            <Badge className="mx-auto rounded-full px-4 py-2 text-sm uppercase tracking-[0.26em] text-primary/90">
+              Pricing
+            </Badge>
+            <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              Simple plans with enterprise-ready scale.
+            </h2>
+            <p className="text-base leading-7 text-muted-foreground">
+              Start with a free tier, upgrade when you need advanced automation,
+              or choose Agency for full team collaboration and white-label
+              workflows.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-6 lg:grid-cols-3">
+            {plans.map((plan) => (
+              <Card
+                key={plan.name}
+                className={`rounded-[32px] border p-6 shadow-lg ${plan.featured ? 'border-primary/30 bg-primary/5' : 'border-border/80 bg-card'}`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">
+                      {plan.name}
+                    </p>
+                    <p className="mt-3 text-sm text-muted-foreground">
+                      {plan.description}
+                    </p>
+                  </div>
+                  {plan.featured && (
+                    <Badge className="rounded-full px-3 py-1 text-[11px]">
+                      Most popular
+                    </Badge>
+                  )}
+                </div>
+                <div className="mt-8 space-y-2">
+                  <p className="text-5xl font-semibold tracking-tight text-foreground">
+                    ${plan.price}
+                  </p>
+                  <p className="text-sm text-muted-foreground">per month</p>
+                </div>
+                <ul className="mt-8 space-y-3 text-sm text-muted-foreground">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-3">
+                      <span className="mt-1 inline-flex h-2.5 w-2.5 rounded-full bg-primary" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button asChild size="lg" className="mt-8 w-full">
+                  <Link href={plan.href}>{plan.button}</Link>
+                </Button>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        <section id="faq" className="py-16">
+          <div className="mx-auto max-w-3xl space-y-4 text-center">
+            <Badge className="mx-auto rounded-full px-4 py-2 text-sm uppercase tracking-[0.26em] text-primary/90">
+              FAQ
+            </Badge>
+            <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              Everything you need to know before launch.
+            </h2>
+          </div>
+
+          <div className="mt-10 space-y-4">
+            {faqs.map((item) => (
+              <details
+                key={item.question}
+                className="overflow-hidden rounded-3xl border border-border/80 bg-card p-6"
+              >
+                <summary className="cursor-pointer text-lg font-semibold text-foreground">
+                  {item.question}
+                </summary>
+                <p className="mt-4 text-sm leading-7 text-muted-foreground">
+                  {item.answer}
+                </p>
+              </details>
+            ))}
+          </div>
+        </section>
+      </main>
+    </div>
+  )
 }

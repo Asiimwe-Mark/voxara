@@ -42,11 +42,17 @@ function SidebarProvider({
 
   React.useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)')
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
-    setIsMobile(mq.matches)
+    const sync = (matches: boolean) => {
+      setIsMobile(matches)
+      setOpen(matches ? false : defaultOpen)
+      setCollapsed(false)
+    }
+
+    sync(mq.matches)
+    const handler = (e: MediaQueryListEvent) => sync(e.matches)
     mq.addEventListener('change', handler)
     return () => mq.removeEventListener('change', handler)
-  }, [])
+  }, [defaultOpen])
 
   return (
     <SidebarContext.Provider
@@ -69,22 +75,37 @@ function Sidebar({
   children,
   ...props
 }: SidebarProps) {
-  const { collapsed } = useSidebar()
+  const { open, collapsed, setOpen } = useSidebar()
   const isIconMode = collapsible === 'icon' && collapsed
+  const isOffcanvas = collapsible === 'offcanvas'
 
   return (
-    <div
-      data-collapsed={isIconMode}
-      className={cn(
-        'group/sidebar relative flex flex-col h-screen border-r bg-sidebar-background text-sidebar-foreground transition-all duration-300',
-        isIconMode ? 'w-14' : 'w-64',
-        className
+    <>
+      {isOffcanvas && open && (
+        <div
+          className="fixed inset-0 z-40 bg-black/25 backdrop-blur-sm transition-opacity"
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
+        />
       )}
-      style={{ width: isIconMode ? SIDEBAR_WIDTH_ICON : SIDEBAR_WIDTH }}
-      {...props}
-    >
-      {children}
-    </div>
+
+      <div
+        data-collapsed={isIconMode}
+        className={cn(
+          'group/sidebar relative flex flex-col h-screen border-r bg-sidebar-background text-sidebar-foreground shadow-xl transition-all duration-300',
+          isOffcanvas
+            ? 'fixed inset-y-0 left-0 z-50 transform border-r bg-background shadow-2xl'
+            : 'relative',
+          isOffcanvas ? (open ? 'translate-x-0' : '-translate-x-full') : '',
+          isIconMode ? 'w-14' : 'w-64',
+          className
+        )}
+        style={{ width: isIconMode ? SIDEBAR_WIDTH_ICON : SIDEBAR_WIDTH }}
+        {...props}
+      >
+        {children}
+      </div>
+    </>
   )
 }
 

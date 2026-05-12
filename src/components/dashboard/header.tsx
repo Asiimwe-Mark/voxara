@@ -74,13 +74,13 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
   const { isMobile, setOpen } = useSidebar()
 
   return (
-    <header className="flex h-14 sm:h-16 items-center justify-between border-b bg-background px-3 sm:px-6 shrink-0 overflow-hidden">
+    <header className="flex flex-wrap items-center justify-between gap-3 border-b bg-background px-3 sm:px-6 py-3 sm:py-0 shrink-0 overflow-hidden">
       {/* Mobile sidebar toggle */}
       {isMobile && (
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 mr-2 md:hidden"
+          className="h-8 w-8"
           onClick={() => setOpen(true)}
         >
           <PanelLeft className="h-4 w-4" />
@@ -88,11 +88,11 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
         </Button>
       )}
 
-      <h1 className="text-base sm:text-lg font-semibold truncate">
+      <h1 className="flex-1 min-w-0 text-base sm:text-lg font-semibold truncate">
         {pageTitle}
       </h1>
 
-      <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+      <div className="flex flex-1 min-w-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
         {/* Credits pill */}
         <div className="flex items-center gap-1 sm:gap-1.5 rounded-full bg-slate-100 dark:bg-slate-800 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">
           <Coins className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-yellow-500 shrink-0" />
