@@ -183,19 +183,28 @@
 }
 
 /* ── Animation & Motion system (premium, subtle) ──────────────────── */
-@layer components {
+@layer utilities {
   /* Smooth transitions */
   .transition-smooth {
-    @apply transition-all duration-200 ease-out;
+    transition-property: all;
+    transition-duration: 200ms;
+    transition-timing-function: ease-out;
   }
 
   .transition-smooth-fast {
-    @apply transition-all duration-150 ease-out;
+    transition-property: all;
+    transition-duration: 150ms;
+    transition-timing-function: ease-out;
   }
 
   .transition-smooth-slow {
-    @apply transition-all duration-300 ease-out;
+    transition-property: all;
+    transition-duration: 300ms;
+    transition-timing-function: ease-out;
   }
+}
+
+@layer components {
 
   /* Hover elevation effect */
   .hover-lift {
