@@ -151,10 +151,9 @@ async function handlePaddleWebhook(event: PaddleEvent): Promise<NextResponse> {
               buyer_id: userId,
               template_id: templateId,
               amount_paid: total,
-            },
-            { onConflict: ['buyer_id', 'template_id'] }
+            } as any,
+            { onConflict: 'buyer_id' }
           );
-          await adminClient.rpc('increment_template_downloads', { template_id: templateId });
         }
       } else if (credits > 0) {
         await adminClient.rpc('add_credits', { p_user_id: userId, p_credits: credits });
@@ -286,10 +285,9 @@ async function handleFlutterwaveWebhook(event: FlutterwaveEvent): Promise<NextRe
               buyer_id: userId,
               template_id: templateId,
               amount_paid: amount,
-            },
-            { onConflict: ['buyer_id', 'template_id'] }
+            } as any,
+            { onConflict: 'buyer_id' }
           );
-          await adminClient.rpc('increment_template_downloads', { template_id: templateId });
         }
       } else if (credits > 0) {
         await adminClient.rpc('add_credits', { p_user_id: userId, p_credits: credits });

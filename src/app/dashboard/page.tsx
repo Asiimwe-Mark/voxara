@@ -145,7 +145,7 @@ export default async function DashboardPage() {
             Your Videos
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {videos.map((video) => (
+            {videos!.map((video) => (
               <VideoCard key={video.id} video={video} />
             ))}
           </div>
@@ -193,7 +193,12 @@ export default async function DashboardPage() {
           {videos && videos.length > 0 && (
             <div>
               <h3 className="text-sm font-semibold mb-4">Share to Earn</h3>
-              <ShareForCredits />
+              <ShareForCredits
+                videoId={videos[0].id}
+                videoUrl={videos[0].video_url ?? videos[0].youtube_id ?? ''}
+                videoTitle={videos[0].title}
+                currentCredits={profile?.credits ?? 0}
+              />
             </div>
           )}
         </div>
