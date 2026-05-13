@@ -31,7 +31,10 @@
       "Bash(findstr /I \"exports\")",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Asiimwe Mark Amooti\\\\Desktop\\\\voxara\" -Filter \".env*\" -File)",
       "Bash(Select-Object Name)",
-      "Bash(taskkill *)"
+      "Bash(taskkill *)",
+      "Bash(dir C:\\\\Users\\\\Asiimwe Mark Amooti\\\\Desktop\\\\voxara\\\\src\\\\app *)",
+      "Bash(dir C:\\\\Users\\\\Asiimwe Mark Amooti\\\\Desktop\\\\voxara\\\\src\\\\app\\\\\\(marketing\\) *)",
+      "Bash(dir *)"
     ]
   }
 }
