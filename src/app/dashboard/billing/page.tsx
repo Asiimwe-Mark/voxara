@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import {
   CreditCard, CheckCircle2, XCircle, Loader2,
-  ExternalLink, Coins, RefreshCw, TrendingUp, Zap,
+  ExternalLink, Coins, RefreshCw, TrendingUp, Zap, FileText,
 } from 'lucide-react'
 import { Button }   from '@/components/ui/button'
 import { Badge }    from '@/components/ui/badge'
@@ -45,6 +45,18 @@ interface CreditPurchase {
   amount_paid: number
   status: string
   created_at: string
+}
+
+interface BillingTransaction {
+  id: string
+  user_id: string
+  amount: number | null
+  currency: string
+  status: string
+  payment_method: string
+  payment_charge_id: string
+  created_at: string
+  user_email?: string
 }
 
 interface AutoTopUpState {
@@ -87,6 +99,8 @@ export default function BillingPage() {
   const [profile,          setProfile]          = useState<Profile | null>(null)
   const [subscription,     setSubscription]     = useState<PaymentSubscription | null>(null)
   const [creditPurchases,  setCreditPurchases]  = useState<CreditPurchase[]>([])
+  const [billingHistory,    setBillingHistory]   = useState<BillingTransaction[]>([])
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
   const [autoTopUp,        setAutoTopUp]        = useState<AutoTopUpState>({
     enabled: false, threshold: 5, top_up_amount: 25,
   })
@@ -131,10 +145,23 @@ export default function BillingPage() {
     } catch { /* non-fatal */ }
   }, [])
 
+  const loadBillingHistory = useCallback(async () => {
+    setIsLoadingHistory(true)
+    try {
+      const res = await fetch('/api/billing/history')
+      if (res.ok) {
+        const data = await res.json() as { transactions: BillingTransaction[] }
+        setBillingHistory(data.transactions)
+      }
+    } catch { /* non-fatal */ }
+    finally { setIsLoadingHistory(false) }
+  }, [])
+
   useEffect(() => {
     loadBillingData()
     loadAutoTopUpSettings()
-  }, [loadBillingData, loadAutoTopUpSettings])
+    loadBillingHistory()
+  }, [loadBillingData, loadAutoTopUpSettings, loadBillingHistory])
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -425,6 +452,74 @@ export default function BillingPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Transaction & Invoice History */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />Transaction & Invoice History
+          </CardTitle>
+          {billingHistory.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.location.href = '/api/stripe/portal'}
+            >
+              <ExternalLink className="mr-2 h-4 w-4" />
+              View Full Invoice Portal
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent>
+          {isLoadingHistory ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : billingHistory.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              No transaction history yet. Your payment transactions will appear here.
+            </p>
+          ) : (
+            <div className="space-y-0">
+              {billingHistory.map((t, i) => (
+                <div
+                  key={t.id}
+                  className={`flex items-center justify-between py-3 ${i < billingHistory.length - 1 ? 'border-b' : ''}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-full ${t.status === 'completed' ? 'bg-green-100 dark:bg-green-900' : 'bg-gray-100 dark:bg-gray-800'}`}>
+                      <FileText className={`h-4 w-4 ${t.status === 'completed' ? 'text-green-600' : 'text-muted-foreground'}`} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">
+                        {t.amount ? `$${(t.amount / 100).toFixed(2)}` : 'Subscription'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(t.created_at).toLocaleDateString(undefined, {
+                          year: 'numeric', month: 'short', day: 'numeric',
+                        })} · {t.payment_method}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    {t.payment_charge_id && (
+                      <p className="text-xs text-muted-foreground font-mono">
+                        {t.payment_charge_id.slice(0, 12)}...
+                      </p>
+                    )}
+                    <Badge
+                      variant={t.status === 'completed' ? 'default' : 'outline'}
+                      className={`text-xs ${t.status === 'completed' ? 'bg-green-500' : ''}`}
+                    >
+                      {t.status}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }
