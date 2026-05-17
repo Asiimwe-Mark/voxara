@@ -15,6 +15,7 @@ export default async function DashboardLayout({
   const {
     data: { user },
   } = await supabase.auth.getUser()
+
   if (!user) redirect('/login')
 
   const { data: profile } = await supabase
@@ -25,9 +26,12 @@ export default async function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen overflow-hidden w-full bg-background">
+      <div className="flex h-screen w-full overflow-hidden bg-background">
+        {/* Sidebar - handles mobile drawer/desktop sidebar via SidebarProvider context */}
         <DashboardSidebar />
-        <div className="flex flex-1 flex-col overflow-hidden min-w-0">
+
+        {/* Main Content Wrapper */}
+        <div className="flex flex-1 flex-col min-w-0 min-h-0 overflow-hidden">
           <DashboardHeader
             user={{
               name: profile?.full_name || user.email?.split('@')[0] || 'User',
@@ -36,8 +40,8 @@ export default async function DashboardLayout({
               plan: profile?.plan ?? 'free',
             }}
           />
-          <main className="flex-1 overflow-y-auto bg-gradient-to-b from-background via-background to-slate-50/50 dark:to-slate-950/50">
-            <div className="w-full">{children}</div>
+          <main className="flex-1 min-h-0 overflow-y-auto bg-gradient-to-b from-background via-background to-slate-50/50 dark:to-slate-950/50">
+            <div className="w-full h-full">{children}</div>
           </main>
         </div>
       </div>

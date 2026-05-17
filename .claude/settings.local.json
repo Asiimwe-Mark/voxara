@@ -36,7 +36,8 @@
       "Bash(dir C:\\\\Users\\\\Asiimwe Mark Amooti\\\\Desktop\\\\voxara\\\\src\\\\app\\\\\\(marketing\\) *)",
       "Bash(dir *)",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Asiimwe Mark Amooti\\\\Desktop\\\\voxara\\\\src\\\\app\\\\api\" -Directory)",
-      "Bash(Select-Object -First 20 Name)"
+      "Bash(Select-Object -First 20 Name)",
+      "Bash(Get-ChildItem -Path src -Recurse -Filter \"*.tsx\" -File)"
     ]
   }
 }

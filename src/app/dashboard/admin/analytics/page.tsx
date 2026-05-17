@@ -1,67 +1,76 @@
-'use client';
+'use client'
 
 /**
  * Admin - Analytics Page
  */
 
-
-import { useEffect, useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { useEffect, useState } from 'react'
+import { Card } from '@/components/ui/card'
+import { TrendingUp, TrendingDown, Loader2 } from 'lucide-react'
 
 interface AnalyticsData {
-  dailySignups: Array<{ date: string; count: number }>;
-  videosGenerated: Array<{ date: string; count: number }>;
-  creditsUsed: Array<{ date: string; amount: number }>;
-  topFeatures: Array<{ feature: string; uses: number }>;
+  dailySignups: Array<{ date: string; count: number }>
+  videosGenerated: Array<{ date: string; count: number }>
+  creditsUsed: Array<{ date: string; amount: number }>
+  topFeatures: Array<{ feature: string; uses: number }>
 }
 
 export default function AdminAnalytics() {
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [timeframe, setTimeframe] = useState('7d'); // 7d, 30d, 90d
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [timeframe, setTimeframe] = useState('7d') // 7d, 30d, 90d
 
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        const response = await fetch(`/api/admin/analytics?timeframe=${timeframe}`);
+        const response = await fetch(`/api/admin/analytics?timeframe=${timeframe}`)
         if (!response.ok) {
-          throw new Error('Failed to fetch analytics');
+          throw new Error('Failed to fetch analytics')
         }
-        const data = await response.json();
-        setAnalytics(data);
+        const data = await response.json()
+        setAnalytics(data)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        setError(err instanceof Error ? err.message : 'An error occurred')
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchAnalytics();
-  }, [timeframe]);
+    fetchAnalytics()
+  }, [timeframe])
 
-  if (loading) return <div className="text-center py-12">Loading analytics...</div>;
+  if (loading) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <span className="ml-3 text-sm text-muted-foreground">Loading analytics...</span>
+      </div>
+    )
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 sm:space-y-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Analytics</h1>
-          <p className="mt-2 text-gray-600">Platform usage and performance metrics</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Analytics</h1>
+          <p className="mt-1.5 text-sm sm:text-base text-muted-foreground">
+            Platform usage and performance metrics
+          </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {['7d', '30d', '90d'].map((tf) => (
             <button
               key={tf}
               onClick={() => {
-                setTimeframe(tf);
-                setLoading(true);
+                setTimeframe(tf)
+                setLoading(true)
               }}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+              className={`h-10 sm:h-11 rounded-lg px-4 py-2 text-xs sm:text-sm font-medium transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
                 timeframe === tf
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-card text-foreground border border-border hover:bg-muted/50'
               }`}
             >
               Last {tf === '7d' ? '7 days' : tf === '30d' ? '30 days' : '90 days'}
@@ -71,69 +80,74 @@ export default function AdminAnalytics() {
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-50 p-4 text-red-700">Error: {error}</div>
+        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 sm:p-5 text-sm sm:text-base text-destructive-foreground">
+          <strong>Error:</strong> {error}
+        </div>
       )}
 
       {analytics && (
-        <div className="space-y-6">
+        <div className="space-y-6 sm:space-y-8">
           {/* Key Metrics */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <Card className="p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {/* Total Signups */}
+            <Card className="card-premium p-5 sm:p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Signups</p>
-                  <p className="mt-2 text-2xl font-bold text-gray-900">
+                  <p className="text-xs sm:text-sm text-muted-foreground">Total Signups</p>
+                  <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight">
                     {analytics.dailySignups.reduce((sum, d) => sum + d.count, 0)}
                   </p>
                 </div>
-                <TrendingUp className="h-5 w-5 text-green-600" />
+                <TrendingUp className="h-5 w-5 text-emerald-500 dark:text-emerald-400" />
               </div>
             </Card>
 
-            <Card className="p-6">
+            {/* Videos Generated */}
+            <Card className="card-premium p-5 sm:p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Videos Generated</p>
-                  <p className="mt-2 text-2xl font-bold text-gray-900">
+                  <p className="text-xs sm:text-sm text-muted-foreground">Videos Generated</p>
+                  <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight">
                     {analytics.videosGenerated.reduce((sum, d) => sum + d.count, 0)}
                   </p>
                 </div>
-                <TrendingUp className="h-5 w-5 text-blue-600" />
+                <TrendingUp className="h-5 w-5 text-primary" />
               </div>
             </Card>
 
-            <Card className="p-6">
+            {/* Credits Consumed */}
+            <Card className="card-premium p-5 sm:p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Credits Consumed</p>
-                  <p className="mt-2 text-2xl font-bold text-gray-900">
+                  <p className="text-xs sm:text-sm text-muted-foreground">Credits Consumed</p>
+                  <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight">
                     {analytics.creditsUsed.reduce((sum, d) => sum + d.amount, 0)}
                   </p>
                 </div>
-                <TrendingDown className="h-5 w-5 text-purple-600" />
+                <TrendingDown className="h-5 w-5 text-violet-500 dark:text-violet-400" />
               </div>
             </Card>
           </div>
 
           {/* Charts Section */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Daily Signups Chart */}
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <Card className="card-premium p-5 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold mb-4 tracking-tight">
                 Daily Signups
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {analytics.dailySignups.slice(-7).map((day) => (
-                  <div key={day.date} className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">
-                      {new Date(day.date).toLocaleDateString()}
+                  <div key={day.date} className="flex items-center justify-between gap-4">
+                    <span className="text-xs sm:text-sm text-muted-foreground min-w-[80px]">
+                      {new Date(day.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                     </span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3 flex-1">
                       <div
-                        className="h-2 bg-blue-500"
-                        style={{ width: `${Math.min(day.count * 10, 100)}px` }}
+                        className="h-2 rounded-full bg-primary transition-all duration-200"
+                        style={{ width: `${Math.min(day.count * 10, 100)}px`, maxWidth: '60%' }}
                       />
-                      <span className="text-sm font-semibold">{day.count}</span>
+                      <span className="text-xs sm:text-sm font-semibold tabular-nums">{day.count}</span>
                     </div>
                   </div>
                 ))}
@@ -141,46 +155,50 @@ export default function AdminAnalytics() {
             </Card>
 
             {/* Top Features */}
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <Card className="card-premium p-5 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold mb-4 tracking-tight">
                 Most Used Features
               </h3>
               <div className="space-y-3">
-                {analytics.topFeatures.map((feature, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">{feature.feature}</span>
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="h-2 bg-green-500"
-                        style={{
-                          width: `${Math.max(feature.uses / Math.max(...analytics.topFeatures.map((f) => f.uses)), 0.1) * 100}px`,
-                        }}
-                      />
-                      <span className="text-sm font-semibold">{feature.uses}</span>
+                {analytics.topFeatures.map((feature, index) => {
+                  const maxUses = Math.max(...analytics.topFeatures.map((f) => f.uses))
+                  const widthPercent = Math.max((feature.uses / maxUses) * 100, 10)
+                  return (
+                    <div key={index} className="flex items-center justify-between gap-4">
+                      <span className="text-xs sm:text-sm text-muted-foreground truncate">
+                        {feature.feature}
+                      </span>
+                      <div className="flex items-center gap-3 flex-1">
+                        <div
+                          className="h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 transition-all duration-200"
+                          style={{ width: `${widthPercent}%`, maxWidth: '60%' }}
+                        />
+                        <span className="text-xs sm:text-sm font-semibold tabular-nums">{feature.uses}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </Card>
           </div>
 
           {/* Videos Generated Trend */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <Card className="card-premium p-5 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold mb-4 tracking-tight">
               Videos Generated Trend
             </h3>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {analytics.videosGenerated.slice(-14).map((day) => (
-                <div key={day.date} className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">
-                    {new Date(day.date).toLocaleDateString()}
+                <div key={day.date} className="flex items-center justify-between gap-4">
+                  <span className="text-xs sm:text-sm text-muted-foreground min-w-[80px]">
+                    {new Date(day.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3 flex-1">
                     <div
-                      className="h-2 bg-purple-500"
-                      style={{ width: `${Math.min(day.count * 5, 200)}px` }}
+                      className="h-2 rounded-full bg-violet-500 dark:bg-violet-400 transition-all duration-200"
+                      style={{ width: `${Math.min(day.count * 5, 200)}px`, maxWidth: '60%' }}
                     />
-                    <span className="text-sm font-semibold">{day.count}</span>
+                    <span className="text-xs sm:text-sm font-semibold tabular-nums">{day.count}</span>
                   </div>
                 </div>
               ))}
@@ -189,5 +207,5 @@ export default function AdminAnalytics() {
         </div>
       )}
     </div>
-  );
+  )
 }

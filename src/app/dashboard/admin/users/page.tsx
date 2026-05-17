@@ -1,138 +1,168 @@
-'use client';
+'use client'
 
 /**
  * Admin - Users Management Page
  */
 
-
-import { useEffect, useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useState } from 'react'
+import { Card } from '@/components/ui/card'
+import { Search, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 
 interface User {
-  id: string;
-  email: string;
-  subscription_status: string;
-  subscription_plan: string;
-  credits: number;
-  created_at: string;
+  id: string
+  email: string
+  subscription_status: string
+  subscription_plan: string
+  credits: number
+  created_at: string
 }
 
 export default function AdminUsers() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(0);
-  const pageSize = 20;
+  const [users, setUsers] = useState<User[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(0)
+  const pageSize = 20
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const response = await fetch(
           `/api/admin/users?page=${page}&limit=${pageSize}&search=${search}`
-        );
+        )
         if (!response.ok) {
-          throw new Error('Failed to fetch users');
+          throw new Error('Failed to fetch users')
         }
-        const data = await response.json();
-        setUsers(data.users);
+        const data = await response.json()
+        setUsers(data.users)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        setError(err instanceof Error ? err.message : 'An error occurred')
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    const timer = setTimeout(fetchUsers, 300);
-    return () => clearTimeout(timer);
-  }, [search, page]);
+    const timer = setTimeout(fetchUsers, 300)
+    return () => clearTimeout(timer)
+  }, [search, page])
 
-  if (loading) return <div className="text-center py-12">Loading users...</div>;
+  if (loading) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <span className="ml-3 text-sm text-muted-foreground">Loading users...</span>
+      </div>
+    )
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 sm:space-y-8">
+      {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-        <p className="mt-2 text-gray-600">Manage and monitor user accounts</p>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">User Management</h1>
+        <p className="mt-1.5 text-sm sm:text-base text-muted-foreground">
+          Manage and monitor user accounts
+        </p>
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-50 p-4 text-red-700">Error: {error}</div>
+        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 sm:p-5 text-sm sm:text-base text-destructive-foreground">
+          <strong>Error:</strong> {error}
+        </div>
       )}
 
       {/* Search Bar */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+        <Search className="absolute left-3.5 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
         <input
           type="text"
           placeholder="Search by email..."
           value={search}
           onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(0);
+            setSearch(e.target.value)
+            setPage(0)
           }}
-          className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-blue-500 focus:outline-none"
+          className="input-premium w-full pl-10 pr-4 text-sm sm:text-base"
         />
       </div>
 
       {/* Users Table */}
-      <Card className="overflow-hidden">
+      <Card className="card-premium overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+          <table className="w-full min-w-[720px]">
+            <thead className="bg-muted/30">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                <th className="px-4 sm:px-6 py-3.5 text-left text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                   Email
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                <th className="px-4 sm:px-6 py-3.5 text-left text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                   Plan
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                <th className="px-4 sm:px-6 py-3.5 text-left text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                <th className="px-4 sm:px-6 py-3.5 text-left text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                   Credits
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                <th className="px-4 sm:px-6 py-3.5 text-left text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                   Joined
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-border/50">
               {users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-gray-600">
-                    No users found
+                  <td colSpan={5} className="px-4 sm:px-6 py-10 text-center">
+                    <div className="empty-state">
+                      <div className="empty-state-icon">
+                        <Search className="h-6 w-6" />
+                      </div>
+                      <p className="empty-state-title">No users found</p>
+                      <p className="empty-state-description">
+                        Try adjusting your search or check back later.
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 users.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      {user.email}
+                  <tr 
+                    key={user.id} 
+                    className="hover:bg-muted/30 transition-colors duration-150"
+                  >
+                    <td className="px-4 sm:px-6 py-4">
+                      <span className="text-sm font-medium truncate block max-w-[180px] sm:max-w-none">
+                        {user.email}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-800">
+                    <td className="px-4 sm:px-6 py-4">
+                      <span className={`badge-${user.subscription_plan === 'pro' || user.subscription_plan === 'agency' ? 'primary' : 'secondary'}`}>
                         {user.subscription_plan?.toUpperCase() || 'FREE'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
+                    <td className="px-4 sm:px-6 py-4">
                       <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           user.subscription_status === 'active'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-800'
+                            ? 'badge-success'
+                            : 'badge-secondary'
                         }`}
                       >
                         {user.subscription_status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">
-                      {user.credits}
+                    <td className="px-4 sm:px-6 py-4">
+                      <span className="text-sm font-semibold tabular-nums">{user.credits}</span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {new Date(user.created_at).toLocaleDateString()}
+                    <td className="px-4 sm:px-6 py-4">
+                      <span className="text-sm text-muted-foreground tabular-nums">
+                        {new Date(user.created_at).toLocaleDateString(undefined, { 
+                          year: 'numeric', 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
+                      </span>
                     </td>
                   </tr>
                 ))
@@ -142,20 +172,22 @@ export default function AdminUsers() {
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-6 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-border/50 bg-muted/10 px-4 sm:px-6 py-4">
           <button
             onClick={() => setPage(Math.max(0, page - 1))}
             disabled={page === 0}
-            className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50 transition"
+            className="inline-flex items-center justify-center gap-2 h-10 sm:h-11 rounded-lg px-4 py-2 text-xs sm:text-sm font-medium text-foreground border border-border hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <ChevronLeft className="h-4 w-4" />
             Previous
           </button>
-          <span className="text-sm text-gray-600">Page {page + 1}</span>
+          <span className="text-sm text-muted-foreground text-center sm:text-left tabular-nums">
+            Page {page + 1}
+          </span>
           <button
             onClick={() => setPage(page + 1)}
             disabled={users.length < pageSize}
-            className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50 transition"
+            className="inline-flex items-center justify-center gap-2 h-10 sm:h-11 rounded-lg px-4 py-2 text-xs sm:text-sm font-medium text-foreground border border-border hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             Next
             <ChevronRight className="h-4 w-4" />
@@ -163,5 +195,5 @@ export default function AdminUsers() {
         </div>
       </Card>
     </div>
-  );
+  )
 }

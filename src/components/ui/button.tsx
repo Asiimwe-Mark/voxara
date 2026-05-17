@@ -71,9 +71,22 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
-    const Comp = asChild ? Slot : 'button'
+    // Slot requires exactly ONE child - cannot add loading spinner with asChild
+    // When asChild is true, just render the child without loading spinner
+    if (asChild) {
+      return (
+        <Slot
+          className={cn(buttonVariants({ variant, size, className }))}
+          ref={ref}
+          {...props}
+        >
+          {children}
+        </Slot>
+      )
+    }
+
     return (
-      <Comp
+      <button
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         disabled={isLoading || disabled}
@@ -83,7 +96,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
         )}
         {children}
-      </Comp>
+      </button>
     )
   }
 )

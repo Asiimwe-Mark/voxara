@@ -1,65 +1,111 @@
-"use client";
+"use client"
 
-import { CheckCircle2, FileText, Wand2, Clapperboard } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { CheckCircle2, FileText, Wand2, Clapperboard } from "lucide-react"
+import { cn } from "@/lib/utils"
 
-type Step = "topic" | "script" | "generating";
+type Step = "topic" | "script" | "generating"
 
-const STEPS: { id: Step; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { id: "topic", label: "Topic", icon: Wand2 },
-  { id: "script", label: "Script", icon: FileText },
-  { id: "generating", label: "Produce", icon: Clapperboard },
-];
+const STEPS: {
+  id: Step
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  description?: string
+}[] = [
+  { id: "topic", label: "Topic", icon: Wand2, description: "Enter your idea" },
+  { id: "script", label: "Script", icon: FileText, description: "Review & edit" },
+  { id: "generating", label: "Produce", icon: Clapperboard, description: "AI rendering" },
+]
 
-export function ProgressTracker({ currentStep }: { currentStep: Step }) {
-  const currentIdx = STEPS.findIndex((s) => s.id === currentStep);
+interface ProgressTrackerProps {
+  currentStep: Step
+  className?: string
+}
+
+export function ProgressTracker({ currentStep, className }: ProgressTrackerProps) {
+  const currentIdx = STEPS.findIndex((s) => s.id === currentStep)
 
   return (
-    <nav aria-label="Video creation steps">
-      <ol className="flex items-center gap-0">
+    <nav 
+      aria-label="Video creation progress" 
+      className={cn("w-full", className)}
+      role="navigation"
+    >
+      <ol className="flex items-center gap-0 sm:gap-2">
         {STEPS.map((step, i) => {
-          const isCompleted = i < currentIdx;
-          const isActive = i === currentIdx;
-          const Icon = step.icon;
+          const isCompleted = i < currentIdx
+          const isActive = i === currentIdx
+          const isUpcoming = i > currentIdx
+          const Icon = step.icon
 
           return (
-            <li key={step.id} className="flex items-center flex-1 last:flex-none">
-              <div className="flex flex-col items-center gap-1.5">
+            <li 
+              key={step.id} 
+              className="flex items-center flex-1 last:flex-none group"
+              aria-current={isActive ? "step" : undefined}
+            >
+              <div className="flex flex-col items-center gap-1.5 sm:gap-2 w-full">
+                {/* Step Indicator */}
                 <div
                   className={cn(
-                    "h-9 w-9 rounded-full flex items-center justify-center border-2 transition-all",
-                    isCompleted && "bg-primary border-primary",
-                    isActive && "border-primary bg-primary/10",
-                    !isCompleted && !isActive && "border-border bg-background"
+                    "h-9 w-9 sm:h-10 sm:w-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ease-out touch-manipulation",
+                    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                    isCompleted && "bg-primary border-primary shadow-sm shadow-primary/20",
+                    isActive && "border-primary bg-primary/10 ring-2 ring-primary/30",
+                    isUpcoming && "border-border/50 bg-muted/30"
                   )}
+                  tabIndex={isActive ? 0 : -1}
+                  aria-label={`${step.label} step ${isCompleted ? "completed" : isActive ? "in progress" : "upcoming"}`}
                 >
                   {isCompleted ? (
-                    <CheckCircle2 className="h-4 w-4 text-primary-foreground" />
+                    <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground transition-transform duration-200 scale-100" />
                   ) : (
-                    <Icon className={cn("h-4 w-4", isActive ? "text-primary" : "text-muted-foreground")} />
+                    <Icon 
+                      className={cn(
+                        "h-4 w-4 sm:h-5 sm:w-5 transition-colors duration-200",
+                        isActive ? "text-primary" : "text-muted-foreground/70"
+                      )} 
+                    />
                   )}
                 </div>
-                <span
-                  className={cn(
-                    "text-xs font-medium",
-                    isActive ? "text-primary" : isCompleted ? "text-foreground" : "text-muted-foreground"
+                
+                {/* Step Label */}
+                <div className="text-center min-w-0 px-1">
+                  <span
+                    className={cn(
+                      "block text-[10px] sm:text-xs font-semibold tracking-tight transition-colors duration-200",
+                      isActive ? "text-primary" : isCompleted ? "text-foreground" : "text-muted-foreground/80"
+                    )}
+                  >
+                    {step.label}
+                  </span>
+                  {/* Optional description for desktop */}
+                  {step.description && (
+                    <span 
+                      className={cn(
+                        "hidden sm:block text-[10px] text-muted-foreground/60 mt-0.5 truncate",
+                        isActive && "text-muted-foreground"
+                      )}
+                    >
+                      {step.description}
+                    </span>
                   )}
-                >
-                  {step.label}
-                </span>
+                </div>
               </div>
+              
+              {/* Connector Line */}
               {i < STEPS.length - 1 && (
                 <div
                   className={cn(
-                    "flex-1 h-0.5 mx-2 mb-5 transition-colors",
-                    i < currentIdx ? "bg-primary" : "bg-border"
+                    "flex-1 h-0.5 sm:h-1 mx-1.5 sm:mx-2 mb-5 sm:mb-6 rounded-full transition-all duration-300 ease-out",
+                    isCompleted ? "bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.3)]" : "bg-border/50"
                   )}
+                  aria-hidden="true"
                 />
               )}
             </li>
-          );
+          )
         })}
       </ol>
     </nav>
-  );
+  )
 }

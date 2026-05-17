@@ -92,11 +92,11 @@ function Sidebar({
       <div
         data-collapsed={isIconMode}
         className={cn(
-          'group/sidebar relative flex flex-col h-screen border-r bg-sidebar-background text-sidebar-foreground shadow-xl transition-all duration-300',
+          'group/sidebar relative flex flex-col h-dvh border-r bg-sidebar-background text-sidebar-foreground shadow-xl transition-all duration-300',
           isOffcanvas
-            ? 'fixed inset-y-0 left-0 z-50 transform border-r bg-background shadow-2xl'
+            ? 'fixed inset-y-0 left-0 z-50 transform border-r bg-background shadow-2xl md:relative md:translate-x-0 md:z-auto md:shadow-xl'
             : 'relative',
-          isOffcanvas ? (open ? 'translate-x-0' : '-translate-x-full') : '',
+          isOffcanvas ? (open ? 'translate-x-0' : '-translate-x-full md:translate-x-0') : '',
           isIconMode ? 'w-14' : 'w-64',
           className
         )}
@@ -189,10 +189,30 @@ const SidebarMenuButton = React.forwardRef<
   SidebarMenuButtonProps
 >(({ asChild, isActive, tooltip, className, children, ...props }, ref) => {
   const { collapsed } = useSidebar()
-  const Comp = asChild ? Slot : 'button'
+
+  // When asChild is true, only pass children as-is (Slot expects single child)
+  // When asChild is false, we can render a button with additional content
+  if (asChild) {
+    return (
+      <Slot
+        ref={ref}
+        title={collapsed ? tooltip : undefined}
+        data-active={isActive}
+        className={cn(
+          'flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+          'data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground',
+          collapsed && 'justify-center px-2',
+          className
+        )}
+        {...(props as any)}
+      >
+        {children}
+      </Slot>
+    )
+  }
 
   return (
-    <Comp
+    <button
       ref={ref}
       title={collapsed ? tooltip : undefined}
       data-active={isActive}
@@ -205,7 +225,7 @@ const SidebarMenuButton = React.forwardRef<
       {...(props as any)}
     >
       {children}
-    </Comp>
+    </button>
   )
 })
 SidebarMenuButton.displayName = 'SidebarMenuButton'

@@ -19,10 +19,27 @@ export async function GET() {
   return NextResponse.json({ keys: data ?? [] });
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  let name = `Key ${new Date().toLocaleDateString()}`;
+  try {
+    const body = await request.json();
+    if (typeof body?.name === 'string') {
+      const trimmed = body.name.trim();
+      if (!/^[a-zA-Z0-9\s_-]{3,50}$/.test(trimmed)) {
+        return NextResponse.json(
+          { error: 'Key name must be 3-50 characters and only include letters, numbers, spaces, hyphens, or underscores' },
+          { status: 400 }
+        );
+      }
+      name = trimmed;
+    }
+  } catch {
+    // Request body is optional.
+  }
 
   // Enforce per-user limit
   const { count } = await supabase
@@ -44,7 +61,7 @@ export async function POST() {
     .from('api_keys')
     .insert({
       user_id: user.id,
-      name: `Key ${new Date().toLocaleDateString()}`,
+      name,
       key_hash: hash,
       preview,
       status: 'active',

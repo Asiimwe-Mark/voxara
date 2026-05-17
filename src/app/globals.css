@@ -183,57 +183,62 @@
 }
 
 /* ── Animation & Motion system (premium, subtle) ──────────────────── */
-@layer utilities {
-  /* Smooth transitions */
+@layer components {
+  /* ✅ FIX: Define transition-smooth with RAW CSS to avoid Tailwind v4 @apply issues */
   .transition-smooth {
-    transition-property: all;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 200ms;
-    transition-timing-function: ease-out;
   }
 
   .transition-smooth-fast {
-    transition-property: all;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 150ms;
-    transition-timing-function: ease-out;
   }
 
   .transition-smooth-slow {
-    transition-property: all;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 300ms;
-    transition-timing-function: ease-out;
   }
-}
-
-@layer components {
 
   /* Hover elevation effect */
   .hover-lift {
     @apply hover:shadow-lg hover:scale-105;
-    transition-property: all;
+  }
+  .hover-lift {
+    transition-property: box-shadow, transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 200ms;
-    transition-timing-function: ease-out;
   }
 
   .hover-lift-sm {
     @apply hover:shadow-md hover:scale-102;
-    transition-property: all;
+  }
+  .hover-lift-sm {
+    transition-property: box-shadow, transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 200ms;
-    transition-timing-function: ease-out;
   }
 
   /* Premium card styles */
   .card-premium {
     @apply rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm hover:shadow-md;
-    transition-property: all;
+  }
+  .card-premium {
+    transition-property: box-shadow, border-color;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 200ms;
-    transition-timing-function: ease-out;
   }
 
   .card-elevated {
     @apply rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-md hover:shadow-lg;
-    transition-property: all;
+  }
+  .card-elevated {
+    transition-property: box-shadow, border-color;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 200ms;
-    transition-timing-function: ease-out;
   }
 
   /* Focus ring utilities */
@@ -296,9 +301,11 @@
   /* Form utilities */
   .input-premium {
     @apply px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary;
-    transition-property: all;
+  }
+  .input-premium {
+    transition-property: border-color, box-shadow;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 200ms;
-    transition-timing-function: ease-out;
   }
 
   /* Badge styles */
@@ -333,67 +340,33 @@
 
   /* Animation keyframes */
   @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   @keyframes slideInUp {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes slideInDown {
-    from {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes slideInLeft {
-    from {
-      opacity: 0;
-      transform: translateX(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
   }
 
   @keyframes slideInRight {
-    from {
-      opacity: 0;
-      transform: translateX(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
+    from { opacity: 0; transform: translateX(10px); }
+    to { opacity: 1; transform: translateX(0); }
   }
 
   @keyframes scaleIn {
-    from {
-      opacity: 0;
-      transform: scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
   }
 
   .animate-fadeIn {
@@ -420,7 +393,6 @@
     animation: scaleIn 300ms ease-out;
   }
 }
-
 
 /* ── Utility: gradient text ───────────────────────────────── */
 .gradient-text {

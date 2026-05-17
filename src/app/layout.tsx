@@ -17,6 +17,7 @@ export const viewport: Viewport = {
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
     { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
   ],
+  colorScheme: 'light dark',
 }
 
 export const metadata: Metadata = {
@@ -51,8 +52,15 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={inter.variable} data-scroll-behavior="smooth">
-      <body className={inter.className}>
+    <html 
+      lang="en" 
+      suppressHydrationWarning 
+      className={inter.variable}
+      data-scroll-behavior="smooth"
+    >
+      <body 
+        className={`${inter.className} bg-background text-foreground antialiased min-h-screen overflow-x-hidden`}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

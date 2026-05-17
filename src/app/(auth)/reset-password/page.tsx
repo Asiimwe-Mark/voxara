@@ -68,35 +68,38 @@ export default function ResetPasswordPage() {
     }
   }
 
+  // Shared background classes for consistency with your design system
+  const bgClasses = "bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900"
+
   if (isSubmitted) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4 bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
-              <Mail className="h-6 w-6 text-green-600 dark:text-green-400" />
+      <div className={`flex min-h-screen items-center justify-center px-4 sm:px-6 ${bgClasses}`}>
+        <Card className="w-full max-w-[95vw] sm:max-w-md border-border/50 bg-background/80 backdrop-blur-xl shadow-2xl shadow-black/5">
+          <CardHeader className="text-center pt-6 sm:pt-8 px-6 sm:px-8">
+            <div className="mx-auto mb-4 flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+              <Mail className="h-6 w-6 sm:h-7 sm:w-7 text-green-600 dark:text-green-400" />
             </div>
-            <CardTitle className="text-2xl">Check Your Email</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-2xl sm:text-3xl">Check Your Email</CardTitle>
+            <CardDescription className="text-sm sm:text-base">
               We've sent password reset instructions to your email address.
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-sm text-muted-foreground mb-6">
+          <CardContent className="text-center px-6 sm:px-8">
+            <p className="text-sm sm:text-base text-muted-foreground mb-6">
               Didn't receive the email? Check your spam folder or try again.
             </p>
             <Button
               variant="outline"
-              className="w-full"
+              className="h-11 sm:h-12 w-full rounded-xl"
               onClick={() => setIsSubmitted(false)}
             >
               Try Again
             </Button>
           </CardContent>
-          <CardFooter className="justify-center">
+          <CardFooter className="justify-center pb-6 sm:pb-8 px-6 sm:px-8">
             <Link
               href="/login"
-              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
+              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Login
@@ -108,32 +111,33 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">
+    <div className={`flex min-h-screen items-center justify-center px-4 sm:px-6 ${bgClasses}`}>
+      <Card className="w-full max-w-[95vw] sm:max-w-md border-border/50 bg-background/80 backdrop-blur-xl shadow-2xl shadow-black/5">
+        <CardHeader className="space-y-1 pt-6 sm:pt-8 px-6 sm:px-8">
+          <CardTitle className="text-2xl sm:text-3xl text-center">
             Reset Your Password
           </CardTitle>
-          <CardDescription className="text-center">
+          <CardDescription className="text-center text-sm sm:text-base">
             Enter your email address and we'll send you a link to reset your
             password
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-6 sm:px-8">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel className="text-sm font-medium">Email</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="you@example.com"
                         type="email"
                         autoComplete="email"
                         disabled={isLoading}
+                        className="h-11 sm:h-12 rounded-xl border-border/60 bg-background/60 px-4 text-sm shadow-sm transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary/30"
                         {...field}
                       />
                     </FormControl>
@@ -141,7 +145,11 @@ export default function ResetPasswordPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button 
+                type="submit" 
+                className="h-11 sm:h-12 w-full rounded-xl text-sm font-semibold shadow-lg shadow-primary/20 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]" 
+                disabled={isLoading}
+              >
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -154,10 +162,10 @@ export default function ResetPasswordPage() {
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex justify-center">
+        <CardFooter className="flex justify-center pb-6 sm:pb-8 px-6 sm:px-8">
           <Link
             href="/login"
-            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
+            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Login

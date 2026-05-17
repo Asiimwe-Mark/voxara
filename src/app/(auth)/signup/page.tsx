@@ -83,18 +83,22 @@ export default function SignUpPage() {
 
   if (emailSent) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
-        <div className="text-center max-w-md">
-          <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30 mb-6">
-            <CheckCircle2 className="h-8 w-8 text-green-600" />
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 sm:px-6 py-12">
+        <div className="text-center max-w-[95vw] sm:max-w-md">
+          <div className="inline-flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30 mb-6">
+            <CheckCircle2 className="h-8 w-8 sm:h-10 sm:w-10 text-green-600" />
           </div>
-          <h1 className="text-2xl font-bold mb-2">Check your email</h1>
-          <p className="text-muted-foreground mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Check your email</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mb-6">
             We sent a confirmation link to{' '}
-            <strong>{form.getValues('email')}</strong>. Click the link to
+            <strong className="text-foreground">{form.getValues('email')}</strong>. Click the link to
             activate your account.
           </p>
-          <Button variant="outline" onClick={() => setEmailSent(false)}>
+          <Button 
+            variant="outline" 
+            className="h-11 sm:h-12 rounded-xl"
+            onClick={() => setEmailSent(false)}
+          >
             Back to sign up
           </Button>
         </div>
@@ -103,48 +107,49 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md space-y-6">
+    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 sm:px-6 py-12">
+      <div className="w-full max-w-[95vw] sm:max-w-md space-y-6 sm:space-y-8">
         <div className="text-center">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-4">
-            <Sparkles className="h-6 w-6 text-primary" />
+          <div className="inline-flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-primary/10 mb-4">
+            <Sparkles className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold">Create your free account</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold">Create your free account</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">
             Start making AI videos in minutes
           </p>
         </div>
 
-        <ul className="space-y-2">
+        <ul className="space-y-2 sm:space-y-3">
           {PERKS.map((p) => (
             <li
               key={p}
-              className="flex items-center gap-2 text-sm text-muted-foreground"
+              className="flex items-start sm:items-center gap-2 sm:gap-3 text-sm text-muted-foreground"
             >
-              <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-              {p}
+              <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5 sm:mt-0" />
+              <span className="leading-relaxed">{p}</span>
             </li>
           ))}
         </ul>
 
-        <Card>
-          <CardContent className="pt-6">
+        <Card className="border-border/50 bg-background/80 backdrop-blur-xl shadow-2xl shadow-black/5">
+          <CardContent className="pt-6 px-5 sm:px-8">
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
+                className="space-y-4 sm:space-y-5"
               >
                 <FormField
                   control={form.control}
                   name="fullName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Full Name</FormLabel>
+                      <FormLabel className="text-sm font-medium">Full Name</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Jane Doe"
                           autoComplete="name"
                           disabled={isLoading}
+                          className="h-11 sm:h-12 rounded-xl border-border/60 bg-background/60 px-4 text-sm shadow-sm transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary/30"
                           {...field}
                         />
                       </FormControl>
@@ -157,13 +162,14 @@ export default function SignUpPage() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel className="text-sm font-medium">Email</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="you@example.com"
                           type="email"
                           autoComplete="email"
                           disabled={isLoading}
+                          className="h-11 sm:h-12 rounded-xl border-border/60 bg-background/60 px-4 text-sm shadow-sm transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary/30"
                           {...field}
                         />
                       </FormControl>
@@ -176,13 +182,14 @@ export default function SignUpPage() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel className="text-sm font-medium">Password</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Min. 8 characters"
                           type="password"
                           autoComplete="new-password"
                           disabled={isLoading}
+                          className="h-11 sm:h-12 rounded-xl border-border/60 bg-background/60 px-4 text-sm shadow-sm transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary/30"
                           {...field}
                         />
                       </FormControl>
@@ -200,15 +207,17 @@ export default function SignUpPage() {
                           checked={field.value}
                           onCheckedChange={field.onChange}
                           disabled={isLoading}
+                          className="mt-1 h-4 w-4 sm:h-5 sm:w-5 rounded border-border/60 data-[state=checked]:bg-primary data-[state=checked]:border-primary focus-visible:ring-2 focus-visible:ring-primary/30"
                         />
                       </FormControl>
                       <div className="space-y-1 leading-none">
-                        <FormLabel className="text-sm font-normal cursor-pointer">
+                        <FormLabel className="text-sm font-normal cursor-pointer select-none">
                           I agree to the{' '}
                           <Link
                             href="/legal/terms"
-                            className="underline hover:text-foreground"
+                            className="underline hover:text-foreground transition-colors"
                             target="_blank"
+                            rel="noopener noreferrer"
                           >
                             Terms of Service
                           </Link>
@@ -228,15 +237,17 @@ export default function SignUpPage() {
                           checked={field.value}
                           onCheckedChange={field.onChange}
                           disabled={isLoading}
+                          className="mt-1 h-4 w-4 sm:h-5 sm:w-5 rounded border-border/60 data-[state=checked]:bg-primary data-[state=checked]:border-primary focus-visible:ring-2 focus-visible:ring-primary/30"
                         />
                       </FormControl>
                       <div className="space-y-1 leading-none">
-                        <FormLabel className="text-sm font-normal cursor-pointer">
+                        <FormLabel className="text-sm font-normal cursor-pointer select-none">
                           I agree to the{' '}
                           <Link
                             href="/legal/privacy"
-                            className="underline hover:text-foreground"
+                            className="underline hover:text-foreground transition-colors"
                             target="_blank"
+                            rel="noopener noreferrer"
                           >
                             Privacy Policy
                           </Link>
@@ -248,7 +259,7 @@ export default function SignUpPage() {
                 />
                 <Button
                   type="submit"
-                  className="w-full"
+                  className="h-11 sm:h-12 w-full rounded-xl text-sm font-semibold shadow-lg shadow-primary/20 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
                   disabled={
                     isLoading ||
                     !form.watch('agreedToTerms') ||
@@ -263,12 +274,12 @@ export default function SignUpPage() {
               </form>
             </Form>
           </CardContent>
-          <CardFooter className="justify-center pt-0">
+          <CardFooter className="justify-center pt-0 pb-6 px-5 sm:px-8 sm:pb-8">
             <p className="text-sm text-muted-foreground">
               Already have an account?{' '}
               <Link
                 href="/login"
-                className="text-primary font-medium hover:underline"
+                className="text-primary font-medium hover:underline transition-colors"
               >
                 Sign in
               </Link>

@@ -11,7 +11,6 @@ import {
   Sparkles,
   Sun,
   Moon,
-  PanelLeft,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -27,7 +26,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { createClient } from '@/lib/supabase/client'
 import { useTheme } from 'next-themes'
-import { useSidebar } from '@/components/ui/sidebar'
+import { useSidebar, SidebarTrigger } from '@/components/ui/sidebar'
 
 const PAGE_TITLES: Record<string, string> = {
   '/dashboard': 'My Videos',
@@ -66,49 +65,42 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
     router.refresh()
   }
 
-  const planColors: Record<string, string> = {
-    pro: 'bg-blue-500 text-white',
-    agency: 'bg-purple-500 text-white',
+  const planBadgeClass: Record<string, string> = {
+    pro: 'bg-primary text-primary-foreground',
+    agency: 'bg-violet-600 text-white dark:bg-violet-500',
   }
 
-  const { isMobile, setOpen } = useSidebar()
+  const { setOpen } = useSidebar()
 
   return (
-    <header className="flex flex-wrap items-center justify-between gap-3 border-b bg-background px-3 sm:px-6 py-3 sm:py-0 shrink-0 overflow-hidden">
+    <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-3 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-3 sm:px-6 py-3 sm:py-4 shrink-0">
       {/* Mobile sidebar toggle */}
-      {isMobile && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => setOpen(true)}
-        >
-          <PanelLeft className="h-4 w-4" />
-          <span className="sr-only">Open sidebar</span>
-        </Button>
-      )}
+      <SidebarTrigger
+        className="md:hidden h-9 w-9 sm:h-10 sm:w-10 rounded-lg transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        onClick={() => setOpen(true)}
+        aria-label="Open sidebar"
+      />
 
-      <h1 className="flex-1 min-w-0 text-base sm:text-lg font-semibold truncate">
+      {/* Page Title */}
+      <h1 className="flex-1 min-w-0 text-base sm:text-lg font-semibold tracking-tight truncate">
         {pageTitle}
       </h1>
 
+      {/* Right-side actions */}
       <div className="flex flex-1 min-w-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
-        {/* Credits pill */}
-        <div className="flex items-center gap-1 sm:gap-1.5 rounded-full bg-slate-100 dark:bg-slate-800 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">
-          <Coins className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-yellow-500 shrink-0" />
-          <span className="font-medium tabular-nums hidden xs:inline">
-            {user.credits}
-          </span>
-          <span className="xs:hidden">{user.credits}</span>
-          <span className="text-xs text-muted-foreground hidden sm:inline">
-            credits
-          </span>
+        {/* Credits & Plan Pill */}
+        <div className="flex items-center gap-1.5 sm:gap-2 rounded-full bg-muted/50 dark:bg-muted/30 px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm border border-border/50">
+          <Coins className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-500 dark:text-amber-400 shrink-0" />
+          <span className="font-medium tabular-nums">{user.credits}</span>
+          <span className="text-muted-foreground hidden sm:inline">credits</span>
           {user.plan !== 'free' && (
             <Badge
-              className={`ml-0.5 sm:ml-1 text-xs px-1 py-0 h-4 ${planColors[user.plan] ?? ''}`}
+              variant="secondary"
+              className={`ml-0.5 text-[10px] sm:text-xs px-1.5 py-0 h-5 rounded-full ${planBadgeClass[user.plan] ?? ''}`}
             >
-              <Crown className="mr-0.5 h-2 w-2 sm:h-2.5 sm:w-2.5" />
-              <span className="hidden sm:inline">{user.plan}</span>
+              <Crown className="mr-1 h-2.5 w-2.5 sm:h-3 sm:w-3" />
+              <span className="hidden sm:inline capitalize">{user.plan}</span>
+              <span className="sm:hidden">{user.plan[0].toUpperCase()}</span>
             </Badge>
           )}
         </div>
@@ -118,11 +110,12 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
           <Button
             variant="outline"
             size="sm"
-            className="h-8 px-2 sm:px-3 text-xs sm:text-sm"
+            className="h-9 sm:h-10 rounded-lg text-xs sm:text-sm font-medium transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             onClick={() => router.push('/pricing')}
           >
-            <Sparkles className="h-3 w-3 sm:mr-1.5" />
-            <span className="hidden xs:inline">Upgrade</span>
+            <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5" />
+            <span className="hidden sm:inline">Upgrade</span>
+            <span className="sm:hidden">Pro</span>
           </Button>
         )}
 
@@ -130,12 +123,12 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 sm:h-8 sm:w-8"
+          className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
         >
-          <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          <span className="sr-only">Toggle theme</span>
+          <Sun className="h-4 w-4 sm:h-5 sm:w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+          <Moon className="absolute h-4 w-4 sm:h-5 sm:w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
         </Button>
 
         {/* User menu */}
@@ -143,45 +136,48 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="relative h-8 w-8 rounded-full p-0"
+              className="relative h-9 w-9 sm:h-10 sm:w-10 rounded-full p-0 transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              aria-label="Open user menu"
             >
-              <Avatar className="h-8 w-8">
+              <Avatar className="h-9 w-9 sm:h-10 sm:w-10">
                 <AvatarImage src="" alt={user.name} />
-                <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                <AvatarFallback className="text-xs sm:text-sm bg-primary text-primary-foreground font-medium">
                   {initials}
                 </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56" align="end" sideOffset={8}>
-            <DropdownMenuLabel>
+            <DropdownMenuLabel className="py-2.5 px-3">
               <div className="flex flex-col gap-0.5">
                 <p className="text-sm font-medium leading-none">{user.name}</p>
-                <p className="text-xs text-muted-foreground leading-none mt-1">
+                <p className="text-xs text-muted-foreground leading-none truncate">
                   {user.email}
                 </p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
 
-            {/* Mobile credits */}
+            {/* Mobile credits (shown only in dropdown on small screens) */}
             <DropdownMenuItem
-              className="sm:hidden"
+              className="sm:hidden py-2.5 px-3"
               onClick={() => router.push('/dashboard/billing')}
             >
-              <Coins className="mr-2 h-4 w-4 text-yellow-500" />
-              {user.credits} credits
+              <Coins className="mr-2 h-4 w-4 text-amber-500 dark:text-amber-400" />
+              <span className="tabular-nums">{user.credits} credits</span>
             </DropdownMenuItem>
 
             <DropdownMenuGroup>
               <DropdownMenuItem
                 onClick={() => router.push('/dashboard/settings')}
+                className="py-2.5 px-3 cursor-pointer"
               >
                 <User className="mr-2 h-4 w-4" />
                 Profile
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => router.push('/dashboard/settings')}
+                className="py-2.5 px-3 cursor-pointer"
               >
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
@@ -190,7 +186,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={handleSignOut}
-              className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950"
+              className="py-2.5 px-3 text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
             >
               <LogOut className="mr-2 h-4 w-4" />
               Sign out

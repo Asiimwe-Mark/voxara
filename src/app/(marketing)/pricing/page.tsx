@@ -249,7 +249,7 @@ export default function PricingPage() {
 
         <p className="text-center text-sm text-muted-foreground mt-10">
           All paid plans include a 7-day money-back guarantee.{' '}
-          <Link href="/terms" className="underline underline-offset-2">Terms apply.</Link>
+          <Link href="/legal/terms" className="underline underline-offset-2">Terms apply.</Link>
         </p>
       </div>
     </div>

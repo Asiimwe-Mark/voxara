@@ -36,24 +36,28 @@ export default async function DashboardPage() {
     videos?.filter((v) => v.status === 'processing').length ?? 0
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
-        <div className="space-y-2">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
+        <div className="space-y-1.5 sm:space-y-2">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
             {profile?.full_name
               ? `Welcome back, ${profile.full_name.split(' ')[0]}`
               : 'My Videos'}
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
             {videos?.length
               ? `${videos.length} video${videos.length === 1 ? '' : 's'} created · ${profile?.credits ?? 0} credits available`
               : 'Create your first AI video — no camera needed'}
           </p>
         </div>
-        <Button asChild size="lg" className="w-full sm:w-auto">
+        <Button 
+          asChild 
+          size="lg" 
+          className="w-full sm:w-auto h-11 sm:h-12 rounded-xl text-sm font-medium transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        >
           <Link href="/dashboard/create">
-            <PlusCircle className="h-4 w-4" />
+            <PlusCircle className="h-4 w-4 mr-2" />
             New Video
           </Link>
         </Button>
@@ -61,7 +65,7 @@ export default async function DashboardPage() {
 
       {/* Low-credit Alert */}
       {(profile?.credits ?? 0) <= 2 && profile?.plan === 'free' && (
-        <div className="rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+        <div className="rounded-xl border border-amber-200/50 dark:border-amber-800/50 bg-amber-50/50 dark:bg-amber-950/20 px-4 sm:px-6 py-3.5 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <p className="text-sm text-amber-800 dark:text-amber-300 font-medium">
             ⚠️ Low credits: You have only {profile?.credits ?? 0} credit
             {(profile?.credits ?? 0) === 1 ? '' : 's'} remaining.
@@ -70,7 +74,7 @@ export default async function DashboardPage() {
             size="sm"
             variant="outline"
             asChild
-            className="border-amber-300 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/30 w-full sm:w-auto"
+            className="h-9 sm:h-10 border-amber-300/50 dark:border-amber-700/50 hover:bg-amber-100/50 dark:hover:bg-amber-900/20 w-full sm:w-auto rounded-lg text-xs sm:text-sm font-medium transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500"
           >
             <Link href="/dashboard/billing">
               <Sparkles className="mr-2 h-4 w-4" />
@@ -83,6 +87,7 @@ export default async function DashboardPage() {
       {/* Stats Grid */}
       {(videos?.length ?? 0) > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+          {/* Total Videos */}
           <Card className="card-premium">
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
@@ -90,7 +95,7 @@ export default async function DashboardPage() {
                   <p className="text-xs sm:text-sm text-muted-foreground font-medium mb-2">
                     Total Videos
                   </p>
-                  <p className="text-3xl sm:text-4xl font-bold tabular-nums">
+                  <p className="text-3xl sm:text-4xl font-bold tracking-tight tabular-nums">
                     {videos?.length ?? 0}
                   </p>
                 </div>
@@ -100,6 +105,8 @@ export default async function DashboardPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Ready to Share */}
           <Card className="card-premium">
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
@@ -107,7 +114,7 @@ export default async function DashboardPage() {
                   <p className="text-xs sm:text-sm text-muted-foreground font-medium mb-2">
                     Ready to Share
                   </p>
-                  <p className="text-3xl sm:text-4xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+                  <p className="text-3xl sm:text-4xl font-bold tracking-tight tabular-nums text-emerald-600 dark:text-emerald-400">
                     {readyCount}
                   </p>
                 </div>
@@ -117,6 +124,8 @@ export default async function DashboardPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Processing */}
           <Card className="card-premium">
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
@@ -124,7 +133,7 @@ export default async function DashboardPage() {
                   <p className="text-xs sm:text-sm text-muted-foreground font-medium mb-2">
                     Processing
                   </p>
-                  <p className="text-3xl sm:text-4xl font-bold tabular-nums text-amber-600 dark:text-amber-400">
+                  <p className="text-3xl sm:text-4xl font-bold tracking-tight tabular-nums text-amber-600 dark:text-amber-400">
                     {processingCount}
                   </p>
                 </div>
@@ -140,7 +149,7 @@ export default async function DashboardPage() {
       {/* Videos Section */}
       {(videos?.length ?? 0) > 0 ? (
         <div>
-          <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 flex items-center gap-2">
+          <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 flex items-center gap-2 tracking-tight">
             <Video className="h-5 w-5 text-primary" />
             Your Videos
           </h2>
@@ -151,29 +160,30 @@ export default async function DashboardPage() {
           </div>
         </div>
       ) : (
-        <div className="empty-state border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-lg">
+        <div className="empty-state border-2 border-dashed border-border/50 rounded-xl">
           <div className="empty-state-icon">
             <Sparkles className="h-full w-full" />
           </div>
           <h3 className="empty-state-title">No videos yet</h3>
-          <p className="empty-state-description">
+          <p className="empty-state-description leading-relaxed">
             Create your first faceless video with AI — enter a topic and we'll
             handle the script, voiceover, footage, and editing.
           </p>
-          <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-            <Button asChild size="lg">
+          <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+            <Button asChild size="lg" className="h-11 sm:h-12 rounded-xl text-sm font-medium transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
               <Link href="/dashboard/create">
-                <PlusCircle className="h-4 w-4" />
+                <PlusCircle className="h-4 w-4 mr-2" />
                 Create Your First Video
               </Link>
             </Button>
             {profile?.plan === 'free' && (
-              <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
+              <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left leading-relaxed">
                 Free plan includes {profile?.credits ?? 1} credit.{' '}
+                <span className="hidden sm:inline"> </span>
                 <br className="sm:hidden" />
                 <Link
                   href="/pricing"
-                  className="text-primary hover:underline font-medium"
+                  className="text-primary hover:text-primary/80 font-medium transition-colors"
                 >
                   Upgrade for unlimited or share to earn more.
                 </Link>
@@ -185,14 +195,14 @@ export default async function DashboardPage() {
 
       {/* Growth Widgets for Free Users */}
       {profile?.plan === 'free' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-200 dark:border-slate-800">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 sm:pt-8 border-t border-border/50">
           <div>
-            <h3 className="text-sm font-semibold mb-4">Earn Free Credits</h3>
+            <h3 className="text-sm font-semibold mb-4 tracking-tight">Earn Free Credits</h3>
             <ReferralCard />
           </div>
           {videos && videos.length > 0 && (
             <div>
-              <h3 className="text-sm font-semibold mb-4">Share to Earn</h3>
+              <h3 className="text-sm font-semibold mb-4 tracking-tight">Share to Earn</h3>
               <ShareForCredits
                 videoId={videos[0].id}
                 videoUrl={videos[0].video_url ?? videos[0].youtube_id ?? ''}

@@ -88,20 +88,23 @@ function ResetPasswordConfirmContent() {
     }
   }
 
+  // Shared background classes for consistency
+  const bgClasses = "bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900"
+
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4 bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900">
-              <Lock className="h-6 w-6 text-red-600 dark:text-red-400" />
+      <div className={`flex min-h-screen items-center justify-center px-4 sm:px-6 ${bgClasses}`}>
+        <Card className="w-full max-w-[95vw] sm:max-w-md border-border/50 bg-background/80 backdrop-blur-xl shadow-2xl shadow-black/5">
+          <CardHeader className="text-center pt-6 sm:pt-8">
+            <div className="mx-auto mb-4 flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+              <Lock className="h-6 w-6 sm:h-7 sm:w-7 text-red-600 dark:text-red-400" />
             </div>
-            <CardTitle className="text-2xl">Invalid Link</CardTitle>
-            <CardDescription>{error}</CardDescription>
+            <CardTitle className="text-2xl sm:text-3xl">Invalid Link</CardTitle>
+            <CardDescription className="text-sm sm:text-base">{error}</CardDescription>
           </CardHeader>
-          <CardFooter className="justify-center">
+          <CardFooter className="justify-center pb-6 sm:pb-8">
             <Link href="/reset-password">
-              <Button variant="outline">
+              <Button variant="outline" className="h-11 sm:h-12 px-6">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Request New Reset Link
               </Button>
@@ -114,25 +117,25 @@ function ResetPasswordConfirmContent() {
 
   if (isSuccess) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4 bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
-              <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+      <div className={`flex min-h-screen items-center justify-center px-4 sm:px-6 ${bgClasses}`}>
+        <Card className="w-full max-w-[95vw] sm:max-w-md border-border/50 bg-background/80 backdrop-blur-xl shadow-2xl shadow-black/5">
+          <CardHeader className="text-center pt-6 sm:pt-8">
+            <div className="mx-auto mb-4 flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+              <CheckCircle className="h-6 w-6 sm:h-7 sm:w-7 text-green-600 dark:text-green-400" />
             </div>
-            <CardTitle className="text-2xl">Password Updated!</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-2xl sm:text-3xl">Password Updated!</CardTitle>
+            <CardDescription className="text-sm sm:text-base">
               Your password has been successfully changed.
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-sm text-muted-foreground mb-6">
+          <CardContent className="text-center px-6">
+            <p className="text-sm sm:text-base text-muted-foreground mb-6">
               You can now sign in with your new password.
             </p>
           </CardContent>
-          <CardFooter className="justify-center">
-            <Link href="/login">
-              <Button className="w-full">Sign In</Button>
+          <CardFooter className="justify-center pb-6 sm:pb-8 px-6">
+            <Link href="/login" className="w-full">
+              <Button className="h-11 sm:h-12 w-full rounded-xl text-sm font-semibold">Sign In</Button>
             </Link>
           </CardFooter>
         </Card>
@@ -141,31 +144,32 @@ function ResetPasswordConfirmContent() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">
+    <div className={`flex min-h-screen items-center justify-center px-4 sm:px-6 ${bgClasses}`}>
+      <Card className="w-full max-w-[95vw] sm:max-w-md border-border/50 bg-background/80 backdrop-blur-xl shadow-2xl shadow-black/5">
+        <CardHeader className="space-y-1 pt-6 sm:pt-8 px-6 sm:px-8">
+          <CardTitle className="text-2xl sm:text-3xl text-center">
             Set New Password
           </CardTitle>
-          <CardDescription className="text-center">
+          <CardDescription className="text-center text-sm sm:text-base">
             Enter your new password below
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-6 sm:px-8">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
               <FormField
                 control={form.control}
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>New Password</FormLabel>
+                    <FormLabel className="text-sm font-medium">New Password</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="••••••••"
                         type="password"
                         autoComplete="new-password"
                         disabled={isLoading}
+                        className="h-11 sm:h-12 rounded-xl border-border/60 bg-background/60 px-4 text-sm shadow-sm transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary/30"
                         {...field}
                       />
                     </FormControl>
@@ -178,13 +182,14 @@ function ResetPasswordConfirmContent() {
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
+                    <FormLabel className="text-sm font-medium">Confirm Password</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="••••••••"
                         type="password"
                         autoComplete="new-password"
                         disabled={isLoading}
+                        className="h-11 sm:h-12 rounded-xl border-border/60 bg-background/60 px-4 text-sm shadow-sm transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary/30"
                         {...field}
                       />
                     </FormControl>
@@ -195,7 +200,11 @@ function ResetPasswordConfirmContent() {
               {error && (
                 <p className="text-sm text-red-500 text-center">{error}</p>
               )}
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button 
+                type="submit" 
+                className="h-11 sm:h-12 w-full rounded-xl text-sm font-semibold shadow-lg shadow-primary/20 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]" 
+                disabled={isLoading}
+              >
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -208,10 +217,10 @@ function ResetPasswordConfirmContent() {
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex justify-center">
+        <CardFooter className="flex justify-center pb-6 sm:pb-8 px-6 sm:px-8">
           <Link
             href="/login"
-            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
+            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Login
@@ -227,8 +236,8 @@ export default function ResetPasswordConfirmPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <div className="flex min-h-screen items-center justify-center bg-background">
+          <Loader2 className="h-8 w-8 sm:h-10 sm:w-10 animate-spin text-muted-foreground" />
         </div>
       }
     >

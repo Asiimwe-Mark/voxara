@@ -7,7 +7,9 @@ import { ApiKeyManager } from '@/components/settings/ApiKeyManager'
 import { DangerZone } from '@/components/settings/DangerZone'
 import { WorkspaceSettings } from '@/components/settings/WorkspaceSettings'
 
-export const metadata = { title: 'Settings' }
+export const metadata = {
+  title: 'Settings',
+}
 
 interface SettingsPageProps {
   searchParams: { tab?: string }
@@ -20,6 +22,7 @@ export default async function SettingsPage({
   const {
     data: { user },
   } = await supabase.auth.getUser()
+
   if (!user) redirect('/login')
 
   const [{ data: profile }, { data: socialAccounts }] = await Promise.all([
@@ -47,54 +50,77 @@ export default async function SettingsPage({
     plan: 'free',
   }
 
+  // Determine active tab from URL, default to 'profile'
+  const activeTab = searchParams.tab === 'workspace' ? 'workspace' : 'profile'
+
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="md:max-w-3xl w-full space-y-6 sm:space-y-8">
+      {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
-        <p className="text-muted-foreground text-sm mt-0.5">
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+          Settings
+        </h2>
+        <p className="mt-1.5 text-sm sm:text-base text-muted-foreground">
           Manage your account, integrations, and preferences
         </p>
       </div>
 
-      <Tabs
-        defaultValue={
-          searchParams.tab === 'workspace' ? 'workspace' : 'profile'
-        }
-        className="space-y-6"
-      >
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="workspace">Workspace</TabsTrigger>
-          <TabsTrigger value="accounts">Social</TabsTrigger>
-          <TabsTrigger value="api">API Keys</TabsTrigger>
+      {/* Tabs Navigation */}
+      <Tabs defaultValue={activeTab} className="space-y-6">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 w-full h-auto sm:h-11 p-1 bg-muted/30 rounded-xl">
+          <TabsTrigger 
+            value="profile" 
+            className="text-xs sm:text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg h-9 sm:h-10"
+          >
+            Profile
+          </TabsTrigger>
+          <TabsTrigger 
+            value="workspace" 
+            className="text-xs sm:text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg h-9 sm:h-10"
+          >
+            Workspace
+          </TabsTrigger>
+          <TabsTrigger 
+            value="accounts" 
+            className="text-xs sm:text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg h-9 sm:h-10"
+          >
+            Social
+          </TabsTrigger>
+          <TabsTrigger 
+            value="api" 
+            className="text-xs sm:text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg h-9 sm:h-10"
+          >
+            API Keys
+          </TabsTrigger>
           <TabsTrigger
             value="danger"
-            className="text-destructive data-[state=active]:text-destructive"
+            className="text-xs sm:text-sm font-medium text-destructive data-[state=active]:bg-destructive/10 data-[state=active]:text-destructive rounded-lg h-9 sm:h-10"
           >
             Danger
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="profile">
+        {/* Tab Contents */}
+        <TabsContent value="profile" className="space-y-0 focus:outline-none">
           <ProfileSettings user={voxaraUser} profile={voxaraProfile} />
         </TabsContent>
 
-        <TabsContent value="workspace">
+        <TabsContent value="workspace" className="space-y-0 focus:outline-none">
           <WorkspaceSettings plan={voxaraProfile.plan ?? 'free'} />
         </TabsContent>
 
-        <TabsContent value="accounts">
+        <TabsContent value="accounts" className="space-y-0 focus:outline-none">
           <ConnectedAccounts
             userId={user.id}
             initialAccounts={socialAccounts ?? []}
           />
         </TabsContent>
 
-        <TabsContent value="api">
+        <TabsContent value="api" className="space-y-0 focus:outline-none">
           <ApiKeyManager userId={user.id} />
         </TabsContent>
 
-        <TabsContent value="danger">
+        <TabsContent value="danger" className="space-y-0 focus:outline-none">
           <DangerZone userId={user.id} />
         </TabsContent>
       </Tabs>
