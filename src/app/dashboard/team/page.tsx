@@ -60,7 +60,7 @@ export default async function TeamPage() {
   // Agency user with no org yet — show create org prompt
   if (!membership) {
     return (
-      <div className="space-y-6 p-2.5 sm:space-y-8">
+      <div className="space-y-6 sm:space-y-8">
         {/* Header */}
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Team</h2>

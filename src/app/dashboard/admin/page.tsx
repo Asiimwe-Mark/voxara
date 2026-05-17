@@ -5,6 +5,7 @@
  */
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/card'
 import { Users, Video, DollarSign, TrendingUp, AlertCircle, Loader2 } from 'lucide-react'
 
@@ -20,6 +21,7 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
+  const router = useRouter()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -207,13 +209,14 @@ export default function AdminDashboard() {
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: 'View All Users', color: 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600' },
-            { label: 'View All Videos', color: 'bg-violet-600 hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-600' },
-            { label: 'Recent Payments', color: 'bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600' },
-            { label: 'System Logs', color: 'bg-muted hover:bg-muted/80 text-foreground dark:text-foreground' },
-          ].map(({ label, color }) => (
+            { label: 'View All Users', color: 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600', href: '/dashboard/admin/users' },
+            { label: 'View Analytics', color: 'bg-violet-600 hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-600', href: '/dashboard/admin/analytics' },
+            { label: 'Recent Payments', color: 'bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600', href: '/dashboard/admin/billing' },
+            { label: 'Back to Dashboard', color: 'bg-muted hover:bg-muted/80 text-foreground dark:text-foreground', href: '/dashboard' },
+          ].map(({ label, color, href }) => (
             <button
               key={label}
+              onClick={() => router.push(href)}
               className={`rounded-xl px-4 py-3 text-xs sm:text-sm font-medium text-primary-foreground transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-[0.98] ${color}`}
             >
               {label}

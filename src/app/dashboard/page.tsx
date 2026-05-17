@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { PlusCircle, Sparkles, TrendingUp, Video, Zap } from 'lucide-react'
@@ -7,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { VideoCard } from '@/components/dashboard/video-card'
 import { ShareForCredits } from '@/components/credits/ShareForCredits'
 import { ReferralCard } from '@/components/credits/ReferralCard'
+import { CheckoutNotifier } from '@/components/dashboard/checkout-notifier'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -36,7 +38,10 @@ export default async function DashboardPage() {
     videos?.filter((v) => v.status === 'processing').length ?? 0
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
+    <div className="space-y-6 sm:space-y-8">
+      <Suspense fallback={null}>
+        <CheckoutNotifier />
+      </Suspense>
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
         <div className="space-y-1.5 sm:space-y-2">

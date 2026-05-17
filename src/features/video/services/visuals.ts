@@ -53,24 +53,49 @@ export async function fetchStockFootage(
 }
 
 function getFallbackFootage(query: string, count: number): string[] {
+  // Curated Pexels video clips by category (public, free-to-use)
   const fallbackVideos: Record<string, string[]> = {
     nature: [
-      "https://player.vimeo.com/external/434748126.sd.mp4?s=865c4eaa72133339f2f3f7c1fef15bca2d2ddbe8",
+      "https://videos.pexels.com/video-files/857251/857251-hd_1920_1080_30fps.mp4",
+      "https://videos.pexels.com/video-files/856974/856974-hd_1920_1080_30fps.mp4",
+      "https://videos.pexels.com/video-files/855564/855564-hd_1920_1080_30fps.mp4",
     ],
     business: [
-      "https://player.vimeo.com/external/434748126.hd.mp4?s=865c4eaa72133339f2f3f7c1fef15bca2d2ddbe8",
+      "https://videos.pexels.com/video-files/3252007/3252007-hd_1920_1080_25fps.mp4",
+      "https://videos.pexels.com/video-files/3209828/3209828-hd_1920_1080_25fps.mp4",
+      "https://videos.pexels.com/video-files/3297379/3297379-hd_1920_1080_25fps.mp4",
     ],
     technology: [
-      "https://player.vimeo.com/external/434748126.sd.mp4?s=865c4eaa72133339f2f3f7c1fef15bca2d2ddbe8",
+      "https://videos.pexels.com/video-files/3129671/3129671-hd_1920_1080_30fps.mp4",
+      "https://videos.pexels.com/video-files/3141208/3141208-hd_1920_1080_30fps.mp4",
+      "https://videos.pexels.com/video-files/2022395/2022395-hd_1920_1080_30fps.mp4",
+    ],
+    food: [
+      "https://videos.pexels.com/video-files/3296396/3296396-hd_1920_1080_25fps.mp4",
+      "https://videos.pexels.com/video-files/3298577/3298577-hd_1920_1080_25fps.mp4",
+    ],
+    travel: [
+      "https://videos.pexels.com/video-files/3571264/3571264-hd_1920_1080_30fps.mp4",
+      "https://videos.pexels.com/video-files/2169880/2169880-hd_1920_1080_25fps.mp4",
+    ],
+    fitness: [
+      "https://videos.pexels.com/video-files/4761437/4761437-hd_1920_1080_25fps.mp4",
+      "https://videos.pexels.com/video-files/4754029/4754029-hd_1920_1080_25fps.mp4",
     ],
   };
 
+  const queryLower = query.toLowerCase();
   const category = Object.keys(fallbackVideos).find((c) =>
-    query.toLowerCase().includes(c)
+    queryLower.includes(c)
   );
   const videos = category
     ? fallbackVideos[category]
     : fallbackVideos["nature"];
 
-  return Array(count).fill(videos[0]).slice(0, count);
+  // Cycle through available videos to fill the requested count
+  const result: string[] = [];
+  for (let i = 0; i < count; i++) {
+    result.push(videos[i % videos.length]);
+  }
+  return result;
 }

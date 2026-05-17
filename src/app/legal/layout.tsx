@@ -16,49 +16,47 @@ export default function LegalLayout({
   const pathname = usePathname()
 
   const legalPages = [
-    { href: '/legal/terms', label: 'Terms of Service', icon: '📋' },
-    { href: '/legal/privacy', label: 'Privacy Policy', icon: '🔒' },
-    { href: '/legal/aup', label: 'Acceptable Use Policy', icon: '⚠️' },
-    { href: '/legal/cookies', label: 'Cookie Policy', icon: '🍪' },
-    { href: '/legal/refunds', label: 'Refund Policy', icon: '💰' },
-    { href: '/legal/dpa', label: 'Data Processing Agreement', icon: '📜' },
-    { href: '/legal/sla', label: 'SLA & Support', icon: '🆘' },
+    { href: '/legal/terms', label: 'Terms of Service' },
+    { href: '/legal/privacy', label: 'Privacy Policy' },
+    { href: '/legal/aup', label: 'Acceptable Use Policy' },
+    { href: '/legal/cookies', label: 'Cookie Policy' },
+    { href: '/legal/refunds', label: 'Refund Policy' },
+    { href: '/legal/dpa', label: 'Data Processing Agreement' },
+    { href: '/legal/sla', label: 'SLA & Support' },
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <h1 className="text-4xl font-bold text-gray-900">Legal & Policies</h1>
-          <p className="text-gray-600 mt-2">
-            Find all the information you need about voxara's policies and legal
-            documentation
+      <div className="bg-card border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
+          <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">Legal & Policies</h1>
+          <p className="text-muted-foreground mt-2 text-sm sm:text-base">
+            Find all the information you need about Voxara&apos;s policies and legal documentation
           </p>
         </div>
       </div>
 
       {/* Navigation and Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
           {/* Sidebar Navigation */}
           <aside className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="card-premium p-5 sm:p-6 sticky top-6">
+              <h2 className="text-base sm:text-lg font-semibold text-foreground mb-4 tracking-tight">
                 Policies & Agreements
               </h2>
-              <nav className="space-y-2">
+              <nav className="space-y-1.5">
                 {legalPages.map((page) => (
                   <Link
                     key={page.href}
                     href={page.href}
-                    className={`block px-4 py-3 rounded-lg transition-colors ${
+                    className={`block px-3 py-2.5 rounded-lg text-sm transition-smooth ${
                       pathname === page.href
-                        ? 'bg-blue-50 text-blue-700 font-semibold border-l-4 border-blue-700'
-                        : 'text-gray-700 hover:bg-gray-50 border-l-4 border-transparent'
+                        ? 'bg-primary/10 text-primary font-medium border-l-2 border-primary'
+                        : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground border-l-2 border-transparent'
                     }`}
                   >
-                    <span className="mr-2">{page.icon}</span>
                     {page.label}
                   </Link>
                 ))}
@@ -66,28 +64,28 @@ export default function LegalLayout({
             </div>
 
             {/* Quick Links */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">
+            <div className="card-premium p-5 sm:p-6 mt-6">
+              <h3 className="text-sm font-semibold text-foreground mb-4 tracking-tight">
                 Need Help?
               </h3>
               <div className="space-y-3">
                 <a
                   href="mailto:support@voxara.app"
-                  className="flex items-center text-blue-600 hover:text-blue-700 font-medium"
+                  className="flex items-center text-sm text-primary hover:text-primary/80 font-medium transition-colors"
                 >
-                  <span className="mr-2">📧</span> Contact Support
+                  Contact Support
                 </a>
                 <a
                   href="mailto:privacy@voxara.app"
-                  className="flex items-center text-blue-600 hover:text-blue-700 font-medium"
+                  className="flex items-center text-sm text-primary hover:text-primary/80 font-medium transition-colors"
                 >
-                  <span className="mr-2">🔐</span> Privacy Questions
+                  Privacy Questions
                 </a>
                 <a
                   href="mailto:billing@voxara.app"
-                  className="flex items-center text-blue-600 hover:text-blue-700 font-medium"
+                  className="flex items-center text-sm text-primary hover:text-primary/80 font-medium transition-colors"
                 >
-                  <span className="mr-2">💳</span> Billing Help
+                  Billing Help
                 </a>
               </div>
             </div>
@@ -99,66 +97,65 @@ export default function LegalLayout({
       </div>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+      <footer className="bg-card border-t border-border mt-12 sm:mt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 mb-8">
             <div>
-              <h3 className="font-semibold text-gray-900 mb-4">
+              <h3 className="font-semibold text-foreground mb-4 text-sm tracking-tight">
                 Policy Categories
               </h3>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <Link href="/legal/terms" className="hover:text-blue-600">
+                  <Link href="/legal/terms" className="hover:text-primary transition-colors">
                     Service Terms
                   </Link>
                 </li>
                 <li>
-                  <Link href="/legal/privacy" className="hover:text-blue-600">
+                  <Link href="/legal/privacy" className="hover:text-primary transition-colors">
                     Privacy & Data
                   </Link>
                 </li>
                 <li>
-                  <Link href="/legal/aup" className="hover:text-blue-600">
+                  <Link href="/legal/aup" className="hover:text-primary transition-colors">
                     Usage Policies
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 mb-4">
+              <h3 className="font-semibold text-foreground mb-4 text-sm tracking-tight">
                 Support & Legal
               </h3>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <Link href="/legal/sla" className="hover:text-blue-600">
+                  <Link href="/legal/sla" className="hover:text-primary transition-colors">
                     Support & SLA
                   </Link>
                 </li>
                 <li>
-                  <Link href="/legal/refunds" className="hover:text-blue-600">
+                  <Link href="/legal/refunds" className="hover:text-primary transition-colors">
                     Refunds & Billing
                   </Link>
                 </li>
                 <li>
-                  <Link href="/legal/dpa" className="hover:text-blue-600">
+                  <Link href="/legal/dpa" className="hover:text-primary transition-colors">
                     Data Agreements
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 mb-4">Contact</h3>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <h3 className="font-semibold text-foreground mb-4 text-sm tracking-tight">Contact</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>support@voxara.app</li>
                 <li>privacy@voxara.app</li>
                 <li>billing@voxara.app</li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-gray-200 pt-8">
-            <p className="text-sm text-gray-600">
-              © 2026 voxara Inc. All rights reserved. | Last updated: April 19,
-              2026
+          <div className="border-t border-border pt-6 sm:pt-8">
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              &copy; 2026 Voxara Inc. All rights reserved.
             </p>
           </div>
         </div>

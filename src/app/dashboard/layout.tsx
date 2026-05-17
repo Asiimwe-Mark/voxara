@@ -41,7 +41,7 @@ export default async function DashboardLayout({
             }}
           />
           <main className="flex-1 min-h-0 overflow-y-auto bg-gradient-to-b from-background via-background to-slate-50/50 dark:to-slate-950/50">
-            <div className="w-full h-full">{children}</div>
+            <div className="w-full h-full p-4 sm:p-6 lg:p-8">{children}</div>
           </main>
         </div>
       </div>

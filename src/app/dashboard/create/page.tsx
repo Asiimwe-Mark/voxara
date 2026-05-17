@@ -179,7 +179,7 @@ export default function CreatePage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-5 sm:space-y-7 px-3 sm:px-0">
+    <div className="mx-auto w-full max-w-2xl space-y-5 sm:space-y-7">
       {/* Header */}
       <div className="pb-2">
         <h2 className="text-xl sm:text-2xl font-bold tracking-tight">

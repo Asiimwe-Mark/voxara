@@ -112,28 +112,28 @@
     outline-offset: 2px;
   }
 
-  /* ── Typography hierarchy ──────────────────────────────────── */
-  h1 {
+  /* ── Typography hierarchy (marketing pages only) ─────────── */
+  .marketing-page h1 {
     @apply text-4xl md:text-5xl font-bold tracking-tight leading-none;
   }
 
-  h2 {
+  .marketing-page h2 {
     @apply text-3xl md:text-4xl font-bold tracking-tight leading-tight;
   }
 
-  h3 {
+  .marketing-page h3 {
     @apply text-2xl font-bold tracking-tight leading-tight;
   }
 
-  h4 {
+  .marketing-page h4 {
     @apply text-xl font-semibold tracking-tight leading-snug;
   }
 
-  h5 {
+  .marketing-page h5 {
     @apply text-lg font-semibold tracking-tight leading-snug;
   }
 
-  h6 {
+  .marketing-page h6 {
     @apply text-base font-semibold tracking-tight;
   }
 

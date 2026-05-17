@@ -5,7 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 // Use the service-role admin client: this service is called from Inngest background
 // jobs where there is no HTTP request / cookie context for the SSR client.
 function getStorageClient() {
-  return
+  return supabaseAdmin;
 }
 
 export interface VoiceoverOptions {
@@ -30,7 +30,7 @@ export async function generateVoiceover(
   const audioBuffer = Buffer.from(await result.audio.arrayBuffer());
 
   const storagePath = `${userId}/${videoId}/voiceover.mp3`;
-  const { error } = await supabaseAdmin.storage.from("videos").upload(storagePath, audioBuffer, {
+  const { error } = await supabase.storage.from("videos").upload(storagePath, audioBuffer, {
     contentType: "audio/mpeg",
     cacheControl: "3600",
     upsert: true,

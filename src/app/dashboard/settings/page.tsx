@@ -54,7 +54,7 @@ export default async function SettingsPage({
   const activeTab = searchParams.tab === 'workspace' ? 'workspace' : 'profile'
 
   return (
-    <div className="md:max-w-3xl w-full space-y-6 sm:space-y-8">
+    <div className="w-full max-w-3xl space-y-6 sm:space-y-8">
       {/* Header */}
       <div>
         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
