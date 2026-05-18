@@ -1,5 +1,7 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from 'next'
+import { withSentryConfig } from '@sentry/nextjs'
+
+const nextConfig: NextConfig = {
   compress: true,
 
   // Image optimization
@@ -56,18 +58,18 @@ const nextConfig = {
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
       },
-    ];
+    ]
   },
 
   async redirects() {
     return [
       { source: '/docs', destination: 'https://docs.voxara.app', permanent: true },
       { source: '/api/docs', destination: 'https://docs.voxara.app/api', permanent: true },
-    ];
+    ]
   },
 
   async rewrites() {
-    return { beforeFiles: [] };
+    return { beforeFiles: [] }
   },
 
   turbopack: {},
@@ -78,12 +80,9 @@ const nextConfig = {
   typescript: {
     tsconfigPath: './tsconfig.json',
   },
-};
+}
 
-// Wrap with Sentry for error capture in build pipeline
-const { withSentryConfig } = require('@sentry/nextjs');
-
-module.exports = withSentryConfig(nextConfig, {
+export default withSentryConfig(nextConfig, {
   silent: true,
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
@@ -92,4 +91,4 @@ module.exports = withSentryConfig(nextConfig, {
   disableClientWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
   hideSourceMaps: true,
   widenClientFileUpload: true,
-});
+})
