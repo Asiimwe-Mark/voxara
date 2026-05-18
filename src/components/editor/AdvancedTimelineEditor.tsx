@@ -464,12 +464,12 @@ export function AdvancedTimelineEditor({ videoId }: AdvancedTimelineEditorProps)
 
       {/* Keyboard Shortcuts Tooltip */}
       {showKeyboardHints && (
-        <div className="px-3 sm:px-4 py-2 bg-muted/30 border-b border-border/50 text-xs text-muted-foreground">
-          <div className="flex flex-wrap gap-x-4 gap-y-1">
-            <span><kbd className="px-1.5 py-0.5 rounded bg-muted border border-border/50 font-mono">Space</kbd> Play/Pause</span>
-            <span><kbd className="px-1.5 py-0.5 rounded bg-muted border border-border/50 font-mono">Ctrl+S</kbd> Save</span>
-            <span><kbd className="px-1.5 py-0.5 rounded bg-muted border border-border/50 font-mono">Del</kbd> Delete clip</span>
-            <span><kbd className="px-1.5 py-0.5 rounded bg-muted border border-border/50 font-mono">K</kbd> Split clip</span>
+        <div className="px-3 sm:px-4 py-2 bg-muted/30 border-b border-border/50 text-[10px] sm:text-xs text-muted-foreground">
+          <div className="flex flex-wrap gap-x-3 sm:gap-x-4 gap-y-1">
+            <span><kbd className="px-1 sm:px-1.5 py-0.5 rounded bg-muted border border-border/50 font-mono">Space</kbd> Play/Pause</span>
+            <span><kbd className="px-1 sm:px-1.5 py-0.5 rounded bg-muted border border-border/50 font-mono">Ctrl+S</kbd> Save</span>
+            <span><kbd className="px-1 sm:px-1.5 py-0.5 rounded bg-muted border border-border/50 font-mono">Del</kbd> Delete clip</span>
+            <span><kbd className="px-1 sm:px-1.5 py-0.5 rounded bg-muted border border-border/50 font-mono">K</kbd> Split clip</span>
           </div>
         </div>
       )}
@@ -511,40 +511,42 @@ export function AdvancedTimelineEditor({ videoId }: AdvancedTimelineEditorProps)
 
       {/* Playback Controls */}
       <div className="border-t border-border/50 p-3 sm:p-4 bg-background">
-        <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            onClick={() => handleSeek(0)}
-            aria-label="Seek to start"
-          >
-            <SkipBack className="h-4 w-4 sm:h-5 sm:w-5" />
-          </Button>
-          <Button
-            variant="default"
-            size="icon"
-            className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            onClick={togglePlayPause}
-            aria-label={isPlaying ? 'Pause' : 'Play'}
-          >
-            {isPlaying ? (
-              <Pause className="h-4 w-4 sm:h-5 sm:w-5" />
-            ) : (
-              <Play className="h-4 w-4 sm:h-5 sm:w-5" />
-            )}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            onClick={() => handleSeek(durationInFrames)}
-            aria-label="Seek to end"
-          >
-            <SkipForward className="h-4 w-4 sm:h-5 sm:w-5" />
-          </Button>
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-3 sm:mb-4">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              onClick={() => handleSeek(0)}
+              aria-label="Seek to start"
+            >
+              <SkipBack className="h-4 w-4 sm:h-5 sm:w-5" />
+            </Button>
+            <Button
+              variant="default"
+              size="icon"
+              className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              onClick={togglePlayPause}
+              aria-label={isPlaying ? 'Pause' : 'Play'}
+            >
+              {isPlaying ? (
+                <Pause className="h-4 w-4 sm:h-5 sm:w-5" />
+              ) : (
+                <Play className="h-4 w-4 sm:h-5 sm:w-5" />
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              onClick={() => handleSeek(durationInFrames)}
+              aria-label="Seek to end"
+            >
+              <SkipForward className="h-4 w-4 sm:h-5 sm:w-5" />
+            </Button>
+          </div>
 
-          <div className="flex-1 min-w-[120px]">
+          <div className="flex-1 min-w-[100px] order-3 sm:order-none w-full sm:w-auto">
             <Slider
               value={[currentFrame]}
               max={durationInFrames}
@@ -554,7 +556,7 @@ export function AdvancedTimelineEditor({ videoId }: AdvancedTimelineEditorProps)
             />
           </div>
 
-          <span className="text-xs sm:text-sm font-mono tabular-nums min-w-[80px] text-center">
+          <span className="text-xs sm:text-sm font-mono tabular-nums min-w-[70px] sm:min-w-[80px] text-center">
             {Math.floor(currentFrame / 30)}s / {Math.floor(durationInFrames / 30)}s
           </span>
 
@@ -568,7 +570,7 @@ export function AdvancedTimelineEditor({ videoId }: AdvancedTimelineEditorProps)
             >
               <ZoomOut className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </Button>
-            <span className="text-xs sm:text-sm min-w-[45px] text-center tabular-nums">
+            <span className="text-xs sm:text-sm min-w-[40px] sm:min-w-[45px] text-center tabular-nums">
               {Math.round(zoom * 100)}%
             </span>
             <Button
@@ -592,9 +594,9 @@ export function AdvancedTimelineEditor({ videoId }: AdvancedTimelineEditorProps)
           style={{ touchAction: 'pan-y' }}
         >
           {tracks.map((track) => (
-            <div key={track.id} className="flex items-start gap-2 min-w-[800px] sm:min-w-0">
+            <div key={track.id} className="flex items-start gap-2 min-w-[600px] sm:min-w-0">
               {/* Track label */}
-              <div className="w-28 sm:w-32 shrink-0 flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground py-1.5">
+              <div className="w-20 sm:w-32 shrink-0 flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground py-1.5">
                 {track.type === 'video' && <Image className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
                 {track.type === 'audio' && <Music className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
                 {track.type === 'text' && <Type className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
@@ -741,7 +743,7 @@ export function AdvancedTimelineEditor({ videoId }: AdvancedTimelineEditorProps)
               </Button>
             </div>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div>
               <Label className="text-xs text-muted-foreground">Start Frame</Label>
               <Input
@@ -772,7 +774,7 @@ export function AdvancedTimelineEditor({ videoId }: AdvancedTimelineEditorProps)
                 className="h-9 sm:h-10 rounded-lg text-xs sm:text-sm mt-1 focus-visible:ring-primary/30 touch-manipulation"
               />
             </div>
-            <div className="col-span-2 sm:col-span-1">
+            <div>
               <Label className="text-xs text-muted-foreground">Duration</Label>
               <Input
                 type="text"
@@ -782,7 +784,7 @@ export function AdvancedTimelineEditor({ videoId }: AdvancedTimelineEditorProps)
               />
             </div>
             {selectedClip.type === 'text' && (
-              <div className="col-span-2 sm:col-span-3">
+              <div className="col-span-1 sm:col-span-3">
                 <Label className="text-xs text-muted-foreground">Text Content</Label>
                 <Textarea
                   value={selectedClip.content || ''}

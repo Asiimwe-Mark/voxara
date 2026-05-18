@@ -50,7 +50,7 @@ export default function AdminAnalytics() {
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <div className="w-full max-w-6xl space-y-6 sm:space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -90,41 +90,41 @@ export default function AdminAnalytics() {
           {/* Key Metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Total Signups */}
-            <Card className="card-premium p-5 sm:p-6">
+            <Card className="card-premium p-4 sm:p-6">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-xs sm:text-sm text-muted-foreground">Total Signups</p>
-                  <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight">
+                  <p className="mt-1.5 sm:mt-2 text-xl sm:text-3xl font-bold tracking-tight">
                     {analytics.dailySignups.reduce((sum, d) => sum + d.count, 0)}
                   </p>
                 </div>
-                <TrendingUp className="h-5 w-5 text-emerald-500 dark:text-emerald-400" />
+                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-500 dark:text-emerald-400" />
               </div>
             </Card>
 
             {/* Videos Generated */}
-            <Card className="card-premium p-5 sm:p-6">
+            <Card className="card-premium p-4 sm:p-6">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-xs sm:text-sm text-muted-foreground">Videos Generated</p>
-                  <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight">
+                  <p className="mt-1.5 sm:mt-2 text-xl sm:text-3xl font-bold tracking-tight">
                     {analytics.videosGenerated.reduce((sum, d) => sum + d.count, 0)}
                   </p>
                 </div>
-                <TrendingUp className="h-5 w-5 text-primary" />
+                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               </div>
             </Card>
 
             {/* Credits Consumed */}
-            <Card className="card-premium p-5 sm:p-6">
+            <Card className="card-premium p-4 sm:p-6">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-xs sm:text-sm text-muted-foreground">Credits Consumed</p>
-                  <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight">
+                  <p className="mt-1.5 sm:mt-2 text-xl sm:text-3xl font-bold tracking-tight">
                     {analytics.creditsUsed.reduce((sum, d) => sum + d.amount, 0)}
                   </p>
                 </div>
-                <TrendingDown className="h-5 w-5 text-violet-500 dark:text-violet-400" />
+                <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-violet-500 dark:text-violet-400" />
               </div>
             </Card>
           </div>
@@ -132,22 +132,22 @@ export default function AdminAnalytics() {
           {/* Charts Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Daily Signups Chart */}
-            <Card className="card-premium p-5 sm:p-6">
-              <h3 className="text-base sm:text-lg font-semibold mb-4 tracking-tight">
+            <Card className="card-premium p-4 sm:p-6">
+              <h3 className="text-sm sm:text-lg font-semibold mb-3 sm:mb-4 tracking-tight">
                 Daily Signups
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-2.5 sm:space-y-3">
                 {analytics.dailySignups.slice(-7).map((day) => (
-                  <div key={day.date} className="flex items-center justify-between gap-4">
-                    <span className="text-xs sm:text-sm text-muted-foreground min-w-[80px]">
+                  <div key={day.date} className="flex items-center justify-between gap-3 sm:gap-4">
+                    <span className="text-xs sm:text-sm text-muted-foreground min-w-[60px] sm:min-w-[80px]">
                       {new Date(day.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                     </span>
-                    <div className="flex items-center gap-3 flex-1">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                       <div
-                        className="h-2 rounded-full bg-primary transition-all duration-200"
-                        style={{ width: `${Math.min(day.count * 10, 100)}px`, maxWidth: '60%' }}
+                        className="h-1.5 sm:h-2 rounded-full bg-primary transition-all duration-200"
+                        style={{ width: `${Math.min(day.count * 10, 100)}%`, maxWidth: '60%' }}
                       />
-                      <span className="text-xs sm:text-sm font-semibold tabular-nums">{day.count}</span>
+                      <span className="text-xs sm:text-sm font-semibold tabular-nums shrink-0">{day.count}</span>
                     </div>
                   </div>
                 ))}
@@ -155,25 +155,25 @@ export default function AdminAnalytics() {
             </Card>
 
             {/* Top Features */}
-            <Card className="card-premium p-5 sm:p-6">
-              <h3 className="text-base sm:text-lg font-semibold mb-4 tracking-tight">
+            <Card className="card-premium p-4 sm:p-6">
+              <h3 className="text-sm sm:text-lg font-semibold mb-3 sm:mb-4 tracking-tight">
                 Most Used Features
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-2.5 sm:space-y-3">
                 {analytics.topFeatures.map((feature, index) => {
                   const maxUses = Math.max(...analytics.topFeatures.map((f) => f.uses))
                   const widthPercent = Math.max((feature.uses / maxUses) * 100, 10)
                   return (
-                    <div key={index} className="flex items-center justify-between gap-4">
-                      <span className="text-xs sm:text-sm text-muted-foreground truncate">
+                    <div key={index} className="flex items-center justify-between gap-3 sm:gap-4">
+                      <span className="text-xs sm:text-sm text-muted-foreground truncate min-w-0">
                         {feature.feature}
                       </span>
-                      <div className="flex items-center gap-3 flex-1">
+                      <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                         <div
-                          className="h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 transition-all duration-200"
+                          className="h-1.5 sm:h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 transition-all duration-200"
                           style={{ width: `${widthPercent}%`, maxWidth: '60%' }}
                         />
-                        <span className="text-xs sm:text-sm font-semibold tabular-nums">{feature.uses}</span>
+                        <span className="text-xs sm:text-sm font-semibold tabular-nums shrink-0">{feature.uses}</span>
                       </div>
                     </div>
                   )
@@ -183,22 +183,22 @@ export default function AdminAnalytics() {
           </div>
 
           {/* Videos Generated Trend */}
-          <Card className="card-premium p-5 sm:p-6">
-            <h3 className="text-base sm:text-lg font-semibold mb-4 tracking-tight">
+          <Card className="card-premium p-4 sm:p-6">
+            <h3 className="text-sm sm:text-lg font-semibold mb-3 sm:mb-4 tracking-tight">
               Videos Generated Trend
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-2.5 sm:space-y-3">
               {analytics.videosGenerated.slice(-14).map((day) => (
-                <div key={day.date} className="flex items-center justify-between gap-4">
-                  <span className="text-xs sm:text-sm text-muted-foreground min-w-[80px]">
+                <div key={day.date} className="flex items-center justify-between gap-3 sm:gap-4">
+                  <span className="text-xs sm:text-sm text-muted-foreground min-w-[60px] sm:min-w-[80px]">
                     {new Date(day.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                   </span>
-                  <div className="flex items-center gap-3 flex-1">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                     <div
-                      className="h-2 rounded-full bg-violet-500 dark:bg-violet-400 transition-all duration-200"
-                      style={{ width: `${Math.min(day.count * 5, 200)}px`, maxWidth: '60%' }}
+                      className="h-1.5 sm:h-2 rounded-full bg-violet-500 dark:bg-violet-400 transition-all duration-200"
+                      style={{ width: `${Math.min(day.count * 5, 100)}%`, maxWidth: '60%' }}
                     />
-                    <span className="text-xs sm:text-sm font-semibold tabular-nums">{day.count}</span>
+                    <span className="text-xs sm:text-sm font-semibold tabular-nums shrink-0">{day.count}</span>
                   </div>
                 </div>
               ))}

@@ -177,9 +177,9 @@ export default function CreatePage() {
   }
 
   return (
-    <div className="min-h-screen w-full">
+    <div className="w-full">
       {/* ── Page shell: centers content with safe side padding on every breakpoint ── */}
-      <div className="mx-auto w-full max-w-2xl px-4 sm:px-6 lg:px-0 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      <div className="mx-auto w-full max-w-2xl px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
 
         {/* ── Header ── */}
         <div className="flex items-start gap-3">

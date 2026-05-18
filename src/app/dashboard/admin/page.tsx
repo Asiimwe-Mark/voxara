@@ -102,7 +102,7 @@ export default function AdminDashboard() {
   ]
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <div className="w-full max-w-6xl space-y-6 sm:space-y-8">
       {/* Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard Overview</h1>
@@ -129,18 +129,18 @@ export default function AdminDashboard() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {statCards.map((stat, index) => (
-          <Card key={index} className={`card-premium p-5 sm:p-6 ${stat.contextColor}`}>
+          <Card key={index} className={`card-premium p-4 sm:p-6 ${stat.contextColor}`}>
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-xs sm:text-sm font-medium text-muted-foreground">
                   {stat.title}
                 </p>
-                <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight tabular-nums">
+                <p className="mt-1.5 sm:mt-2 text-xl sm:text-3xl font-bold tracking-tight tabular-nums">
                   {stat.value}
                 </p>
-                <p className="mt-1.5 text-xs text-muted-foreground/80">{stat.trend}</p>
+                <p className="mt-1 sm:mt-1.5 text-xs text-muted-foreground/80">{stat.trend}</p>
               </div>
-              <div className="p-2 rounded-lg bg-background/50 backdrop-blur-sm">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-background/50 backdrop-blur-sm">
                 {stat.icon}
               </div>
             </div>
@@ -149,10 +149,10 @@ export default function AdminDashboard() {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Subscription Breakdown */}
-        <Card className="card-premium p-5 sm:p-6">
-          <h3 className="text-base sm:text-lg font-semibold tracking-tight mb-4">
+        <Card className="card-premium p-4 sm:p-6">
+          <h3 className="text-sm sm:text-lg font-semibold tracking-tight mb-3 sm:mb-4">
             Subscription Metrics
           </h3>
           <div className="space-y-3.5">
@@ -178,8 +178,8 @@ export default function AdminDashboard() {
         </Card>
 
         {/* System Status */}
-        <Card className="card-premium p-5 sm:p-6">
-          <h3 className="text-base sm:text-lg font-semibold tracking-tight mb-4">
+        <Card className="card-premium p-4 sm:p-6">
+          <h3 className="text-sm sm:text-lg font-semibold tracking-tight mb-3 sm:mb-4">
             System Health
           </h3>
           <div className="space-y-4">
@@ -203,8 +203,8 @@ export default function AdminDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <Card className="card-premium p-5 sm:p-6">
-        <h3 className="text-base sm:text-lg font-semibold tracking-tight mb-4">
+      <Card className="card-premium p-4 sm:p-6">
+        <h3 className="text-sm sm:text-lg font-semibold tracking-tight mb-3 sm:mb-4">
           Quick Actions
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">

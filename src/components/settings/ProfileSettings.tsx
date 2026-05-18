@@ -207,9 +207,9 @@ async function onSubmit(values: ProfileFormValues) {
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <label 
-              htmlFor="avatar-upload" 
-              className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-full cursor-pointer"
+            <label
+              htmlFor="avatar-upload"
+              className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-full cursor-pointer touch-manipulation"
               aria-label="Change avatar"
             >
               <Camera className="h-5 w-5 sm:h-6 sm:w-6 text-white" />

@@ -65,7 +65,7 @@ export default function AdminBilling() {
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <div className="w-full max-w-6xl space-y-6 sm:space-y-8">
       {/* Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Billing Management</h1>
@@ -77,25 +77,25 @@ export default function AdminBilling() {
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Successful Payments */}
-        <Card className="card-premium p-5 sm:p-6 bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200/50 dark:border-emerald-800/50">
+        <Card className="card-premium p-4 sm:p-6 bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200/50 dark:border-emerald-800/50">
           <p className="text-xs sm:text-sm text-muted-foreground">Successful Payments</p>
-          <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
+          <p className="mt-1.5 sm:mt-2 text-xl sm:text-3xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
             {stats.totalCompleted}
           </p>
         </Card>
 
         {/* Failed Payments */}
-        <Card className="card-premium p-5 sm:p-6 bg-red-50/50 dark:bg-red-950/20 border-red-200/50 dark:border-red-800/50">
+        <Card className="card-premium p-4 sm:p-6 bg-red-50/50 dark:bg-red-950/20 border-red-200/50 dark:border-red-800/50">
           <p className="text-xs sm:text-sm text-muted-foreground">Failed Payments</p>
-          <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-red-600 dark:text-red-400">
+          <p className="mt-1.5 sm:mt-2 text-xl sm:text-3xl font-bold tracking-tight text-red-600 dark:text-red-400">
             {stats.totalFailed}
           </p>
         </Card>
 
         {/* Total Revenue */}
-        <Card className="card-premium p-5 sm:p-6 bg-primary/5 dark:bg-primary/10 border-primary/20">
+        <Card className="card-premium p-4 sm:p-6 bg-primary/5 dark:bg-primary/10 border-primary/20">
           <p className="text-xs sm:text-sm text-muted-foreground">Total Revenue</p>
-          <p className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-primary">
+          <p className="mt-1.5 sm:mt-2 text-xl sm:text-3xl font-bold tracking-tight text-primary">
             ${(stats.totalRevenue / 100).toFixed(2)}
           </p>
         </Card>
@@ -129,8 +129,8 @@ export default function AdminBilling() {
 
       {/* Billing Records Table */}
       <Card className="card-premium overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px]">
+        <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+          <table className="w-full min-w-[640px]">
             <thead className="bg-muted/30">
               <tr>
                 <th className="px-4 sm:px-6 py-3.5 text-left text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">

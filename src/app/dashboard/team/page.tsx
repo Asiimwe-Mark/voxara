@@ -83,7 +83,7 @@ export default async function TeamPage() {
   // ── Not on Agency plan ──────────────────────────────────────────────────
   if (profile?.plan !== 'agency') {
     return (
-      <div className="space-y-5 sm:space-y-6">
+      <div className="w-full max-w-4xl space-y-5 sm:space-y-6">
         <PageHeader description="Collaborate with your team on video creation" />
         <StateCard
           iconBg="bg-muted"
@@ -100,7 +100,7 @@ export default async function TeamPage() {
   // ── Agency user, no org yet ─────────────────────────────────────────────
   if (!membership) {
     return (
-      <div className="space-y-5 sm:space-y-6">
+      <div className="w-full max-w-4xl space-y-5 sm:space-y-6">
         <PageHeader description="Collaborate with your team on video creation" />
         <StateCard
           iconBg="bg-primary/10"
@@ -116,7 +116,7 @@ export default async function TeamPage() {
 
   // ── Agency user with org — full team settings ───────────────────────────
   return (
-    <div className="space-y-5 sm:space-y-6">
+    <div className="w-full max-w-4xl space-y-5 sm:space-y-6">
       <PageHeader description="Manage members and permissions for your workspace" />
       <TeamSettings organizationId={membership.organization_id} />
     </div>

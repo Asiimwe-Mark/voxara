@@ -90,7 +90,7 @@ export default function LoginPage() {
         </div>
 
         {/* ── Auth card ── */}
-        <Card className="w-full max-w-sm sm:max-w-md border-border/50 bg-background/80 shadow-2xl shadow-black/5 backdrop-blur-xl">
+        <Card className="w-full sm:w-120  border-border/50 bg-background/80 shadow-2xl shadow-black/5 backdrop-blur-xl">
 
           <CardContent className="px-5 pt-6 pb-2 sm:px-8 sm:pt-8 sm:pb-2">
             <Form {...form}>

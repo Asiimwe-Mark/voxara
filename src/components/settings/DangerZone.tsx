@@ -109,20 +109,20 @@ export function DangerZone({ userId }: { userId: string }) {
         </div>
 
         {/* Sign out all devices */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-border/50 bg-background">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:p-4 rounded-xl border border-border/50 bg-background">
           <div className="min-w-0">
             <p className="text-sm font-medium">Sign Out All Devices</p>
             <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
               Invalidates all active sessions across every device. You'll need to log in again everywhere.
             </p>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleSignOutAllDevices}
-            className="h-9 sm:h-10 rounded-lg text-xs sm:text-sm font-medium transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary w-full sm:w-auto"
+            className="h-9 sm:h-10 rounded-lg text-xs sm:text-sm font-medium transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary w-full sm:w-auto touch-manipulation"
           >
-            <LogOut className="mr-2 h-4 w-4" /> 
+            <LogOut className="mr-2 h-4 w-4" />
             Sign Out All
           </Button>
         </div>
@@ -130,7 +130,7 @@ export function DangerZone({ userId }: { userId: string }) {
         <Separator className="bg-border/50" />
 
         {/* Delete account */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-destructive/30 bg-destructive/5 dark:bg-destructive/10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:p-4 rounded-xl border border-destructive/30 bg-destructive/5 dark:bg-destructive/10">
           <div className="min-w-0">
             <p className="text-sm font-semibold text-destructive">Delete Account</p>
             <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">

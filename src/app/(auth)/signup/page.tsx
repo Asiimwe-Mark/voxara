@@ -129,13 +129,13 @@ export default function SignUpPage() {
 
       {/* ── Ambient background blobs ── */}
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden>
-        <div className="absolute left-1/2 top-[-10%] h-[55vw] w-[55vw] max-h-[520px] max-w-[520px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute bottom-[-5%] left-[-5%] h-[40vw] w-[40vw] max-h-[340px] max-w-[340px] rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute right-[-5%] top-1/3 h-[30vw] w-[30vw] max-h-[260px] max-w-[260px] rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute left-1/2 top-[-10%] h-[55vw] w-[55vw] max-h-130 max-w-130 -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute bottom-[-5%] left-[-5%] h-[40vw] w-[40vw] max-h-85 max-w-85 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute right-[-5%] top-1/3 h-[30vw] w-[30vw] max-h-65 max-w-65 rounded-full bg-primary/5 blur-3xl" />
       </div>
 
       <div className="flex min-h-screen flex-col items-center justify-center px-4 py-10 sm:px-6">
-        <div className="w-full max-w-sm sm:max-w-md space-y-5 sm:space-y-6">
+        <div className="w-full sm:max-w-2/4 space-y-5 sm:space-y-6">
 
           {/* ── Brand mark + headline ── */}
           <div className="flex flex-col items-center gap-3 text-center">

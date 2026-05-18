@@ -276,11 +276,11 @@ export function SEOOptimizer({
             {/* Overall Score & Actions */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-5 rounded-xl bg-muted/30 border border-border/50">
               <div className="flex items-center gap-3 w-full sm:w-auto">
-                <div className={`text-4xl sm:text-5xl font-bold tabular-nums ${scoreColor(analysis.overallScore)}`}>
+                <div className={`text-3xl sm:text-5xl font-bold tabular-nums ${scoreColor(analysis.overallScore)}`}>
                   {analysis.overallScore}
                 </div>
                 <div className="min-w-0 flex-1 sm:flex-none">
-                  <p className="font-semibold tracking-tight">Overall SEO Score</p>
+                  <p className="text-sm sm:text-base font-semibold tracking-tight">Overall SEO Score</p>
                   <Progress value={analysis.overallScore} className={`h-2 mt-2 w-full sm:w-32 ${progressColor(analysis.overallScore)}`} />
                   <p className="text-xs text-muted-foreground mt-1.5">
                     {analysis.overallScore >= 80 ? "Excellent! Ready to publish" : analysis.overallScore >= 60 ? "Good, can improve" : "Needs optimization"}
@@ -306,9 +306,9 @@ export function SEOOptimizer({
             <Tabs defaultValue="title" className="w-full">
               <TabsList className="grid w-full grid-cols-3 h-10 sm:h-11 rounded-lg">
                 {["title", "description", "tags"].map((tab) => (
-                  <TabsTrigger key={tab} value={tab} className="text-xs sm:text-sm capitalize data-[state=active]:bg-background">
-                    {tab}
-                    <Badge variant="secondary" className="ml-1.5 text-[10px] h-4 px-1.5">
+                  <TabsTrigger key={tab} value={tab} className="text-[11px] sm:text-sm capitalize data-[state=active]:bg-background gap-1 sm:gap-1.5">
+                    <span className="truncate">{tab}</span>
+                    <Badge variant="secondary" className="text-[9px] sm:text-[10px] h-3.5 sm:h-4 px-1 sm:px-1.5">
                       {(analysis as any)[tab].score}
                     </Badge>
                   </TabsTrigger>
@@ -401,7 +401,7 @@ export function SEOOptimizer({
                 <Target className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
                 Keyword Opportunities
               </Label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                 {[
                   { key: "primary", label: "Primary" },
                   { key: "secondary", label: "Secondary" },
@@ -447,10 +447,10 @@ export function SEOOptimizer({
                   Search Preview
                 </Label>
                 <div className="flex bg-muted/50 rounded-lg p-0.5">
-                  <Button variant="ghost" size="sm" className={`h-7 px-2 text-xs rounded-md ${previewMode === "desktop" ? "bg-background shadow-sm" : ""}`} onClick={() => setPreviewMode("desktop")}>
+                  <Button variant="ghost" size="sm" className={`h-8 sm:h-7 px-2.5 sm:px-2 text-xs rounded-md touch-manipulation ${previewMode === "desktop" ? "bg-background shadow-sm" : ""}`} onClick={() => setPreviewMode("desktop")}>
                     <Monitor className="h-3.5 w-3.5 mr-1" /> Desktop
                   </Button>
-                  <Button variant="ghost" size="sm" className={`h-7 px-2 text-xs rounded-md ${previewMode === "mobile" ? "bg-background shadow-sm" : ""}`} onClick={() => setPreviewMode("mobile")}>
+                  <Button variant="ghost" size="sm" className={`h-8 sm:h-7 px-2.5 sm:px-2 text-xs rounded-md touch-manipulation ${previewMode === "mobile" ? "bg-background shadow-sm" : ""}`} onClick={() => setPreviewMode("mobile")}>
                     <Smartphone className="h-3.5 w-3.5 mr-1" /> Mobile
                   </Button>
                 </div>

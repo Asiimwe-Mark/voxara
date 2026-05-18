@@ -15,6 +15,7 @@ import {
   Zap,
   X,
   BarChart3,
+  Search,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -37,6 +38,7 @@ const navItems = [
   { title: 'Dashboard', href: '/dashboard', icon: Home },
   { title: 'Create Video', href: '/dashboard/create', icon: PlusCircle },
   { title: 'AI Studio', href: '/dashboard/ai-studio', icon: Sparkles },
+  { title: 'SEO', href: '/dashboard/seo', icon: Search },
   { title: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
   { title: 'Marketplace', href: '/dashboard/marketplace', icon: Store },
   { title: 'Team', href: '/dashboard/team', icon: Users },

@@ -47,7 +47,7 @@ export default async function DashboardPage() {
   const firstName       = profile?.full_name?.split(' ')[0]
 
   return (
-    <div className="space-y-5 sm:space-y-7">
+    <div className="space-y-5 sm:space-y-7 overflow-x-hidden w-full">
       <Suspense fallback={null}>
         <CheckoutNotifier />
       </Suspense>
@@ -100,20 +100,20 @@ export default async function DashboardPage() {
 
       {/* ── Stats grid ───────────────────────────────────────────────────── */}
       {hasVideos && (
-        <div className="grid grid-cols-3 gap-3 sm:gap-4 md:gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
           {/* Total videos */}
-          <Card className="card-premium">
+          <Card className="card-premium overflow-hidden">
             <CardContent className="p-3.5 sm:p-5">
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <p className="truncate text-[10px] font-medium text-muted-foreground sm:text-xs">
                     Total
                   </p>
-                  <p className="mt-1 text-2xl font-bold tabular-nums tracking-tight sm:text-3xl">
+                  <p className="mt-1 text-xl font-bold tabular-nums tracking-tight sm:text-2xl lg:text-3xl">
                     {videos?.length ?? 0}
                   </p>
                 </div>
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 sm:h-11 sm:w-11">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 sm:h-10 sm:w-10">
                   <Video className="h-4 w-4 text-primary sm:h-5 sm:w-5" />
                 </div>
               </div>
@@ -121,18 +121,18 @@ export default async function DashboardPage() {
           </Card>
 
           {/* Ready */}
-          <Card className="card-premium">
+          <Card className="card-premium overflow-hidden">
             <CardContent className="p-3.5 sm:p-5">
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <p className="truncate text-[10px] font-medium text-muted-foreground sm:text-xs">
                     Ready
                   </p>
-                  <p className="mt-1 text-2xl font-bold tabular-nums tracking-tight text-emerald-600 dark:text-emerald-400 sm:text-3xl">
+                  <p className="mt-1 text-xl font-bold tabular-nums tracking-tight text-emerald-600 dark:text-emerald-400 sm:text-2xl lg:text-3xl">
                     {readyCount}
                   </p>
                 </div>
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950/30 sm:h-11 sm:w-11">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950/30 sm:h-10 sm:w-10">
                   <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400 sm:h-5 sm:w-5" />
                 </div>
               </div>
@@ -140,18 +140,18 @@ export default async function DashboardPage() {
           </Card>
 
           {/* Processing */}
-          <Card className="card-premium">
+          <Card className="card-premium overflow-hidden">
             <CardContent className="p-3.5 sm:p-5">
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <p className="truncate text-[10px] font-medium text-muted-foreground sm:text-xs">
                     In Progress
                   </p>
-                  <p className="mt-1 text-2xl font-bold tabular-nums tracking-tight text-amber-600 dark:text-amber-400 sm:text-3xl">
+                  <p className="mt-1 text-xl font-bold tabular-nums tracking-tight text-amber-600 dark:text-amber-400 sm:text-2xl lg:text-3xl">
                     {processingCount}
                   </p>
                 </div>
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-950/30 sm:h-11 sm:w-11">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-950/30 sm:h-10 sm:w-10">
                   <Zap className="h-4 w-4 text-amber-600 dark:text-amber-400 sm:h-5 sm:w-5" />
                 </div>
               </div>

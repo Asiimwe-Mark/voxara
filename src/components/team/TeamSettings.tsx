@@ -253,8 +253,8 @@ export function TeamSettings({ organizationId }: TeamSettingsProps) {
           </div>
 
           {/* Invite Form */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3">
-            <div className="flex-1 w-full space-y-2">
+          <div className="space-y-3">
+            <div className="space-y-2">
               <Label htmlFor="invite-email" className="text-sm font-medium">
                 Invite Team Member
               </Label>
@@ -290,30 +290,32 @@ export function TeamSettings({ organizationId }: TeamSettingsProps) {
                 </p>
               )}
             </div>
-            <Select 
-              value={inviteRole} 
-              onValueChange={(v) => setInviteRole(v as "admin" | "member")}
-            >
-              <SelectTrigger className="h-10 sm:h-11 w-full sm:w-32 rounded-lg text-sm focus:ring-2 focus:ring-primary/30">
-                <SelectValue placeholder="Role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="member">Member</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button 
-              onClick={handleInvite} 
-              disabled={isInviting || !isEmailValid}
-              className="h-10 sm:h-11 rounded-lg text-sm font-medium transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary w-full sm:w-auto disabled:opacity-50"
-            >
-              {isInviting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <UserPlus className="mr-2 h-4 w-4" />
-              )}
-              Invite
-            </Button>
+            <div className="flex gap-2.5 sm:gap-3">
+              <Select
+                value={inviteRole}
+                onValueChange={(v) => setInviteRole(v as "admin" | "member")}
+              >
+                <SelectTrigger className="h-10 sm:h-11 w-28 sm:w-32 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 shrink-0">
+                  <SelectValue placeholder="Role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="member">Member</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                onClick={handleInvite}
+                disabled={isInviting || !isEmailValid}
+                className="h-10 sm:h-11 rounded-lg text-sm font-medium transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary flex-1 sm:flex-none disabled:opacity-50"
+              >
+                {isInviting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <UserPlus className="mr-2 h-4 w-4" />
+                )}
+                Invite
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -405,7 +407,7 @@ export function TeamSettings({ organizationId }: TeamSettingsProps) {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleRemoveMember(member.id, member.email)}
-                        className="h-9 w-9 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-destructive"
+                        className="h-9 w-9 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-destructive touch-manipulation"
                         aria-label={`Remove ${member.email} from team`}
                       >
                         <Trash2 className="h-4 w-4" />

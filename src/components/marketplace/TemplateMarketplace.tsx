@@ -151,7 +151,7 @@ export function TemplateMarketplace({ userId }: Props) {
     <div className="space-y-6 sm:space-y-8">
       {/* Sticky Filters */}
       <div className="sticky top-16 sm:top-20 z-20 -mx-3 sm:-mx-6 px-3 sm:px-6 py-3 sm:py-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/50">
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
@@ -163,29 +163,31 @@ export function TemplateMarketplace({ userId }: Props) {
               aria-label="Search templates"
             />
           </div>
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="h-10 sm:h-11 w-full sm:w-44 rounded-lg text-sm focus:ring-2 focus:ring-primary/30">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              {["all", "educational", "marketing", "entertainment", "business", "social"].map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c === "all" ? "All Categories" : c.charAt(0).toUpperCase() + c.slice(1)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-            <SelectTrigger className="h-10 sm:h-11 w-full sm:w-48 rounded-lg text-sm focus:ring-2 focus:ring-primary/30">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="popular">Most Popular</SelectItem>
-              <SelectItem value="newest">Newest First</SelectItem>
-              <SelectItem value="price_low">Price: Low → High</SelectItem>
-              <SelectItem value="price_high">Price: High → Low</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="grid grid-cols-2 gap-2.5 sm:contents">
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger className="h-10 sm:h-11 w-full sm:w-44 rounded-lg text-sm focus:ring-2 focus:ring-primary/30">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                {["all", "educational", "marketing", "entertainment", "business", "social"].map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c === "all" ? "All Categories" : c.charAt(0).toUpperCase() + c.slice(1)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+              <SelectTrigger className="h-10 sm:h-11 w-full sm:w-48 rounded-lg text-sm focus:ring-2 focus:ring-primary/30">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="popular">Most Popular</SelectItem>
+                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="price_low">Price: Low → High</SelectItem>
+                <SelectItem value="price_high">Price: High → Low</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 

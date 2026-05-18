@@ -183,10 +183,10 @@ export function ConnectedAccounts({ userId, initialAccounts }: ConnectedAccounts
           const isDisconnecting = disconnecting === (connected?.id ?? "")
 
           return (
-            <div key={platform} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:p-4 rounded-xl border border-border/50 hover:border-primary/30 transition-smooth bg-muted/10">
+            <div key={platform} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:p-4 rounded-xl border border-border/50 hover:border-primary/30 transition-smooth bg-muted/10 touch-manipulation">
               <div className="flex items-start sm:items-center gap-3 min-w-0">
-                <div className={`p-2.5 rounded-xl ${config.color} text-white flex-shrink-0 shadow-sm`}>
-                  <Icon className="h-5 w-5" />
+                <div className={`p-2 sm:p-2.5 rounded-xl ${config.color} text-white flex-shrink-0 shadow-sm`}>
+                  <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">

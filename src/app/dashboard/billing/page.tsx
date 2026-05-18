@@ -240,7 +240,7 @@ export default function BillingPage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-6 sm:space-y-8 max-w-4xl">
+    <div className="w-full max-w-4xl space-y-6 sm:space-y-8">
       {/* Header */}
       <div>
         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Billing &amp; Subscription</h2>

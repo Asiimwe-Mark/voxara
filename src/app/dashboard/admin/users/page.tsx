@@ -57,7 +57,7 @@ export default function AdminUsers() {
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <div className="w-full max-w-6xl space-y-6 sm:space-y-8">
       {/* Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">User Management</h1>
@@ -89,8 +89,8 @@ export default function AdminUsers() {
 
       {/* Users Table */}
       <Card className="card-premium overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px]">
+        <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+          <table className="w-full min-w-[640px]">
             <thead className="bg-muted/30">
               <tr>
                 <th className="px-4 sm:px-6 py-3.5 text-left text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
