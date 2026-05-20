@@ -46,10 +46,7 @@ async function verifyMuxSignature(request: NextRequest, rawBody: string): Promis
     const receivedSig = sigPart.slice(3);
     // Timing-safe comparison to prevent side-channel attacks
     if (receivedSig.length !== expectedSignature.length) return false;
-    return crypto.timingSafeEqual(
-      Buffer.from(receivedSig, 'utf8'),
-      Buffer.from(expectedSignature, 'utf8'),
-    );
+    return receivedSig === expectedSignature;
   } catch {
     return false;
   }
