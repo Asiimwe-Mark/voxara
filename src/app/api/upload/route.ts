@@ -7,6 +7,14 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 const ALLOWED_MIME_TYPES = ["audio/mp3", "audio/mpeg", "audio/wav", "audio/webm", "audio/ogg"];
 const MAX_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
 
+const MIME_TO_EXT: Record<string, string> = {
+  "audio/mp3": "mp3",
+  "audio/mpeg": "mp3",
+  "audio/wav": "wav",
+  "audio/webm": "webm",
+  "audio/ogg": "ogg",
+};
+
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -31,7 +39,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "File exceeds 25 MB limit" }, { status: 413 });
   }
 
-  const ext = file.name.split(".").pop() ?? "mp3";
+  const ext = MIME_TO_EXT[file.type] ?? "mp3";
   const filename = `${user.id}/samples/${Date.now()}.${ext}`;
 
   const buffer = Buffer.from(await file.arrayBuffer());

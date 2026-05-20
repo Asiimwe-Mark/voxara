@@ -25,10 +25,10 @@ export async function GET() {
     };
   } catch { services.database = { status: 'down' }; }
 
-  // Check required env vars
-  const missing = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'SUPABASE_SERVICE_ROLE_KEY']
-    .filter(v => !process.env[v]);
-  if (missing.length > 0) services.env = { status: 'degraded' };
+  // Check required env vars (without exposing variable names)
+  const requiredVars = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'SUPABASE_SERVICE_ROLE_KEY'];
+  const hasAllEnv = requiredVars.every(v => !!process.env[v]);
+  if (!hasAllEnv) services.env = { status: 'degraded' };
 
   const overall = services.database.status === 'down' ? 'down'
     : Object.values(services).some(s => s.status !== 'ok') ? 'degraded'

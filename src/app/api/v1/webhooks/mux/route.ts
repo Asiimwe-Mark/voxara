@@ -19,8 +19,8 @@ async function verifyMuxSignature(request: NextRequest, rawBody: string): Promis
   // Mux webhook verification requires the signing secret
   const secret = process.env.MUX_WEBHOOK_SECRET ?? process.env.MUX_WEBHOOK_SIGNING_SECRET;
   if (!secret) {
-    logger.warn("MUX_WEBHOOK_SECRET not set — skipping signature verification in development");
-    return process.env.NODE_ENV === "development";
+    logger.error("MUX_WEBHOOK_SECRET not set — rejecting webhook");
+    return false;
   }
 
   try {
@@ -43,7 +43,13 @@ async function verifyMuxSignature(request: NextRequest, rawBody: string): Promis
     const sigPart = parts.find(p => p.startsWith('v1='));
     if (!sigPart) return false;
 
-    return sigPart.slice(3) === expectedSignature;
+    const receivedSig = sigPart.slice(3);
+    // Timing-safe comparison to prevent side-channel attacks
+    if (receivedSig.length !== expectedSignature.length) return false;
+    return crypto.timingSafeEqual(
+      Buffer.from(receivedSig, 'utf8'),
+      Buffer.from(expectedSignature, 'utf8'),
+    );
   } catch {
     return false;
   }

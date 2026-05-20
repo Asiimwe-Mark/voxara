@@ -17,7 +17,6 @@ import { NextRequest, NextResponse } from 'next/server';
 export const SECURITY_HEADERS: Record<string, string> = {
   'X-Content-Type-Options':    'nosniff',
   'X-Frame-Options':            'DENY',
-  'X-XSS-Protection':           '1; mode=block',
   'Referrer-Policy':            'strict-origin-when-cross-origin',
   'Permissions-Policy':         'geolocation=(), microphone=(), camera=()',
   'Strict-Transport-Security':  'max-age=63072000; includeSubDomains; preload',
@@ -153,4 +152,64 @@ export function maskSensitiveData(obj: unknown): unknown {
     }
   }
   return copy;
+}
+
+// ─── OAuth State Signing (Web Crypto — Edge compatible) ──────────────────────
+
+const OAUTH_STATE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+function getOAuthStateSecret(): string {
+  const secret = process.env.OAUTH_STATE_SECRET ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!secret) throw new Error('Missing OAUTH_STATE_SECRET or SUPABASE_SERVICE_ROLE_KEY');
+  return secret;
+}
+
+/**
+ * Sign an OAuth state payload with HMAC-SHA256.
+ * Returns a base64url-encoded string: `body.signature`
+ */
+export async function signOAuthState(userId: string): Promise<string> {
+  const payload = JSON.stringify({ uid: userId, iat: Date.now() });
+  const body = btoa(payload).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const enc = new TextEncoder();
+  const key = await globalThis.crypto.subtle.importKey(
+    'raw', enc.encode(getOAuthStateSecret()),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'],
+  );
+  const sigBuf = await globalThis.crypto.subtle.sign('HMAC', key, enc.encode(body));
+  const sig = btoa(String.fromCharCode(...new Uint8Array(sigBuf)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return `${body}.${sig}`;
+}
+
+/**
+ * Verify a signed OAuth state and return the userId.
+ * Returns null if invalid or expired.
+ */
+export async function verifyOAuthState(token: string): Promise<string | null> {
+  const dot = token.lastIndexOf('.');
+  if (dot === -1) return null;
+  const body = token.slice(0, dot);
+  const sig = token.slice(dot + 1);
+
+  const enc = new TextEncoder();
+  const key = await globalThis.crypto.subtle.importKey(
+    'raw', enc.encode(getOAuthStateSecret()),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['verify'],
+  );
+  // Decode base64url signature to Uint8Array
+  const sigPadded = sig.replace(/-/g, '+').replace(/_/g, '/') + '=='.slice(0, (4 - (sig.length % 4)) % 4);
+  const sigBytes = Uint8Array.from(atob(sigPadded), c => c.charCodeAt(0));
+  const valid = await globalThis.crypto.subtle.verify('HMAC', key, sigBytes, enc.encode(body));
+  if (!valid) return null;
+
+  try {
+    const bodyPadded = body.replace(/-/g, '+').replace(/_/g, '/') + '=='.slice(0, (4 - (body.length % 4)) % 4);
+    const payload = JSON.parse(atob(bodyPadded));
+    if (!payload.uid || typeof payload.iat !== 'number') return null;
+    if (Date.now() - payload.iat > OAUTH_STATE_TTL_MS) return null;
+    return payload.uid as string;
+  } catch {
+    return null;
+  }
 }

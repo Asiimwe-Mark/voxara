@@ -12,7 +12,7 @@ export const metadata = {
 }
 
 // Tabs config — single source of truth for label, value, and optional styling
-const TABS = [
+const TABS: readonly { value: string; label: string; danger?: boolean }[] = [
   { value: 'profile',   label: 'Profile'    },
   { value: 'workspace', label: 'Workspace'  },
   { value: 'accounts',  label: 'Social'     },

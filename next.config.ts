@@ -26,7 +26,7 @@ const nextConfig: NextConfig = {
 
   experimental: {
     serverActions: {
-      bodySizeLimit: '10mb',
+      bodySizeLimit: '2mb',
     },
   },
 
@@ -47,9 +47,25 @@ const nextConfig: NextConfig = {
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'X-XSS-Protection', value: '1; mode=block' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'geolocation=(), microphone=(), camera=()' },
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.sentry.io https://js.stripe.com https://sandbox.paddle.com https://buy.paddle.com",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: blob: https://images.pexels.com https://image.mux.com https://lh3.googleusercontent.com https://*.supabase.co https://*.supabase.in https://api.heygen.com https://api.d-id.com",
+              "font-src 'self' data:",
+              "connect-src 'self' https://*.supabase.co https://*.supabase.in https://api.stripe.com https://sandbox.paddle.com https://api.paddle.com https://stream.mux.com https://api.mux.com https://sentry.io https://*.ingest.sentry.io https://api.heygen.com https://api.d-id.com https://open-api.tiktok.com https://api.instagram.com https://graph.instagram.com https://www.googleapis.com",
+              "frame-src 'self' https://js.stripe.com https://sandbox.paddle.com https://buy.paddle.com https://www.youtube.com",
+              "media-src 'self' blob: https://stream.mux.com",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "frame-ancestors 'none'",
+            ].join('; '),
+          },
         ],
       },
       {
@@ -87,8 +103,8 @@ export default withSentryConfig(nextConfig, {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
-  disableServerWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
-  disableClientWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
-  hideSourceMaps: true,
+  sourcemaps: {
+    disable: !process.env.SENTRY_AUTH_TOKEN,
+  },
   widenClientFileUpload: true,
 })

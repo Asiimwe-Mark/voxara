@@ -1,21 +1,53 @@
 /**
  * POST /api/auth/2fa/validate
- * Validate 2FA code during login
+ * Validate 2FA code during login.
+ *
+ * Security: Accepts a signed challengeToken (issued after password verification)
+ * instead of a raw userId. This prevents attackers from submitting arbitrary
+ * userIds to brute-force TOTP codes. Rate-limited to 5 attempts per 15 minutes
+ * per IP.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { verifyTOTPCode, verifyBackupCode, useBackupCode, isValidTOTPFormat, isValidBackupCodeFormat } from '@/lib/two-factor-auth';
+import {
+  verifyTOTPCode,
+  verifyBackupCode,
+  useBackupCode,
+  isValidTOTPFormat,
+  isValidBackupCodeFormat,
+  verifyChallengeToken,
+} from '@/lib/two-factor-auth';
+import { ratelimit } from '@/lib/rate-limit';
 import { captureException, addBreadcrumb } from '@/lib/monitoring';
 
 export async function POST(req: NextRequest) {
-  try {
-    const { userId, code } = await req.json();
+  // ── Rate limit per IP ──
+  const ip = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? 'unknown';
+  const { success: rateOk } = await ratelimit.limit(`2fa-validate:${ip}`);
+  if (!rateOk) {
+    return NextResponse.json(
+      { error: 'Too many attempts. Please try again later.' },
+      { status: 429 },
+    );
+  }
 
-    if (!userId || !code) {
+  try {
+    const { challengeToken, code } = await req.json();
+
+    if (!challengeToken || !code) {
       return NextResponse.json(
-        { error: 'Missing userId or code' },
+        { error: 'Missing challengeToken or code' },
         { status: 400 }
+      );
+    }
+
+    // ── Verify the signed challenge token ──
+    const userId = verifyChallengeToken(challengeToken);
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Invalid or expired challenge token. Please sign in again.' },
+        { status: 401 }
       );
     }
 
@@ -35,7 +67,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const codeNormalized = code.replace(/\s+/g, '').toUpperCase();
     let isValid = false;
     let isBackupCode = false;
 

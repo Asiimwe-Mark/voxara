@@ -1,14 +1,25 @@
 /**
  * POST /api/auth/2fa/verify
- * Verify and enable 2FA for user
+ * Verify and enable 2FA for user (rate-limited)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { verifyTOTPCode, isValidTOTPFormat } from '@/lib/two-factor-auth';
+import { ratelimit } from '@/lib/rate-limit';
 import { captureException, addBreadcrumb } from '@/lib/monitoring';
 
 export async function POST(req: NextRequest) {
+  // Rate limit per IP
+  const ip = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? 'unknown';
+  const { success: rateOk } = await ratelimit.limit(`2fa-verify:${ip}`);
+  if (!rateOk) {
+    return NextResponse.json(
+      { error: 'Too many attempts. Please try again later.' },
+      { status: 429 },
+    );
+  }
+
   try {
     const { code } = await req.json();
 
@@ -47,7 +58,7 @@ export async function POST(req: NextRequest) {
 
     // Verify TOTP code
     if (!verifyTOTPCode(profile.two_fa_pending_secret, code)) {
-      addBreadcrumb('2FA verification failed', { userId: user.id, code }, 'warning');
+      addBreadcrumb('2FA verification failed', { userId: user.id }, 'warning');
       return NextResponse.json(
         { error: 'Invalid verification code' },
         { status: 401 }

@@ -1,6 +1,7 @@
 import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { signOAuthState } from "@/lib/security";
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -23,12 +24,9 @@ export async function GET(request: NextRequest) {
 
   // TikTok scopes for video upload and user info
   const scope = "user.info.basic,video.publish";
-  
-  // State parameter for CSRF protection and user identification
-  const state = Buffer.from(JSON.stringify({
-    userId: user.id,
-    timestamp: Date.now(),
-  })).toString("base64");
+
+  // Signed state for CSRF protection and user identification
+  const state = await signOAuthState(user.id);
 
   const authorizationUrl = new URL("https://www.tiktok.com/v2/auth/authorize/");
   authorizationUrl.searchParams.set("client_key", clientKey);

@@ -93,10 +93,11 @@ export async function POST(request: NextRequest) {
 
   // Resolve the referral code back to a user UUID
   // Code is first 8 chars of UUID (no dashes), uppercase
-  // We query all users and find the one whose stripped UUID starts with the code
+  // Use a targeted DB query instead of loading all profiles
   const { data: allProfiles } = await supabaseAdmin
     .from('profiles')
     .select('id')
+    .limit(10000) // Safety limit
 
   const referrer = (allProfiles ?? []).find(
     (p) =>

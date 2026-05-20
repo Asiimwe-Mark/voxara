@@ -1,6 +1,7 @@
 import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { signOAuthState } from "@/lib/security";
 import { google } from "googleapis";
 
 export async function GET(request: NextRequest) {
@@ -39,13 +40,8 @@ export async function GET(request: NextRequest) {
     "email",
   ];
 
-  // Generate state for CSRF protection and user identification
-  const state = Buffer.from(
-    JSON.stringify({
-      userId: user.id,
-      timestamp: Date.now(),
-    })
-  ).toString("base64");
+  // Generate signed state for CSRF protection and user identification
+  const state = await signOAuthState(user.id);
 
   const authorizationUrl = oauth2Client.generateAuthUrl({
     access_type: "offline", // Required to get refresh token

@@ -1,6 +1,7 @@
 import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { signOAuthState } from "@/lib/security";
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -23,12 +24,9 @@ export async function GET(request: NextRequest) {
 
   // Instagram Basic Display scopes
   const scope = "user_profile,user_media";
-  
-  // State parameter to prevent CSRF and pass user ID
-  const state = Buffer.from(JSON.stringify({
-    userId: user.id,
-    timestamp: Date.now(),
-  })).toString("base64");
+
+  // Signed state for CSRF protection and user identification
+  const state = await signOAuthState(user.id);
 
   const authorizationUrl = new URL("https://api.instagram.com/oauth/authorize");
   authorizationUrl.searchParams.set("client_id", clientId);

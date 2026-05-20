@@ -2,6 +2,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin';
 import logger from '@/lib/logger';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { verifyOAuthState } from "@/lib/security";
 import { google } from "googleapis";
 
 export async function GET(request: NextRequest) {
@@ -25,21 +26,19 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Decode and validate state
-  let decodedState;
-  try {
-    decodedState = JSON.parse(Buffer.from(state, "base64").toString());
-  } catch {
+  // Verify signed state and extract userId
+  const userId = await verifyOAuthState(state);
+  if (!userId) {
     return NextResponse.redirect(
       new URL("/dashboard/settings?error=invalid_state", request.url)
     );
   }
 
-  const { userId, timestamp } = decodedState;
-  const TEN_MINUTES = 10 * 60 * 1000;
-  if (Date.now() - timestamp > TEN_MINUTES) {
+  // Verify the userId matches the currently authenticated user
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || user.id !== userId) {
     return NextResponse.redirect(
-      new URL("/dashboard/settings?error=expired_state", request.url)
+      new URL("/dashboard/settings?error=unauthorized", request.url)
     );
   }
 
@@ -68,9 +67,7 @@ export async function GET(request: NextRequest) {
       throw new Error("No YouTube channel found for this account");
     }
 
-    
-    // Store tokens in Supabase Vault (recommended) or encrypted column
-    // For simplicity, we store in social_accounts with tokens
+    // Store tokens in Supabase
     const { error: dbError } = await supabaseAdmin.from("social_accounts").upsert(
       {
         user_id: userId,

@@ -10,6 +10,13 @@ function createRatelimiter(): Ratelimit {
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
 
   if (!url || !token) {
+    // In production, log a warning so missing Redis doesn't go unnoticed
+    if (process.env.NODE_ENV === 'production') {
+      console.warn(
+        '[rate-limit] WARNING: UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN not set. ' +
+        'Rate limiting is DISABLED. This is a security risk in production.'
+      );
+    }
     // Return a no-op ratelimiter that always allows requests
     // (useful in local dev / CI where Redis isn't configured)
     return {

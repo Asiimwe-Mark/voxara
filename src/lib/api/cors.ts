@@ -21,7 +21,9 @@ import { NextResponse } from 'next/server';
 function getAllowedOrigin(): string {
   if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return '*';
+  // Never fall back to wildcard — reject if no origin is configured
+  console.warn('[cors] WARNING: No NEXT_PUBLIC_APP_URL or VERCEL_URL set. CORS origin will be empty.');
+  return 'https://localhost'; // Safe fallback that won't match real requests
 }
 
 export function optionsResponse(): NextResponse {

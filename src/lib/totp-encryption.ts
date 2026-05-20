@@ -14,10 +14,10 @@ const ALGORITHM = 'aes-256-gcm';
 const KEY_LENGTH = 32; // 256-bit
 
 function getEncryptionKey(): Buffer {
-  const raw = process.env.TOTP_ENCRYPTION_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const raw = process.env.TOTP_ENCRYPTION_KEY;
   if (!raw) {
     throw new Error(
-      'TOTP_ENCRYPTION_KEY (or SUPABASE_SERVICE_ROLE_KEY) must be set to encrypt 2FA secrets'
+      'TOTP_ENCRYPTION_KEY must be set to encrypt 2FA secrets. Do not fall back to SUPABASE_SERVICE_ROLE_KEY.'
     );
   }
   // Derive a 32-byte key from the raw secret using SHA-256

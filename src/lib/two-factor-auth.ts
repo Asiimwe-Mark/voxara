@@ -238,6 +238,59 @@ export function isValidBackupCodeFormat(code: string): boolean {
   return /^[A-Z0-9]{8}$/.test(normalized);
 }
 
+// ── 2FA Challenge Token ──────────────────────────────────────────────
+// Signed HMAC tokens issued after password verification, consumed by
+// the /api/auth/2fa/validate endpoint. Prevents attackers from
+// submitting arbitrary userIds to brute-force TOTP codes.
+
+const CHALLENGE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+function getChallengeSecret(): string {
+  const secret = process.env.TOTP_ENCRYPTION_KEY;
+  if (!secret) throw new Error('Missing TOTP_ENCRYPTION_KEY — required for 2FA challenge tokens');
+  return secret;
+}
+
+/**
+ * Issue a signed 2FA challenge token for a userId.
+ * Call this after password verification, before redirecting to the 2FA screen.
+ */
+export function issueChallengeToken(userId: string): string {
+  const payload = JSON.stringify({ uid: userId, iat: Date.now() });
+  const body = Buffer.from(payload).toString('base64url');
+  const sig = crypto
+    .createHmac('sha256', getChallengeSecret())
+    .update(body)
+    .digest('base64url');
+  return `${body}.${sig}`;
+}
+
+/**
+ * Verify a 2FA challenge token and return the userId.
+ * Returns null if the token is invalid or expired.
+ */
+export function verifyChallengeToken(token: string): string | null {
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+
+  const [body, sig] = parts;
+  const expectedSig = crypto
+    .createHmac('sha256', getChallengeSecret())
+    .update(body)
+    .digest('base64url');
+
+  if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expectedSig))) return null;
+
+  try {
+    const payload = JSON.parse(Buffer.from(body, 'base64url').toString());
+    if (!payload.uid || typeof payload.iat !== 'number') return null;
+    if (Date.now() - payload.iat > CHALLENGE_TTL_MS) return null;
+    return payload.uid as string;
+  } catch {
+    return null;
+  }
+}
+
 export default {
   generateTOTPSecret,
   generateQRCodeData,
@@ -249,5 +302,7 @@ export default {
   useBackupCode,
   isValidTOTPFormat,
   isValidBackupCodeFormat,
+  issueChallengeToken,
+  verifyChallengeToken,
   TwoFAMethod,
 };
