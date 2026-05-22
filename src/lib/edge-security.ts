@@ -10,7 +10,8 @@ export function getClientIp(request: NextRequest): string {
     // Grab the actual client IP (first in the chain)
     return xForwardedFor.split(",")[0].trim();
   }
-  return request.ip || "127.0.0.1";
+  // NextRequest in the Edge runtime doesn't expose `ip`; fall back to standard headers
+  return request.headers.get("x-real-ip") || "127.0.0.1";
 }
 
 /**
