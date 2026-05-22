@@ -1,10 +1,12 @@
+// proxy.ts
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-import { applySecurityHeaders, getClientIp, isValidOrigin } from "@/lib/security";
+// Imported from our clean, isolated Edge utility file to prevent tracing crashes
+import { applySecurityHeaders, getClientIp, isValidOrigin } from "@/lib/edge-security";
 
-// Only instantiate when env vars are set (avoids build-time crash)
+// Safe initialization for Upstash (REST over HTTP works perfectly in Next 16 Edge)
 let ratelimit: Ratelimit | null = null;
 if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
   ratelimit = new Ratelimit({
@@ -17,8 +19,10 @@ if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) 
   });
 }
 
+// Named export 'proxy' is the official standard for Next.js 16
 export async function proxy(request: NextRequest) {
-  // Validate origin for API requests
+  
+  // 1. Validate incoming origins on your internal API routes
   if (request.nextUrl.pathname.startsWith("/api/") && !isValidOrigin(request)) {
     return NextResponse.json(
       { error: "Invalid origin" },
@@ -26,7 +30,7 @@ export async function proxy(request: NextRequest) {
     );
   }
 
-  // Rate-limit public API (v1) endpoints
+  // 2. Execute Upstash Rate Limiting on v1 API routes
   if (ratelimit && request.nextUrl.pathname.startsWith("/api/v1/")) {
     const ip = getClientIp(request);
     const { success, limit, remaining, reset } = await ratelimit.limit(ip);
@@ -47,16 +51,18 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Update Supabase auth session (refreshes JWT in cookies)
+  // 3. Keep the user auth session alive (Supabase cookies)
   let response = await updateSession(request);
   
-  // Apply security headers
+  // 4. Inject structural security headers into the response payload
   response = applySecurityHeaders(response);
 
   return response;
 }
 
 export const config = {
+  // Explicitly forces Turbopack to isolate compilation to the Edge Runtime
+  runtime: "edge",
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
