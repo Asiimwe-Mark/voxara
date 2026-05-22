@@ -106,9 +106,9 @@ export function WorkspaceSettings({ plan }: WorkspaceSettingsProps) {
   }, [router])
 
   return (
-    <Card className="card-premium max-w-2xl mx-auto">
+    <Card className="card-glow rounded-2xl max-w-2xl mx-auto">
       <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
-        <CardTitle className="flex items-center gap-2.5 text-lg sm:text-xl tracking-tight">
+        <CardTitle className="flex items-center gap-2.5 text-lg sm:text-xl tracking-tight border-l-2 border-primary pl-3">
           <Users className="h-5 w-5 text-primary" />
           Workspace
         </CardTitle>

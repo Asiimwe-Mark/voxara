@@ -24,20 +24,6 @@ const config: Config = {
         "2xl": "1536px",
       },
 
-      /* ── Spacing scale ────────────────────────────────────── */
-      spacing: {
-        "3xs": "0.125rem",
-        "2xs": "0.25rem",
-        xs: "0.5rem",
-        sm: "0.75rem",
-        md: "1rem",
-        lg: "1.5rem",
-        xl: "2rem",
-        "2xl": "3rem",
-        "3xl": "4rem",
-        "4xl": "6rem",
-      },
-
       /* ── Enhanced shadows ──────────────────────────────────── */
       boxShadow: {
         xs: "0 1px 2px rgba(0, 0, 0, 0.05)",
@@ -89,7 +75,7 @@ const config: Config = {
         "5xl": ["3rem", { lineHeight: "1" }],
       },
 
-      /* ── Letter spacing for premium typography ────────────– */
+      /* ── Letter spacing ───────────────────────────────────── */
       letterSpacing: {
         tighter: "-0.05em",
         tight: "-0.025em",
@@ -99,7 +85,7 @@ const config: Config = {
         widest: "0.1em",
       },
 
-      /* ── Line height for better readability ────────────── */
+      /* ── Line height ──────────────────────────────────────── */
       lineHeight: {
         tight: "1.25",
         snug: "1.375",
@@ -116,6 +102,15 @@ const config: Config = {
         slideInLeft: "slideInLeft 400ms ease-out",
         slideInRight: "slideInRight 400ms ease-out",
         scaleIn: "scaleIn 300ms ease-out",
+        aurora: "aurora 4s ease infinite",
+        "glow-pulse": "glow-pulse 2s ease-in-out infinite",
+        float: "float 3s ease-in-out infinite",
+        "shimmer-slide": "shimmer-slide 1.8s ease-in-out infinite",
+        "enter-up": "enter-up 400ms cubic-bezier(0.22, 1, 0.36, 1) both",
+        "enter-scale": "enter-scale 300ms cubic-bezier(0.22, 1, 0.36, 1) both",
+        orbit: "orbit 3s linear infinite",
+        "orbit-slow": "orbit 5s linear infinite",
+        "orbit-fast": "orbit 1.5s linear infinite",
       },
 
       /* ── Z-index scale ──────────────────────────────────– */
@@ -131,23 +126,6 @@ const config: Config = {
         80: "80",
         90: "90",
         100: "100",
-      },
-
-      /* ── Opacity scale ──────────────────────────────────– */
-      opacity: {
-        0: "0",
-        5: "0.05",
-        10: "0.1",
-        20: "0.2",
-        30: "0.3",
-        40: "0.4",
-        50: "0.5",
-        60: "0.6",
-        70: "0.7",
-        80: "0.8",
-        90: "0.9",
-        95: "0.95",
-        100: "1",
       },
 
       /* ── Container queries for component-level responsiveness */

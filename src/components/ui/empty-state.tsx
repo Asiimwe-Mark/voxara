@@ -38,7 +38,7 @@ export function EmptyState({
           {...(action.href ? { asChild: true } : { onClick: action.onClick })}
           variant={action.variant}
           size={action.size || 'lg'}
-          className="mt-6"
+          className="mt-4 w-full sm:w-auto sm:mt-6"
         >
           {action.href ? (
             <a href={action.href}>{action.label}</a>

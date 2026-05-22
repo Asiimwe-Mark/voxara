@@ -34,6 +34,14 @@ const buttonVariants = cva(
         /* ── Subtle: Faint background ──────────────────────────── */
         subtle:
           'bg-muted text-muted-foreground hover:bg-muted/80 active:bg-muted/60 transition-smooth',
+
+        /* ── Gradient: Premium brand gradient ────────────────────── */
+        gradient:
+          'bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-primary/30 active:from-violet-700 active:to-indigo-700',
+
+        /* ── Ghost Glow: Ghost with glow on hover ────────────────── */
+        'ghost-glow':
+          'hover:bg-primary/10 hover:text-primary hover:shadow-[0_0_12px_rgba(139,92,246,0.2)] transition-smooth',
       },
 
       size: {

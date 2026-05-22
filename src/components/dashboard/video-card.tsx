@@ -12,7 +12,6 @@ import {
   Share2,
   Trash2,
   Loader2,
-  MoreHorizontal,
   RefreshCw,
 } from 'lucide-react'
 import { IconYoutube, IconInstagram, IconTiktok } from '@/lib/icons'
@@ -29,7 +28,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
@@ -43,6 +41,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import { cn } from '@/lib/utils'
 
 interface VideoCardProps {
   video: {
@@ -59,22 +58,22 @@ interface VideoCardProps {
 const STATUS_CONFIG = {
   ready: {
     label: 'Ready',
-    className: 'bg-emerald-500 hover:bg-emerald-600 text-white dark:bg-emerald-600 dark:hover:bg-emerald-700',
+    className: 'bg-emerald-500/90 text-white shadow-[0_0_12px_rgba(34,197,94,0.3)]',
     icon: CheckCircle2,
   },
   processing: {
     label: 'Processing',
-    className: 'bg-amber-500 hover:bg-amber-600 text-white dark:bg-amber-600 dark:hover:bg-amber-700',
+    className: 'bg-amber-500/90 text-white animate-[glow-pulse_2s_ease-in-out_infinite]',
     icon: Loader2,
   },
   failed: {
     label: 'Failed',
-    className: 'bg-red-500 hover:bg-red-600 text-white dark:bg-red-600 dark:hover:bg-red-700',
+    className: 'bg-red-500/90 text-white shadow-[0_0_12px_rgba(239,68,68,0.3)]',
     icon: XCircle,
   },
   pending: {
     label: 'Pending',
-    className: 'bg-slate-500 hover:bg-slate-600 text-white dark:bg-slate-600 dark:hover:bg-slate-700',
+    className: 'bg-muted text-muted-foreground',
     icon: Clock,
   },
 } as const
@@ -173,9 +172,9 @@ export function VideoCard({ video }: VideoCardProps) {
   }
 
   return (
-    <Card className="card-premium overflow-hidden group transition-smooth hover:shadow-md">
+    <Card className="overflow-hidden rounded-2xl border border-border/50 bg-card group transition-all duration-200 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/30 hover:scale-[1.02]">
       {/* Thumbnail / Player */}
-      <div className="aspect-video bg-muted/30 dark:bg-muted/10 relative">
+      <div className="aspect-video relative overflow-hidden">
         {video.status === 'ready' && video.mux_playback_id ? (
           <video
             src={
@@ -189,25 +188,31 @@ export function VideoCard({ video }: VideoCardProps) {
             aria-label={`Video player for ${video.title || 'Untitled'}`}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-violet-950/50 to-indigo-950/50">
             {video.status === 'processing' ? (
               <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                <Loader2 className="h-8 w-8 sm:h-10 sm:w-10 animate-spin" />
-                <span className="text-xs sm:text-sm">Generating…</span>
+                <Loader2 className="h-8 w-8 sm:h-10 sm:w-10 animate-spin text-primary" />
+                <span className="text-xs sm:text-sm">Generating...</span>
               </div>
             ) : (
-              <Video className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground/50" />
+              <Video className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/40" />
             )}
           </div>
         )}
 
         {/* Status badge overlay */}
         <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
-          <Badge 
-            className={`text-[10px] sm:text-xs px-2 py-0.5 ${cfg.className}`}
+          <Badge
+            className={cn(
+              'text-[10px] sm:text-xs px-2 py-0.5 border-0',
+              cfg.className
+            )}
           >
             <StatusIcon
-              className={`mr-1 h-3 w-3 ${video.status === 'processing' ? 'animate-spin' : ''}`}
+              className={cn(
+                'mr-1 h-3 w-3',
+                video.status === 'processing' && 'animate-spin'
+              )}
             />
             {cfg.label}
           </Badge>
@@ -215,8 +220,8 @@ export function VideoCard({ video }: VideoCardProps) {
 
         {/* YouTube published badge */}
         {video.youtube_id && (
-          <Badge className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-red-600 hover:bg-red-700 text-white text-[10px] sm:text-xs px-2 py-0.5">
-            <IconYoutube className="mr-1 h-3 w-3" /> 
+          <Badge className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-red-600 hover:bg-red-700 text-white text-[10px] sm:text-xs px-2 py-0.5 border-0">
+            <IconYoutube className="mr-1 h-3 w-3" />
             <span className="hidden sm:inline">YouTube</span>
             <span className="sm:hidden">YT</span>
           </Badge>
@@ -242,6 +247,42 @@ export function VideoCard({ video }: VideoCardProps) {
 
       {/* Actions */}
       <CardFooter className="p-3 pt-0 px-3 sm:px-4 flex flex-col gap-3">
+        {/* Social publish row */}
+        {video.status === 'ready' && (
+          <div className="flex items-center gap-1.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-lg transition-all duration-200 hover:bg-red-500/10 hover:text-red-500"
+              onClick={() => handlePublish('youtube')}
+              disabled={!!video.youtube_id || isPublishing}
+              aria-label="Publish to YouTube"
+            >
+              <IconYoutube className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-lg transition-all duration-200 hover:bg-black/10 hover:text-foreground dark:hover:bg-white/10"
+              onClick={() => handlePublish('tiktok')}
+              disabled={isPublishing}
+              aria-label="Publish to TikTok"
+            >
+              <IconTiktok className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-lg transition-all duration-200 hover:bg-pink-500/10 hover:text-pink-500"
+              onClick={() => handlePublish('instagram')}
+              disabled={isPublishing}
+              aria-label="Publish to Instagram"
+            >
+              <IconInstagram className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+
         {/* Primary actions row */}
         <div className="flex flex-wrap items-center gap-1.5">
           {video.status === 'ready' && (
@@ -288,14 +329,14 @@ export function VideoCard({ video }: VideoCardProps) {
                       ? 'Published to YouTube'
                       : 'Publish to YouTube'}
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={() => handlePublish('tiktok')}
                     className="cursor-pointer py-2 px-3"
                   >
                     <IconTiktok className="mr-2 h-4 w-4" />
                     Publish to TikTok
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={() => handlePublish('instagram')}
                     className="cursor-pointer py-2 px-3"
                   >
@@ -323,47 +364,46 @@ export function VideoCard({ video }: VideoCardProps) {
               Retry
             </Button>
           )}
-        </div>
 
-        {/* Delete button - full width on mobile */}
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-9 w-full sm:w-auto justify-start sm:justify-center rounded-lg text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-destructive"
-              aria-label="Delete video"
-            >
-              <Trash2 className="h-4 w-4 mr-2 sm:mr-0" />
-              <span className="sm:hidden">Delete</span>
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent className="sm:max-w-[425px]">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-lg">Delete video?</AlertDialogTitle>
-              <AlertDialogDescription className="text-sm">
-                &quot;{video.title || 'This video'}&quot; will be permanently deleted
-                along with its Mux asset and audio files. This action cannot be
-                undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="flex-col sm:flex-row gap-2 sm:gap-3">
-              <AlertDialogCancel className="h-10 sm:h-11 rounded-lg text-sm font-medium transition-smooth">
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="h-10 sm:h-11 rounded-lg text-sm font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-destructive"
+          {/* Delete button */}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-smooth ml-auto"
+                aria-label="Delete video"
               >
-                {isDeleting && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="sm:max-w-[425px]">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-lg">Delete video?</AlertDialogTitle>
+                <AlertDialogDescription className="text-sm">
+                  &quot;{video.title || 'This video'}&quot; will be permanently deleted
+                  along with its Mux asset and audio files. This action cannot be
+                  undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter className="flex-col sm:flex-row gap-2 sm:gap-3">
+                <AlertDialogCancel className="h-10 sm:h-11 rounded-lg text-sm font-medium transition-smooth">
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="h-10 sm:h-11 rounded-lg text-sm font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-destructive"
+                >
+                  {isDeleting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </CardFooter>
     </Card>
   )

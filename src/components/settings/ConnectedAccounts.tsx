@@ -143,11 +143,11 @@ export function ConnectedAccounts({ userId, initialAccounts }: ConnectedAccounts
   }, [accountsByPlatform])
 
   return (
-    <Card className="card-premium max-w-3xl mx-auto">
+    <Card className="card-glow rounded-2xl max-w-3xl mx-auto">
       <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <CardTitle className="flex items-center gap-2.5 text-lg sm:text-xl tracking-tight">
+            <CardTitle className="flex items-center gap-2.5 text-lg sm:text-xl tracking-tight border-l-2 border-primary pl-3">
               <Link2 className="h-5 w-5 text-primary" />
               Connected Accounts
             </CardTitle>

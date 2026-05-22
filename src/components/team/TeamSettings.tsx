@@ -328,9 +328,9 @@ export function TeamSettings({ organizationId }: TeamSettingsProps) {
             <span className="ml-3 text-sm text-muted-foreground">Loading members...</span>
           </div>
         ) : filteredMembers.length === 0 ? (
-          <div className="empty-state border-2 border-dashed border-border/50 rounded-xl py-10 sm:py-12">
+          <div className="empty-state border-2 border-dashed border-border/50 rounded-xl">
             <div className="empty-state-icon">
-              <Users className="h-full w-full" />
+              <Users className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
             <p className="empty-state-title">
               {searchQuery ? "No members match your search" : "No team members yet"}

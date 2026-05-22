@@ -161,11 +161,11 @@ export function ApiKeyManager({ userId }: { userId: string }) {
   }, [newKeyName])
 
   return (
-    <Card className="card-premium max-w-4xl mx-auto">
+    <Card className="card-glow rounded-2xl max-w-4xl mx-auto">
       <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <CardTitle className="flex items-center gap-2.5 text-lg sm:text-xl tracking-tight">
+            <CardTitle className="flex items-center gap-2.5 text-lg sm:text-xl tracking-tight border-l-2 border-primary pl-3">
               <Key className="h-5 w-5 text-primary" />
               API Keys
             </CardTitle>
@@ -307,9 +307,9 @@ export function ApiKeyManager({ userId }: { userId: string }) {
             <span className="ml-3 text-sm text-muted-foreground">Loading keys...</span>
           </div>
         ) : filteredKeys.length === 0 ? (
-          <div className="empty-state border-2 border-dashed border-border/50 rounded-xl py-10 sm:py-12">
+          <div className="empty-state border-2 border-dashed border-border/50 rounded-xl">
             <div className="empty-state-icon">
-              <Key className="h-full w-full" />
+              <Key className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
             <p className="empty-state-title">
               {searchQuery ? 'No keys match your search' : 'No API keys yet'}

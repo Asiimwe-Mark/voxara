@@ -82,15 +82,15 @@ export default function SEOPage() {
             Optimize your video titles, descriptions, and tags for better discoverability
           </p>
         </div>
-        <Card className="card-premium border-dashed">
-          <CardContent className="flex flex-col items-center justify-center px-6 py-14 text-center sm:py-20">
-            <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-muted/50 sm:h-16 sm:w-16">
-              <Search className="h-7 w-7 text-muted-foreground sm:h-8 sm:w-8" />
+        <Card className="card-glow rounded-2xl border-dashed border-2">
+          <CardContent className="flex flex-col items-center justify-center px-4 py-10 text-center sm:px-6 sm:py-14">
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted/50 sm:mb-5 sm:h-14 sm:w-14">
+              <Search className="h-5 w-5 text-muted-foreground sm:h-7 sm:w-7" />
             </div>
-            <h3 className="mb-2 text-base font-semibold tracking-tight sm:text-lg">
+            <h3 className="mb-1.5 text-base font-semibold tracking-tight sm:mb-2 sm:text-lg">
               No videos yet
             </h3>
-            <p className="mb-7 max-w-xs text-xs leading-relaxed text-muted-foreground sm:text-sm">
+            <p className="mb-5 max-w-xs text-xs leading-relaxed text-muted-foreground sm:mb-7 sm:text-sm">
               Create a video first to use the SEO optimizer.
             </p>
           </CardContent>

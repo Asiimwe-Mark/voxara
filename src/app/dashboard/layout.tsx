@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { DashboardSidebar } from '@/components/dashboard/sidebar'
 import { DashboardHeader } from '@/components/dashboard/header'
 import { SidebarProvider } from '@/components/ui/sidebar'
+import { DashboardPageTransition } from '@/components/dashboard/page-transition'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,8 +42,10 @@ export default async function DashboardLayout({
               avatarUrl: profile?.avatar_url,
             }}
           />
-          <main className="flex-1 min-h-0 overflow-y-auto bg-gradient-to-b from-background via-background to-slate-50/50 dark:to-slate-950/50">
-            <div className="w-full h-full p-4 sm:p-6 lg:p-8">{children}</div>
+          <main className="flex-1 min-h-0 overflow-y-auto bg-[radial-gradient(ellipse_at_top,_hsl(258_84%_62%_/_0.04)_0%,_transparent_60%)] bg-background">
+            <DashboardPageTransition>
+              <div className="w-full h-full p-4 sm:p-6 lg:p-8">{children}</div>
+            </DashboardPageTransition>
           </main>
         </div>
       </div>

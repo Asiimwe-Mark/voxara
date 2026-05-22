@@ -187,29 +187,31 @@ async function onSubmit(values: ProfileFormValues) {
   }, [profile?.plan])
 
   return (
-    <Card className="card-premium max-w-2xl mx-auto">
+    <Card className="card-glow rounded-2xl max-w-2xl mx-auto">
       <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
-        <CardTitle className="text-lg sm:text-xl tracking-tight">Profile Information</CardTitle>
+        <CardTitle className="text-lg sm:text-xl tracking-tight border-l-2 border-primary pl-3">Profile Information</CardTitle>
         <CardDescription className="text-sm sm:text-base mt-1.5">
           Update your personal details and account settings
         </CardDescription>
       </CardHeader>
       <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-6">
-        {/* Avatar Upload */}
+        {/* Avatar Upload — circular dropzone */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
           <div className="relative group">
-            <Avatar className="h-16 w-16 sm:h-20 sm:w-20 ring-2 ring-border/50">
-              <AvatarImage 
-                src={avatarPreview || profile?.avatar_url || undefined} 
-                alt={profile?.full_name || "Profile"} 
-              />
-              <AvatarFallback className="text-lg sm:text-xl bg-primary/10 text-primary font-medium">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+            <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full border-2 border-dashed border-border/60 group-hover:border-primary/50 transition-all duration-200 flex items-center justify-center overflow-hidden bg-muted/20">
+              <Avatar className="h-[calc(100%-4px)] w-[calc(100%-4px)]">
+                <AvatarImage
+                  src={avatarPreview || profile?.avatar_url || undefined}
+                  alt={profile?.full_name || "Profile"}
+                />
+                <AvatarFallback className="text-lg sm:text-xl bg-primary/10 text-primary font-medium">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+            </div>
             <label
               htmlFor="avatar-upload"
-              className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-full cursor-pointer touch-manipulation"
+              className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-full cursor-pointer touch-manipulation"
               aria-label="Change avatar"
             >
               <Camera className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
@@ -229,9 +231,9 @@ async function onSubmit(values: ProfileFormValues) {
               JPG, PNG, or GIF. Max 5MB.
             </p>
             {avatarPreview && (
-              <Badge variant="secondary" className="mt-2 text-xs animate-pulse">
+              <Badge variant="secondary" className="mt-2 text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
                 <CheckCircle2 className="h-3 w-3 mr-1" />
-                Preview updated — click Save to apply
+                Preview updated
               </Badge>
             )}
           </div>
@@ -249,11 +251,11 @@ async function onSubmit(values: ProfileFormValues) {
                   <FormControl>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                      <Input 
-                        placeholder="John Doe" 
-                        className="pl-10 h-10 sm:h-11 rounded-lg text-sm focus-visible:ring-primary/30" 
-                        disabled={isLoading} 
-                        {...field} 
+                      <Input
+                        placeholder="John Doe"
+                        className="pl-10 h-10 sm:h-11 rounded-lg text-sm input-premium"
+                        disabled={isLoading}
+                        {...field}
                         aria-describedby="name-help"
                       />
                     </div>
@@ -284,11 +286,11 @@ async function onSubmit(values: ProfileFormValues) {
                   <FormControl>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                      <Input 
-                        placeholder="you@example.com" 
-                        className="pl-10 h-10 sm:h-11 rounded-lg text-sm focus-visible:ring-primary/30" 
-                        disabled={isLoading} 
-                        {...field} 
+                      <Input
+                        placeholder="you@example.com"
+                        className="pl-10 h-10 sm:h-11 rounded-lg text-sm input-premium"
+                        disabled={isLoading}
+                        {...field}
                         type="email"
                         autoCapitalize="none"
                         autoComplete="email"
@@ -308,8 +310,8 @@ async function onSubmit(values: ProfileFormValues) {
 
             {/* Form Actions */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-2">
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={isLoading || !form.formState.isDirty}
                 className="h-10 sm:h-11 rounded-lg text-sm font-medium transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 w-full sm:w-auto"
               >

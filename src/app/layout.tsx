@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Instrument_Serif } from 'next/font/google'
 import './globals.css'
 import { Toaster } from 'sonner'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -8,6 +8,14 @@ const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-inter',
+})
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ['latin'],
+  weight: '400',
+  style: ['normal', 'italic'],
+  display: 'swap',
+  variable: '--font-instrument-serif',
 })
 
 export const viewport: Viewport = {
@@ -52,13 +60,13 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html 
-      lang="en" 
-      suppressHydrationWarning 
-      className={inter.variable}
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${inter.variable} ${instrumentSerif.variable}`}
       data-scroll-behavior="smooth"
     >
-      <body 
+      <body
         className={`${inter.className} bg-background text-foreground antialiased min-h-screen overflow-x-hidden`}
       >
         <ThemeProvider
@@ -69,10 +77,19 @@ export default function RootLayout({
         >
           {children}
           <Toaster
-            position="top-center"
+            position="bottom-right"
+            expand={true}
             richColors
-            closeButton
-            toastOptions={{ duration: 4000 }}
+            toastOptions={{
+              duration: 4000,
+              classNames: {
+                toast: 'rounded-2xl border shadow-xl',
+                success: 'border-emerald-500/30 bg-emerald-950/90 text-emerald-100',
+                error: 'border-red-500/30 bg-red-950/90 text-red-100',
+                warning: 'border-amber-500/30 bg-amber-950/90 text-amber-100',
+                info: 'border-primary/30 bg-primary/10 text-foreground',
+              },
+            }}
           />
         </ThemeProvider>
       </body>

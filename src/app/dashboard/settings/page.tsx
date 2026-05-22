@@ -11,7 +11,6 @@ export const metadata = {
   title: 'Settings',
 }
 
-// Tabs config — single source of truth for label, value, and optional styling
 const TABS: readonly { value: string; label: string; danger?: boolean }[] = [
   { value: 'profile',   label: 'Profile'    },
   { value: 'workspace', label: 'Workspace'  },
@@ -64,7 +63,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
   return (
     <div className="w-full max-w-3xl space-y-5 sm:space-y-7">
 
-      {/* ── Header ─────────────────────────────────────────────────────── */}
+      {/* Header */}
       <div className="pb-1">
         <h2 className="text-xl font-bold tracking-tight sm:text-2xl">
           Settings
@@ -74,23 +73,22 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         </p>
       </div>
 
-      {/* ── Tabs ───────────────────────────────────────────────────────── */}
+      {/* Tabs */}
       <Tabs defaultValue={activeTab} className="space-y-5 sm:space-y-6">
 
-        {/* Tab bar
-            – Mobile  (< sm): 2-col grid so labels never truncate
-            – Desktop (≥ sm): single row, all 5 tabs visible           */}
-        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-xl bg-muted/30 p-1 sm:grid-cols-5 sm:gap-0">
+        {/* Horizontal scrollable tab strip */}
+        <TabsList className="flex h-auto w-full gap-1 rounded-none border-b border-border bg-transparent p-0 overflow-x-auto scrollbar-none">
           {TABS.map(({ value, label, danger }) => (
             <TabsTrigger
               key={value}
               value={value}
               className={[
-                'h-9 rounded-lg text-xs font-medium transition-all',
-                'data-[state=active]:bg-background data-[state=active]:shadow-sm',
+                'relative h-10 shrink-0 rounded-none border-b-2 border-transparent px-4 text-sm font-medium transition-all',
+                'data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none',
+                'hover:text-foreground',
                 danger
-                  ? 'text-destructive/70 data-[state=active]:bg-destructive/10 data-[state=active]:text-destructive'
-                  : 'data-[state=active]:text-foreground',
+                  ? 'text-destructive/60 hover:text-destructive data-[state=active]:border-destructive data-[state=active]:text-destructive'
+                  : 'text-muted-foreground',
               ].join(' ')}
             >
               {label}

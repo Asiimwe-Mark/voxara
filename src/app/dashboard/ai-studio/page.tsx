@@ -50,12 +50,12 @@ export default async function AIStudioPage() {
         </div>
       </div>
 
-      {/* ── Content grid ───────────────────────────────────────────────── */}
+      {/* Content grid */}
       <div className="grid grid-cols-1 gap-5 sm:gap-6 md:grid-cols-2">
 
         {/* Avatars */}
         <section aria-label="Your avatars" className="space-y-3 sm:space-y-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 border-l-2 border-primary pl-3">
             <User className="h-4 w-4 shrink-0 text-primary" />
             <h3 className="text-sm font-semibold tracking-tight sm:text-base">
               Your Avatars
@@ -71,7 +71,7 @@ export default async function AIStudioPage() {
 
         {/* Voices */}
         <section aria-label="Your voices" className="space-y-3 sm:space-y-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 border-l-2 border-primary pl-3">
             <Mic className="h-4 w-4 shrink-0 text-primary" />
             <h3 className="text-sm font-semibold tracking-tight sm:text-base">
               Your Voices

@@ -25,8 +25,8 @@ export function ProgressTracker({ currentStep, className }: ProgressTrackerProps
   const currentIdx = STEPS.findIndex((s) => s.id === currentStep)
 
   return (
-    <nav 
-      aria-label="Video creation progress" 
+    <nav
+      aria-label="Video creation progress"
       className={cn("w-full", className)}
       role="navigation"
     >
@@ -34,12 +34,11 @@ export function ProgressTracker({ currentStep, className }: ProgressTrackerProps
         {STEPS.map((step, i) => {
           const isCompleted = i < currentIdx
           const isActive = i === currentIdx
-          const isUpcoming = i > currentIdx
           const Icon = step.icon
 
           return (
-            <li 
-              key={step.id} 
+            <li
+              key={step.id}
               className="flex items-center flex-1 last:flex-none group"
               aria-current={isActive ? "step" : undefined}
             >
@@ -49,25 +48,25 @@ export function ProgressTracker({ currentStep, className }: ProgressTrackerProps
                   className={cn(
                     "h-9 w-9 sm:h-10 sm:w-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ease-out touch-manipulation",
                     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-                    isCompleted && "bg-primary border-primary shadow-sm shadow-primary/20",
-                    isActive && "border-primary bg-primary/10 ring-2 ring-primary/30",
-                    isUpcoming && "border-border/50 bg-muted/30"
+                    isCompleted && "bg-primary border-primary shadow-[0_0_16px_rgba(139,92,246,0.3)]",
+                    isActive && "border-primary bg-primary/10 shadow-[0_0_20px_rgba(139,92,246,0.2)] ring-2 ring-primary/20",
+                    !isCompleted && !isActive && "border-border/50 bg-muted/30"
                   )}
                   tabIndex={isActive ? 0 : -1}
                   aria-label={`${step.label} step ${isCompleted ? "completed" : isActive ? "in progress" : "upcoming"}`}
                 >
                   {isCompleted ? (
-                    <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground transition-transform duration-200 scale-100" />
+                    <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
                   ) : (
-                    <Icon 
+                    <Icon
                       className={cn(
                         "h-4 w-4 sm:h-5 sm:w-5 transition-colors duration-200",
                         isActive ? "text-primary" : "text-muted-foreground/70"
-                      )} 
+                      )}
                     />
                   )}
                 </div>
-                
+
                 {/* Step Label */}
                 <div className="text-center min-w-0 px-1">
                   <span
@@ -78,9 +77,8 @@ export function ProgressTracker({ currentStep, className }: ProgressTrackerProps
                   >
                     {step.label}
                   </span>
-                  {/* Optional description for desktop */}
                   {step.description && (
-                    <span 
+                    <span
                       className={cn(
                         "hidden sm:block text-[10px] text-muted-foreground/60 mt-0.5 truncate",
                         isActive && "text-muted-foreground"
@@ -91,13 +89,15 @@ export function ProgressTracker({ currentStep, className }: ProgressTrackerProps
                   )}
                 </div>
               </div>
-              
+
               {/* Connector Line */}
               {i < STEPS.length - 1 && (
                 <div
                   className={cn(
-                    "flex-1 h-0.5 sm:h-1 mx-1.5 sm:mx-2 mb-5 sm:mb-6 rounded-full transition-all duration-300 ease-out",
-                    isCompleted ? "bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.3)]" : "bg-border/50"
+                    "flex-1 h-0.5 sm:h-1 mx-1.5 sm:mx-2 mb-5 sm:mb-6 rounded-full transition-all duration-500 ease-out",
+                    isCompleted
+                      ? "bg-gradient-to-r from-primary to-primary shadow-[0_0_8px_rgba(139,92,246,0.3)]"
+                      : "bg-border/50"
                   )}
                   aria-hidden="true"
                 />

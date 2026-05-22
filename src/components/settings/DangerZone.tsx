@@ -69,7 +69,7 @@ export function DangerZone({ userId }: { userId: string }) {
   }, [userId])
 
   return (
-    <Card className="card-premium border-destructive/30 bg-destructive/5 dark:bg-destructive/10">
+    <Card className="rounded-2xl border border-destructive/20 bg-destructive/3 dark:bg-destructive/5 overflow-hidden">
       <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
         <div className="flex items-start sm:items-center gap-3">
           <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-destructive/10 flex items-center justify-center flex-shrink-0">

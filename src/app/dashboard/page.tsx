@@ -11,11 +11,11 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { VideoCard } from '@/components/dashboard/video-card'
 import { ShareForCredits } from '@/components/credits/ShareForCredits'
 import { ReferralCard } from '@/components/credits/ReferralCard'
 import { CheckoutNotifier } from '@/components/dashboard/checkout-notifier'
+import { DashboardStatsCard } from '@/components/dashboard/stats-card'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -56,7 +56,17 @@ export default async function DashboardPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
         <div className="space-y-1">
           <h1 className="text-xl font-bold tracking-tight sm:text-2xl md:text-3xl">
-            {firstName ? `Welcome back, ${firstName}` : 'My Videos'}
+            {firstName ? (
+              <>
+                Welcome back,{' '}
+                <em className="font-display italic not-italic text-primary">
+                  {firstName}
+                </em>
+                <Sparkles className="inline-block ml-2 h-5 w-5 text-primary animate-[float_3s_ease-in-out_infinite]" />
+              </>
+            ) : (
+              'My Videos'
+            )}
           </h1>
           <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
             {hasVideos
@@ -100,63 +110,31 @@ export default async function DashboardPage() {
 
       {/* ── Stats grid ───────────────────────────────────────────────────── */}
       {hasVideos && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
-          {/* Total videos */}
-          <Card className="card-premium overflow-hidden">
-            <CardContent className="p-3.5 sm:p-5">
-              <div className="flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="truncate text-[10px] font-medium text-muted-foreground sm:text-xs">
-                    Total
-                  </p>
-                  <p className="mt-1 text-xl font-bold tabular-nums tracking-tight sm:text-2xl lg:text-3xl">
-                    {videos?.length ?? 0}
-                  </p>
-                </div>
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 sm:h-10 sm:w-10">
-                  <Video className="h-4 w-4 text-primary sm:h-5 sm:w-5" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Ready */}
-          <Card className="card-premium overflow-hidden">
-            <CardContent className="p-3.5 sm:p-5">
-              <div className="flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="truncate text-[10px] font-medium text-muted-foreground sm:text-xs">
-                    Ready
-                  </p>
-                  <p className="mt-1 text-xl font-bold tabular-nums tracking-tight text-emerald-600 dark:text-emerald-400 sm:text-2xl lg:text-3xl">
-                    {readyCount}
-                  </p>
-                </div>
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950/30 sm:h-10 sm:w-10">
-                  <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400 sm:h-5 sm:w-5" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Processing */}
-          <Card className="card-premium overflow-hidden">
-            <CardContent className="p-3.5 sm:p-5">
-              <div className="flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="truncate text-[10px] font-medium text-muted-foreground sm:text-xs">
-                    In Progress
-                  </p>
-                  <p className="mt-1 text-xl font-bold tabular-nums tracking-tight text-amber-600 dark:text-amber-400 sm:text-2xl lg:text-3xl">
-                    {processingCount}
-                  </p>
-                </div>
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-950/30 sm:h-10 sm:w-10">
-                  <Zap className="h-4 w-4 text-amber-600 dark:text-amber-400 sm:h-5 sm:w-5" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-5 stagger-children">
+          <DashboardStatsCard
+            label="Total"
+            value={videos?.length ?? 0}
+            icon={Video}
+            iconBgClass="bg-primary/10"
+            iconColorClass="text-primary"
+            index={0}
+          />
+          <DashboardStatsCard
+            label="Ready"
+            value={readyCount}
+            icon={TrendingUp}
+            iconBgClass="bg-emerald-100 dark:bg-emerald-950/30"
+            iconColorClass="text-emerald-600 dark:text-emerald-400"
+            index={1}
+          />
+          <DashboardStatsCard
+            label="In Progress"
+            value={processingCount}
+            icon={Zap}
+            iconBgClass="bg-amber-100 dark:bg-amber-950/30"
+            iconColorClass="text-amber-600 dark:text-amber-400"
+            index={2}
+          />
         </div>
       )}
 
@@ -167,29 +145,49 @@ export default async function DashboardPage() {
             <Video className="h-4 w-4 text-primary" />
             Your Videos
           </h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 stagger-children">
             {videos!.map((video) => (
               <VideoCard key={video.id} video={video} />
             ))}
           </div>
         </section>
       ) : (
-        <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border/50 px-6 py-14 text-center sm:py-20">
-          {/* Icon */}
-          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 sm:h-16 sm:w-16">
-            <Sparkles className="h-6 w-6 text-primary sm:h-7 sm:w-7" />
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/50 px-4 py-10 text-center sm:px-6 sm:py-14 bg-gradient-to-b from-primary/[0.02] to-transparent relative overflow-hidden">
+          {/* Radial glow behind illustration */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-primary/[0.06] blur-3xl pointer-events-none" />
+
+          {/* Video camera illustration */}
+          <div className="relative mb-4 sm:mb-6">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 sm:h-16 sm:w-16 relative z-10">
+              <svg
+                viewBox="0 0 48 48"
+                fill="none"
+                className="h-6 w-6 sm:h-8 sm:w-8 text-primary"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="4" y="12" width="28" height="24" rx="4" />
+                <path d="M32 20l12-6v20l-12-6" />
+                {/* Radiating lines */}
+                <line x1="4" y1="24" x2="0" y2="24" opacity="0.4" />
+                <line x1="4" y1="18" x2="0" y2="15" opacity="0.3" />
+                <line x1="4" y1="30" x2="0" y2="33" opacity="0.3" />
+              </svg>
+            </div>
+            <Sparkles className="absolute -top-2 -right-2 h-5 w-5 text-primary/40 animate-[float_3s_ease-in-out_infinite] z-20" />
           </div>
 
-          <h3 className="mb-2 text-base font-semibold tracking-tight sm:text-lg">
+          <h3 className="relative z-10 mb-2 text-base font-semibold tracking-tight sm:text-lg">
             No videos yet
           </h3>
-          <p className="mb-7 max-w-sm text-xs leading-relaxed text-muted-foreground sm:text-sm">
+          <p className="relative z-10 mb-5 max-w-xs text-xs leading-relaxed text-muted-foreground sm:mb-7 sm:text-sm sm:max-w-sm">
             Create your first faceless video — enter a topic and we'll handle
             the script, voiceover, footage, and editing.
           </p>
 
-          {/* CTA row */}
-          <div className="flex w-full flex-col items-center gap-3 sm:w-auto sm:flex-row sm:gap-4">
+          <div className="relative z-10 flex w-full flex-col items-center gap-3 sm:w-auto sm:flex-row sm:gap-4">
             <Button
               asChild
               size="lg"

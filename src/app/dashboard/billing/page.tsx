@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'motion/react'
 import { toast } from 'sonner'
 import {
   CreditCard, CheckCircle2, XCircle, Loader2,
   ExternalLink, Coins, RefreshCw, TrendingUp, Zap, FileText,
+  Crown, Sparkles,
 } from 'lucide-react'
 import { Button }   from '@/components/ui/button'
 import { Badge }    from '@/components/ui/badge'
@@ -19,6 +21,7 @@ import {
 } from '@/components/ui/select'
 import { createClient } from '@/lib/supabase/client'
 import { formatPrice } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -82,8 +85,8 @@ const CREDIT_PACKS: CreditPack[] = [
 
 const PLAN_BADGE: Record<PlanType, { label: string; className: string }> = {
   free:   { label: 'Free',   className: '' },
-  pro:    { label: 'Pro',    className: 'bg-primary text-primary-foreground' },
-  agency: { label: 'Agency', className: 'bg-violet-600 text-white dark:bg-violet-500' },
+  pro:    { label: 'Pro',    className: 'bg-primary text-primary-foreground shadow-[0_0_12px_rgba(139,92,246,0.2)]' },
+  agency: { label: 'Agency', className: 'bg-violet-600 text-white dark:bg-violet-500 shadow-[0_0_12px_rgba(139,92,246,0.2)]' },
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -250,75 +253,87 @@ export default function BillingPage() {
       </div>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 stagger-children">
         {/* Current Plan */}
-        <Card className="card-premium">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-2 sm:mb-3">
-              <span className="text-xs sm:text-sm text-muted-foreground">Current Plan</span>
-              <Badge 
-                className={badge.className} 
-                variant={plan === 'free' ? 'outline' : 'default'}
-              >
-                {badge.label}
-              </Badge>
-            </div>
-            <p className="text-xl sm:text-2xl font-bold tracking-tight capitalize">{plan}</p>
-          </CardContent>
-        </Card>
-
-        {/* Available Credits */}
-        <Card className="card-premium">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              <Coins className="h-4 w-4 text-amber-500 dark:text-amber-400" />
-              <span className="text-xs sm:text-sm text-muted-foreground">Available Credits</span>
-            </div>
-            <p className="text-xl sm:text-2xl font-bold tracking-tight tabular-nums">
-              {profile?.credits ?? 0}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Subscription Status */}
-        <Card className="card-premium">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              <TrendingUp className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
-              <span className="text-xs sm:text-sm text-muted-foreground">Subscription Status</span>
-            </div>
-            {isActive ? (
-              <div className="flex flex-wrap items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
-                <span className="text-xs sm:text-sm font-medium text-emerald-600 dark:text-emerald-400">Active</span>
-                {subscription?.renews_at && (
-                  <span className="text-xs text-muted-foreground">
-                    · renews {new Date(subscription.renews_at).toLocaleDateString()}
-                  </span>
-                )}
-              </div>
-            ) : (
-              <div className="flex items-center gap-1.5">
-                <XCircle className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs sm:text-sm text-muted-foreground">No active subscription</span>
+        <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-card p-4 sm:p-5 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-200 group">
+          <div className={cn(
+            'absolute inset-0 bg-gradient-to-br via-transparent to-transparent pointer-events-none transition-all duration-300',
+            plan === 'pro' ? 'from-primary/[0.04] group-hover:from-primary/[0.06]' : plan === 'agency' ? 'from-violet-500/[0.04] group-hover:from-violet-500/[0.06]' : ''
+          )} />
+          <div className="relative flex items-center justify-between mb-2 sm:mb-3">
+            <span className="text-xs sm:text-sm text-muted-foreground">Current Plan</span>
+            {plan !== 'free' && (
+              <div className={cn('p-1.5 rounded-lg', plan === 'pro' ? 'bg-primary/10' : 'bg-violet-500/10')}>
+                <Crown className="h-3.5 w-3.5 text-primary" />
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+          <p className="relative text-xl sm:text-2xl font-bold tracking-tight capitalize stat-number">{plan}</p>
+          <Badge
+            className={cn('mt-2 relative', badge.className)}
+            variant={plan === 'free' ? 'outline' : 'default'}
+          >
+            {badge.label}
+          </Badge>
+        </div>
+
+        {/* Available Credits */}
+        <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-card p-4 sm:p-5 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-200 group">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/0 via-amber-500/0 to-amber-500/0 group-hover:from-amber-500/[0.03] transition-all duration-300 pointer-events-none" />
+          <div className="relative flex items-center gap-2 mb-2 sm:mb-3">
+            <div className="p-1.5 rounded-lg bg-amber-500/10">
+              <Coins className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />
+            </div>
+            <span className="text-xs sm:text-sm text-muted-foreground">Available Credits</span>
+          </div>
+          <p className="relative text-xl sm:text-2xl font-bold tracking-tight tabular-nums stat-number">
+            {profile?.credits ?? 0}
+          </p>
+        </div>
+
+        {/* Subscription Status */}
+        <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-card p-4 sm:p-5 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-200 group">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 via-emerald-500/0 to-emerald-500/0 group-hover:from-emerald-500/[0.03] transition-all duration-300 pointer-events-none" />
+          <div className="relative flex items-center gap-2 mb-2 sm:mb-3">
+            <div className="p-1.5 rounded-lg bg-emerald-500/10">
+              <TrendingUp className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" />
+            </div>
+            <span className="text-xs sm:text-sm text-muted-foreground">Status</span>
+          </div>
+          {isActive ? (
+            <div className="relative flex flex-wrap items-center gap-1.5">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+              </span>
+              <span className="text-xs sm:text-sm font-medium text-emerald-600 dark:text-emerald-400">Active</span>
+              {subscription?.renews_at && (
+                <span className="text-xs text-muted-foreground">
+                  renews {new Date(subscription.renews_at).toLocaleDateString()}
+                </span>
+              )}
+            </div>
+          ) : (
+            <div className="relative flex items-center gap-1.5">
+              <XCircle className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs sm:text-sm text-muted-foreground">No active subscription</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Manage Billing */}
-      <Card className="card-premium">
+      <Card className="card-glow rounded-2xl">
         <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6">
-          <CardTitle className="text-sm sm:text-base">Manage Billing</CardTitle>
+          <CardTitle className="text-sm sm:text-base border-l-2 border-primary pl-3">Manage Billing</CardTitle>
           <CardDescription className="text-xs sm:text-sm">
             Update payment method, view invoices, or change your plan
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col sm:flex-row gap-3 px-4 sm:px-6 pb-4 sm:pb-6">
-          <Button 
-            onClick={handleManageBilling} 
-            disabled={isPortalLoading} 
+          <Button
+            onClick={handleManageBilling}
+            disabled={isPortalLoading}
             className="h-11 sm:h-12 w-full sm:w-auto rounded-xl text-sm font-medium transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             {isPortalLoading
@@ -326,9 +341,9 @@ export default function BillingPage() {
               : <CreditCard className="mr-2 h-4 w-4" />}
             Customer Portal
           </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => router.push('/pricing')} 
+          <Button
+            variant="outline"
+            onClick={() => router.push('/pricing')}
             className="h-11 sm:h-12 w-full sm:w-auto rounded-xl text-sm font-medium transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <ExternalLink className="mr-2 h-4 w-4" />
@@ -338,9 +353,9 @@ export default function BillingPage() {
       </Card>
 
       {/* Credit Packs */}
-      <Card className="card-premium">
+      <Card className="card-glow rounded-2xl">
         <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6">
-          <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+          <CardTitle className="text-sm sm:text-base flex items-center gap-2 border-l-2 border-primary pl-3">
             <Zap className="h-4 w-4 text-amber-500 dark:text-amber-400" />Buy Credits
           </CardTitle>
           <CardDescription className="text-xs sm:text-sm">
@@ -352,21 +367,30 @@ export default function BillingPage() {
             {CREDIT_PACKS.map((pack) => (
               <div
                 key={pack.credits}
-                className={`relative rounded-xl border p-4 sm:p-5 text-center transition-smooth hover:shadow-md ${
-                  pack.popular ? 'border-primary shadow-sm ring-1 ring-primary/20' : 'border-border/50'
-                }`}
+                className={cn(
+                  'relative rounded-2xl border p-5 sm:p-6 text-center transition-all duration-200 cursor-default',
+                  'hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10',
+                  pack.popular
+                    ? 'border-primary/50 bg-gradient-to-b from-primary/5 to-transparent shadow-[0_0_30px_rgba(139,92,246,0.12)]'
+                    : 'border-border/60 hover:border-primary/30 bg-card'
+                )}
               >
                 {pack.popular && (
-                  <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-xs px-2 py-0.5">
-                    Best Value
-                  </Badge>
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground shadow-lg shadow-primary/30">
+                      <Sparkles className="h-3 w-3" />
+                      Best Value
+                    </span>
+                  </div>
                 )}
-                <p className="text-2xl sm:text-3xl font-bold tracking-tight mt-2 tabular-nums">{pack.credits}</p>
-                <p className="text-xs sm:text-sm text-muted-foreground mb-1">credits</p>
-                <p className="text-lg sm:text-xl font-semibold mb-4 tabular-nums">{pack.label}</p>
+                <p className="mt-3 text-4xl font-bold stat-number">{pack.credits}</p>
+                <p className="text-sm text-muted-foreground">credits</p>
+                <p className="mt-1 text-2xl font-semibold">{pack.label}</p>
                 <Button
-                  className="h-10 sm:h-11 w-full rounded-lg text-sm font-medium transition-smooth active:scale-[0.98]"
-                  size="sm"
+                  className={cn(
+                    'mt-5 w-full rounded-xl',
+                    pack.popular && 'gradient-brand shadow-lg shadow-primary/20'
+                  )}
                   variant={pack.popular ? 'default' : 'outline'}
                   onClick={() => handleBuyCredits(pack)}
                   disabled={purchasingPack !== null}
@@ -382,9 +406,9 @@ export default function BillingPage() {
       </Card>
 
       {/* Auto Top-Up */}
-      <Card className="card-premium">
+      <Card className="card-glow rounded-2xl">
         <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6">
-          <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+          <CardTitle className="text-sm sm:text-base flex items-center gap-2 border-l-2 border-primary pl-3">
             <RefreshCw className="h-4 w-4" />Auto Top-Up
           </CardTitle>
           <CardDescription className="text-xs sm:text-sm">
@@ -411,73 +435,82 @@ export default function BillingPage() {
             />
           </div>
 
-          {autoTopUp.enabled && (
-            <>
-              <Separator />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Threshold Select */}
-                <div className="space-y-1.5">
-                  <label className="text-xs sm:text-sm font-medium">Top-up when below</label>
-                  <Select
-                    value={String(autoTopUp.threshold)}
-                    onValueChange={(v) => {
-                      const updated = { ...autoTopUp, threshold: parseInt(v) }
-                      setAutoTopUp(updated); saveAutoTopUp(updated)
-                    }}
-                  >
-                    <SelectTrigger className="h-10 sm:h-11 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-primary/30">
-                      <SelectValue placeholder="Select threshold" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="3">3 credits</SelectItem>
-                      <SelectItem value="5">5 credits</SelectItem>
-                      <SelectItem value="10">10 credits</SelectItem>
-                    </SelectContent>
-                  </Select>
+          <AnimatePresence>
+            {autoTopUp.enabled && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                className="overflow-hidden"
+              >
+                <Separator className="mb-4" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs sm:text-sm font-medium">Top-up when below</label>
+                    <Select
+                      value={String(autoTopUp.threshold)}
+                      onValueChange={(v) => {
+                        const updated = { ...autoTopUp, threshold: parseInt(v) }
+                        setAutoTopUp(updated); saveAutoTopUp(updated)
+                      }}
+                    >
+                      <SelectTrigger className="h-10 sm:h-11 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-primary/30">
+                        <SelectValue placeholder="Select threshold" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="3">3 credits</SelectItem>
+                        <SelectItem value="5">5 credits</SelectItem>
+                        <SelectItem value="10">10 credits</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs sm:text-sm font-medium">Purchase amount</label>
+                    <Select
+                      value={String(autoTopUp.top_up_amount)}
+                      onValueChange={(v) => {
+                        const updated = { ...autoTopUp, top_up_amount: parseInt(v) }
+                        setAutoTopUp(updated); saveAutoTopUp(updated)
+                      }}
+                    >
+                      <SelectTrigger className="h-10 sm:h-11 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-primary/30">
+                        <SelectValue placeholder="Select amount" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="10">10 credits ($9)</SelectItem>
+                        <SelectItem value="25">25 credits ($19)</SelectItem>
+                        <SelectItem value="50">50 credits ($29)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                {/* Amount Select */}
-                <div className="space-y-1.5">
-                  <label className="text-xs sm:text-sm font-medium">Purchase amount</label>
-                  <Select
-                    value={String(autoTopUp.top_up_amount)}
-                    onValueChange={(v) => {
-                      const updated = { ...autoTopUp, top_up_amount: parseInt(v) }
-                      setAutoTopUp(updated); saveAutoTopUp(updated)
-                    }}
-                  >
-                    <SelectTrigger className="h-10 sm:h-11 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-primary/30">
-                      <SelectValue placeholder="Select amount" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="10">10 credits ($9)</SelectItem>
-                      <SelectItem value="25">25 credits ($19)</SelectItem>
-                      <SelectItem value="50">50 credits ($29)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </CardContent>
       </Card>
 
       {/* Credit Purchase History */}
       {creditPurchases.length > 0 && (
-        <Card className="card-premium">
+        <Card className="card-glow rounded-2xl">
           <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6">
-            <CardTitle className="text-sm sm:text-base">Credit Purchase History</CardTitle>
+            <CardTitle className="text-sm sm:text-base border-l-2 border-primary pl-3">Credit Purchase History</CardTitle>
           </CardHeader>
           <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
             <div className="space-y-0">
               {creditPurchases.map((p, i) => (
                 <div
                   key={p.id}
-                  className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-3 ${
+                  className={cn(
+                    'flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-3',
+                    i % 2 === 0 ? 'bg-muted/10' : '',
+                    'px-3 rounded-lg',
                     i < creditPurchases.length - 1 ? 'border-b border-border/50' : ''
-                  }`}
+                  )}
                 >
                   <div>
-                    <p className="text-xs sm:text-sm font-medium tabular-nums">
+                    <p className="text-xs sm:text-sm font-medium tabular-nums font-mono">
                       +{p.credits_purchased} credits
                     </p>
                     <p className="text-xs text-muted-foreground">
@@ -487,13 +520,17 @@ export default function BillingPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-3 sm:gap-4">
-                    <p className="text-xs sm:text-sm font-medium tabular-nums">
+                    <p className="text-xs sm:text-sm font-bold tabular-nums font-mono">
                       {formatPrice(p.amount_paid)}
                     </p>
-                    <Badge 
-                      variant={p.status === 'completed' ? 'default' : 'outline'} 
-                      className="text-xs"
+                    <Badge
+                      variant={p.status === 'completed' ? 'default' : 'outline'}
+                      className={cn(
+                        'text-xs',
+                        p.status === 'completed' && 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                      )}
                     >
+                      {p.status === 'completed' && <CheckCircle2 className="mr-1 h-3 w-3" />}
                       {p.status}
                     </Badge>
                   </div>
@@ -505,9 +542,9 @@ export default function BillingPage() {
       )}
 
       {/* Transaction & Invoice History */}
-      <Card className="card-premium">
+      <Card className="card-glow rounded-2xl">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3 px-4 sm:px-6">
-          <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+          <CardTitle className="text-sm sm:text-base flex items-center gap-2 border-l-2 border-primary pl-3">
             <FileText className="h-4 w-4" />Transaction & Invoice History
           </CardTitle>
           {billingHistory.length > 0 && (
@@ -531,7 +568,7 @@ export default function BillingPage() {
           ) : billingHistory.length === 0 ? (
             <div className="empty-state py-6">
               <div className="empty-state-icon">
-                <FileText className="h-6 w-6" />
+                <FileText className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
               <p className="empty-state-title">No transaction history yet</p>
               <p className="empty-state-description">
@@ -543,24 +580,28 @@ export default function BillingPage() {
               {billingHistory.map((t, i) => (
                 <div
                   key={t.id}
-                  className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3 ${
+                  className={cn(
+                    'flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3 px-3 rounded-lg',
+                    i % 2 === 0 ? 'bg-muted/10' : '',
                     i < billingHistory.length - 1 ? 'border-b border-border/50' : ''
-                  }`}
+                  )}
                 >
                   <div className="flex items-start sm:items-center gap-3">
-                    <div className={`p-2 rounded-lg flex-shrink-0 ${
-                      t.status === 'completed' 
-                        ? 'bg-emerald-100 dark:bg-emerald-900/30' 
+                    <div className={cn(
+                      'p-2 rounded-lg flex-shrink-0',
+                      t.status === 'completed'
+                        ? 'bg-emerald-100 dark:bg-emerald-900/30'
                         : 'bg-muted'
-                    }`}>
-                      <FileText className={`h-4 w-4 ${
-                        t.status === 'completed' 
-                          ? 'text-emerald-600 dark:text-emerald-400' 
+                    )}>
+                      <FileText className={cn(
+                        'h-4 w-4',
+                        t.status === 'completed'
+                          ? 'text-emerald-600 dark:text-emerald-400'
                           : 'text-muted-foreground'
-                      }`} />
+                      )} />
                     </div>
                     <div>
-                      <p className="text-xs sm:text-sm font-medium tabular-nums">
+                      <p className="text-xs sm:text-sm font-bold tabular-nums font-mono">
                         {t.amount ? `$${(t.amount / 100).toFixed(2)}` : 'Subscription'}
                       </p>
                       <p className="text-xs text-muted-foreground">
@@ -578,10 +619,12 @@ export default function BillingPage() {
                     )}
                     <Badge
                       variant={t.status === 'completed' ? 'default' : 'outline'}
-                      className={`text-xs ${
-                        t.status === 'completed' ? 'bg-emerald-500 dark:bg-emerald-600' : ''
-                      }`}
+                      className={cn(
+                        'text-xs',
+                        t.status === 'completed' && 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                      )}
                     >
+                      {t.status === 'completed' && <CheckCircle2 className="mr-1 h-3 w-3" />}
                       {t.status}
                     </Badge>
                   </div>

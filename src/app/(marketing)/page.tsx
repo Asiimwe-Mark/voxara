@@ -18,8 +18,6 @@ const C = {
 
 /* ─── Keyframes injected once ───────────────────────────────── */
 const CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
@@ -1039,7 +1037,7 @@ export default function LandingPage() {
   return (
     <>
       <style>{CSS}</style>
-      <div className="noise-overlay" style={{ position: "relative", minHeight: "100vh" }}>
+      <div className="noise-overlay" style={{ position: "relative", minHeight: "100vh", overflowX: "hidden" }}>
 
         <MeshBg />
         <Particles />

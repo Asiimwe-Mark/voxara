@@ -113,10 +113,10 @@ export default function AdminUsers() {
             <tbody className="divide-y divide-border/50">
               {users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 sm:px-6 py-10 text-center">
+                  <td colSpan={5} className="px-4 sm:px-6 py-8 sm:py-10 text-center">
                     <div className="empty-state">
                       <div className="empty-state-icon">
-                        <Search className="h-6 w-6" />
+                        <Search className="h-5 w-5 sm:h-6 sm:w-6" />
                       </div>
                       <p className="empty-state-title">No users found</p>
                       <p className="empty-state-description">

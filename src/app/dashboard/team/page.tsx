@@ -30,27 +30,27 @@ interface StateCardProps {
 
 function StateCard({ icon, iconBg, title, description, cta, href }: StateCardProps) {
   return (
-    <Card className="card-premium border-dashed">
-      <CardContent className="flex flex-col items-center justify-center px-6 py-14 text-center sm:py-20">
+    <Card className="card-glow rounded-2xl border-dashed border-2">
+      <CardContent className="flex flex-col items-center justify-center px-4 py-10 text-center sm:px-6 sm:py-14">
         {/* Icon */}
         <div
-          className={`mb-5 flex h-14 w-14 items-center justify-center rounded-full sm:h-16 sm:w-16 ${iconBg}`}
+          className={`mb-3 flex h-10 w-10 items-center justify-center rounded-full sm:mb-5 sm:h-14 sm:w-14 ${iconBg}`}
         >
           {icon}
         </div>
 
         {/* Copy */}
-        <h3 className="mb-2 text-base font-semibold tracking-tight sm:text-lg">
+        <h3 className="mb-1.5 text-base font-semibold tracking-tight sm:mb-2 sm:text-lg">
           {title}
         </h3>
-        <p className="mb-7 max-w-xs text-xs leading-relaxed text-muted-foreground sm:text-sm">
+        <p className="mb-5 max-w-xs text-xs leading-relaxed text-muted-foreground sm:mb-7 sm:text-sm">
           {description}
         </p>
 
         {/* CTA */}
         <Button
           asChild
-          className="group h-10 rounded-xl px-5 text-sm font-medium shadow-sm transition-all hover:scale-[1.015] active:scale-[0.985] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:h-11"
+          className="group h-10 w-full rounded-xl px-5 text-sm font-medium shadow-sm transition-all hover:scale-[1.015] active:scale-[0.985] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:h-11 sm:w-auto"
         >
           <Link href={href}>
             {cta}

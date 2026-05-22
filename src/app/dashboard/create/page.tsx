@@ -50,6 +50,12 @@ interface Voice {
 const STEPS = ['topic', 'script', 'generating'] as const
 type Step = (typeof STEPS)[number]
 
+const GENERATING_STAGES = [
+  'Crafting your script...',
+  'Generating voiceover...',
+  'Assembling footage...',
+]
+
 export default function CreatePage() {
   const router = useRouter()
   const supabase = createClient()
@@ -65,6 +71,7 @@ export default function CreatePage() {
   const [generatedScript, setGeneratedScript] = useState('')
   const [isGeneratingScript, setIsGeneratingScript] = useState(false)
   const [isCreatingVideo, setIsCreatingVideo] = useState(false)
+  const [generatingStage, setGeneratingStage] = useState(0)
 
   useEffect(() => {
     if (videoType !== 'avatar') return
@@ -85,6 +92,15 @@ export default function CreatePage() {
       .catch(() => toast.error('Failed to load AI Studio options'))
       .finally(() => setLoadingOptions(false))
   }, [videoType])
+
+  // Cycle through generating stages
+  useEffect(() => {
+    if (step !== 'generating') return
+    const interval = setInterval(() => {
+      setGeneratingStage((prev) => (prev + 1) % GENERATING_STAGES.length)
+    }, 2500)
+    return () => clearInterval(interval)
+  }, [step])
 
   async function handleTopicSubmit(values: TopicFormValues) {
     setIsGeneratingScript(true)
@@ -178,12 +194,10 @@ export default function CreatePage() {
 
   return (
     <div className="w-full">
-      {/* ── Page shell: centers content with safe side padding on every breakpoint ── */}
       <div className="mx-auto w-full max-w-2xl px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
 
         {/* ── Header ── */}
         <div className="flex items-start gap-3">
-          {/* Back button: visible on script step to give mobile users a clear escape */}
           {step === 'script' && (
             <button
               onClick={() => { setStep('topic'); setGeneratedScript('') }}
@@ -217,7 +231,7 @@ export default function CreatePage() {
           <div className="space-y-4 sm:space-y-5">
 
             {/* Video Style card */}
-            <Card className="card-premium overflow-hidden">
+            <Card className="card-glow rounded-2xl overflow-hidden">
               <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3">
                 <CardTitle className="text-sm sm:text-base font-semibold">
                   Video Style
@@ -228,11 +242,10 @@ export default function CreatePage() {
               </CardHeader>
 
               <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-4 sm:space-y-5">
-                {/* Type toggle — full-width columns on all sizes */}
                 <RadioGroup
                   value={videoType}
                   onValueChange={(v) => setVideoType(v as 'faceless' | 'avatar')}
-                  className="grid grid-cols-2 gap-2.5 sm:gap-3"
+                  className="grid grid-cols-2 gap-3 sm:gap-4"
                 >
                   {(
                     [
@@ -259,34 +272,37 @@ export default function CreatePage() {
                       <Label
                         htmlFor={value}
                         className={cn(
-                          // Base: flex column, centered, smooth border
-                          'relative flex flex-col items-center gap-2 rounded-xl border-2 p-3.5 sm:p-5 cursor-pointer select-none transition-all duration-200',
-                          // Focus ring for keyboard nav
+                          'relative flex flex-col items-center gap-3 rounded-2xl border-2 p-5 sm:p-6 md:p-8 cursor-pointer select-none transition-all duration-200',
                           'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
                           videoType === value
-                            ? 'border-primary bg-primary/5 shadow-sm'
+                            ? 'border-primary shadow-lg shadow-primary/20 bg-gradient-to-b from-primary/5 to-transparent'
                             : 'border-border/50 hover:border-primary/40 hover:bg-muted/30'
                         )}
                       >
-                        {/* Selected checkmark — absolute so it doesn't displace content */}
                         {videoType === value && (
-                          <CheckCircle2 className="absolute top-2.5 right-2.5 h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
+                          <CheckCircle2 className="absolute top-3 right-3 h-4 w-4 text-primary" />
                         )}
 
-                        <Icon
-                          className={cn(
-                            'h-5 w-5 sm:h-6 sm:w-6 shrink-0',
-                            videoType === value
-                              ? 'text-primary'
-                              : 'text-muted-foreground'
-                          )}
-                        />
+                        {/* Abstract visual area */}
+                        <div className={cn(
+                          'h-12 w-12 sm:h-14 sm:w-14 rounded-xl flex items-center justify-center transition-all duration-200',
+                          videoType === value
+                            ? 'bg-primary/10'
+                            : 'bg-muted/50'
+                        )}>
+                          <Icon
+                            className={cn(
+                              'h-6 w-6 sm:h-7 sm:w-7 transition-colors duration-200',
+                              videoType === value ? 'text-primary' : 'text-muted-foreground'
+                            )}
+                          />
+                        </div>
+
                         <div className="text-center min-w-0 w-full">
-                          <p className="text-xs sm:text-sm font-medium leading-tight">
+                          <p className="text-sm sm:text-base font-medium leading-tight">
                             {label}
                           </p>
-                          {/* desc hidden on very small screens to avoid wrapping */}
-                          <p className="hidden xs:block text-[10px] sm:text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 line-clamp-1">
                             {desc}
                           </p>
                         </div>
@@ -295,11 +311,9 @@ export default function CreatePage() {
                   ))}
                 </RadioGroup>
 
-                {/* Avatar / Voice selectors — animate in */}
+                {/* Avatar / Voice selectors */}
                 {videoType === 'avatar' && (
                   <div className="space-y-3.5 sm:space-y-4 border-t border-border/50 pt-4 sm:pt-5 animate-in fade-in slide-in-from-top-2 duration-200">
-
-                    {/* Avatar Select */}
                     <div className="space-y-1.5">
                       <Label className="text-xs sm:text-sm font-medium">
                         Select Avatar
@@ -308,7 +322,7 @@ export default function CreatePage() {
                       {loadingOptions ? (
                         <div className="flex items-center gap-2.5 h-10 sm:h-11 px-3 border border-border/60 rounded-lg bg-muted/10 text-sm text-muted-foreground">
                           <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-                          <span className="text-xs sm:text-sm">Loading avatars…</span>
+                          <span className="text-xs sm:text-sm">Loading avatars...</span>
                         </div>
                       ) : avatars.length === 0 ? (
                         <div className="flex flex-wrap items-center gap-x-1 text-xs sm:text-sm text-muted-foreground">
@@ -317,7 +331,7 @@ export default function CreatePage() {
                             href="/dashboard/ai-studio"
                             className="underline text-primary hover:text-primary/80 transition-colors whitespace-nowrap"
                           >
-                            Create one in AI Studio →
+                            Create one in AI Studio
                           </Link>
                         </div>
                       ) : (
@@ -339,7 +353,6 @@ export default function CreatePage() {
                       )}
                     </div>
 
-                    {/* Voice Select */}
                     <div className="space-y-1.5">
                       <Label className="text-xs sm:text-sm font-medium">
                         Voice{' '}
@@ -355,7 +368,7 @@ export default function CreatePage() {
                             href="/dashboard/ai-studio"
                             className="underline text-primary hover:text-primary/80 transition-colors whitespace-nowrap"
                           >
-                            Clone your voice →
+                            Clone your voice
                           </Link>
                         </div>
                       ) : (
@@ -387,11 +400,11 @@ export default function CreatePage() {
             </Card>
 
             {/* Topic Entry card */}
-            <Card className="card-premium overflow-hidden">
+            <Card className="card-glow rounded-2xl overflow-hidden">
               <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3">
                 <CardTitle className="text-sm sm:text-base font-semibold flex items-center gap-2">
                   <Wand2 className="h-4 w-4 shrink-0 text-primary" />
-                  What's your video about?
+                  What&apos;s your video about?
                 </CardTitle>
                 <CardDescription className="text-xs sm:text-sm">
                   Enter a topic and our AI will write an engaging script instantly.
@@ -412,7 +425,7 @@ export default function CreatePage() {
             STEP 2 — Script editor
         ════════════════════════════════ */}
         {step === 'script' && (
-          <Card className="card-premium overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <Card className="card-glow rounded-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
             <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3">
               <CardTitle className="text-sm sm:text-base font-semibold">
                 Review &amp; Edit Script
@@ -439,41 +452,49 @@ export default function CreatePage() {
             STEP 3 — Generating state
         ════════════════════════════════ */}
         {step === 'generating' && (
-          <Card className="card-premium border-primary/30 bg-primary/5 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-            <CardContent className="flex flex-col items-center justify-center py-14 sm:py-20 px-6 text-center">
-              {/* Animated icon ring */}
-              <div className="relative mb-5 sm:mb-6">
-                {/* Outer pulsing ring */}
-                <span className="absolute inset-0 rounded-full bg-primary/10 animate-ping" />
-                <div className="relative h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-primary/10 flex items-center justify-center ring-1 ring-primary/20">
-                  <Sparkles className="h-7 w-7 sm:h-9 sm:w-9 text-primary animate-pulse" />
-                </div>
+          <div className="flex flex-col items-center justify-center py-14 sm:py-20 px-6 text-center rounded-2xl border border-primary/20 bg-[radial-gradient(ellipse_at_center,_hsl(258_84%_62%_/_0.1)_0%,_transparent_70%)] relative overflow-hidden">
+            {/* Orbital rings */}
+            <div className="relative mb-8">
+              {/* Outer orbital ring */}
+              <div className="absolute inset-0 -m-10 sm:-m-14">
+                <div className="absolute inset-0 rounded-full border border-primary/10" />
+                <div className="absolute inset-0 rounded-full border border-transparent border-t-primary/30 animate-[orbit_5s_linear_infinite]" />
               </div>
 
-              <h3 className="text-base sm:text-lg md:text-xl font-semibold mb-2 tracking-tight">
-                Your video is being created!
-              </h3>
-              <p className="text-xs sm:text-sm text-muted-foreground max-w-xs leading-relaxed">
-                We're generating the script, voiceover, and footage. This
-                usually takes 2–5 minutes.
-              </p>
-
-              {/* Subtle progress dots */}
-              <div className="flex items-center gap-1.5 mt-6">
-                {[0, 1, 2].map((i) => (
-                  <span
-                    key={i}
-                    className="h-1.5 w-1.5 rounded-full bg-primary/40 animate-bounce"
-                    style={{ animationDelay: `${i * 150}ms` }}
-                  />
-                ))}
+              {/* Middle orbital ring */}
+              <div className="absolute inset-0 -m-5 sm:-m-8">
+                <div className="absolute inset-0 rounded-full border border-primary/10" />
+                <div className="absolute inset-0 rounded-full border border-transparent border-t-primary/40 animate-[orbit_3s_linear_infinite_reverse]" />
               </div>
 
-              <p className="text-[10px] sm:text-xs text-muted-foreground/60 mt-4">
-                Redirecting to dashboard…
-              </p>
-            </CardContent>
-          </Card>
+              {/* Inner orbital ring */}
+              <div className="absolute inset-0 -m-1">
+                <div className="absolute inset-0 rounded-full border border-primary/15" />
+                <div className="absolute inset-0 rounded-full border border-transparent border-t-primary/50 animate-[orbit_1.5s_linear_infinite]" />
+              </div>
+
+              {/* Center icon */}
+              <div className="relative h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-primary/10 flex items-center justify-center ring-1 ring-primary/20 shadow-[0_0_40px_rgba(139,92,246,0.2)]">
+                <Sparkles className="h-7 w-7 sm:h-9 sm:w-9 text-primary animate-[glow-pulse_2s_ease-in-out_infinite]" />
+              </div>
+            </div>
+
+            <h3 className="text-base sm:text-lg md:text-xl font-semibold mb-2 tracking-tight">
+              Your video is being created!
+            </h3>
+
+            {/* Fading stage text */}
+            <p
+              key={generatingStage}
+              className="text-xs sm:text-sm text-muted-foreground max-w-xs leading-relaxed animate-[fadeIn_400ms_ease-out]"
+            >
+              {GENERATING_STAGES[generatingStage]}
+            </p>
+
+            <p className="text-[10px] sm:text-xs text-muted-foreground/60 mt-6">
+              Redirecting to dashboard...
+            </p>
+          </div>
         )}
       </div>
     </div>

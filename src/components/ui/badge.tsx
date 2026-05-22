@@ -19,6 +19,8 @@ const badgeVariants = cva(
           'border-amber-200 dark:border-amber-900 bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900',
         outline:
           'border-slate-200 dark:border-slate-800 text-foreground hover:bg-slate-50 dark:hover:bg-slate-950',
+        glow:
+          'border-primary/30 bg-primary/10 text-primary shadow-[0_0_12px_rgba(139,92,246,0.2)] hover:bg-primary/20',
       },
     },
     defaultVariants: { variant: 'default' },

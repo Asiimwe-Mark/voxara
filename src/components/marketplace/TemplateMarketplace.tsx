@@ -195,7 +195,7 @@ export function TemplateMarketplace({ userId }: Props) {
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="card-premium overflow-hidden">
+            <Card key={i} className="card-glow rounded-2xl overflow-hidden">
               <Skeleton className="aspect-video w-full rounded-none" />
               <CardContent className="p-4 sm:p-5 space-y-3">
                 <Skeleton className="h-5 w-3/4" />
@@ -213,9 +213,9 @@ export function TemplateMarketplace({ userId }: Props) {
           ))}
         </div>
       ) : templates.length === 0 ? (
-        <div className="empty-state border-2 border-dashed border-border/50 rounded-xl py-12 sm:py-16">
+        <div className="empty-state border-2 border-dashed border-border/50 rounded-xl">
           <div className="empty-state-icon">
-            <ShoppingCart className="h-full w-full" />
+            <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6" />
           </div>
           <p className="empty-state-title">No templates found</p>
           <p className="empty-state-description">
@@ -225,7 +225,7 @@ export function TemplateMarketplace({ userId }: Props) {
             <Button
               variant="outline"
               onClick={resetFilters}
-              className="mt-4 h-10 rounded-lg text-sm font-medium transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="mt-4 h-10 w-full rounded-lg text-sm font-medium sm:w-auto"
             >
               <RefreshCw className="mr-2 h-4 w-4" />
               Reset Filters
@@ -237,7 +237,7 @@ export function TemplateMarketplace({ userId }: Props) {
           {templates.map((t) => (
             <Card
               key={t.id}
-              className="card-premium overflow-hidden group flex flex-col transition-smooth hover:shadow-md"
+              className="card-glow rounded-2xl overflow-hidden group flex flex-col transition-smooth hover:shadow-md"
             >
               {/* Preview */}
               <div className="aspect-video bg-muted/30 dark:bg-muted/10 relative overflow-hidden flex-shrink-0">

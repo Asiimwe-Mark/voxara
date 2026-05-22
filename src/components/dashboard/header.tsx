@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from 'next/navigation'
 import { toast } from 'sonner'
+import { motion } from 'motion/react'
 import {
   LogOut,
   User,
@@ -27,6 +28,7 @@ import { Badge } from '@/components/ui/badge'
 import { createClient } from '@/lib/supabase/client'
 import { useTheme } from 'next-themes'
 import { useSidebar, SidebarTrigger } from '@/components/ui/sidebar'
+import { cn } from '@/lib/utils'
 
 const PAGE_TITLES: Record<string, string> = {
   '/dashboard': 'My Videos',
@@ -67,14 +69,17 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
   }
 
   const planBadgeClass: Record<string, string> = {
-    pro: 'bg-primary text-primary-foreground',
-    agency: 'bg-violet-600 text-white dark:bg-violet-500',
+    pro: 'bg-primary/15 text-primary border border-primary/20 shadow-[0_0_12px_rgba(139,92,246,0.15)]',
+    agency: 'bg-violet-500/15 text-violet-400 border border-violet-500/20 shadow-[0_0_12px_rgba(139,92,246,0.15)]',
   }
 
   const { setOpen } = useSidebar()
 
   return (
-    <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-3 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-3 sm:px-6 py-3 sm:py-4 shrink-0">
+    <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-3 border-b border-border/30 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 px-3 sm:px-6 py-3 sm:py-4 shrink-0 relative">
+      {/* Gradient separator below header */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+
       {/* Mobile sidebar toggle */}
       <SidebarTrigger
         className="md:hidden h-9 w-9 sm:h-10 sm:w-10 rounded-lg transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
@@ -92,12 +97,23 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
         {/* Credits & Plan Pill */}
         <div className="flex items-center gap-1.5 sm:gap-2 rounded-full bg-muted/50 dark:bg-muted/30 px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm border border-border/50">
           <Coins className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-500 dark:text-amber-400 shrink-0" />
-          <span className="font-medium tabular-nums">{user.credits}</span>
+          <motion.span
+            key={user.credits}
+            initial={{ scale: 1, opacity: 0.5 }}
+            animate={{ scale: [1, 1.15, 1], opacity: 1 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="font-medium tabular-nums"
+          >
+            {user.credits}
+          </motion.span>
           <span className="text-muted-foreground hidden sm:inline">credits</span>
           {user.plan !== 'free' && (
             <Badge
               variant="secondary"
-              className={`ml-0.5 text-[10px] sm:text-xs px-1.5 py-0 h-5 rounded-full ${planBadgeClass[user.plan] ?? ''}`}
+              className={cn(
+                'ml-0.5 text-[10px] sm:text-xs px-1.5 py-0 h-5 rounded-full',
+                planBadgeClass[user.plan] ?? ''
+              )}
             >
               <Crown className="mr-1 h-2.5 w-2.5 sm:h-3 sm:w-3" />
               <span className="hidden sm:inline capitalize">{user.plan}</span>

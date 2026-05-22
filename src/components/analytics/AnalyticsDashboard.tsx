@@ -22,13 +22,13 @@ function StatCard({ icon: Icon, label, value, sub, color = "text-primary" }: {
   icon: React.ElementType; label: string; value: string; sub?: string; color?: string;
 }) {
   return (
-    <Card className="card-premium">
+    <Card className="card-glow rounded-2xl overflow-hidden group hover:shadow-md hover:border-primary/30 transition-all duration-200">
       <CardContent className="p-4 sm:p-5">
         <div className="flex items-center gap-2 text-muted-foreground text-xs mb-2">
           <Icon className={`h-3.5 w-3.5 ${color}`} />
           <span className="font-medium">{label}</span>
         </div>
-        <p className="text-xl sm:text-2xl font-bold tracking-tight tabular-nums">{value}</p>
+        <p className="text-xl sm:text-2xl font-bold tracking-tight stat-number">{value}</p>
         {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
       </CardContent>
     </Card>
@@ -64,20 +64,20 @@ export function AnalyticsDashboard({ plan }: { plan: string }) {
         </div>
 
         {/* Locked State */}
-        <Card className="card-premium border-dashed border-2">
-          <CardContent className="flex flex-col items-center py-12 sm:py-16 px-6 text-center">
-            <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-muted flex items-center justify-center mb-4 sm:mb-5">
-              <Lock className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground" />
+        <Card className="card-glow rounded-2xl border-dashed border-2">
+          <CardContent className="flex flex-col items-center px-4 py-10 text-center sm:px-6 sm:py-14">
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted sm:mb-5 sm:h-14 sm:w-14">
+              <Lock className="h-5 w-5 text-muted-foreground sm:h-7 sm:w-7" />
             </div>
-            <h3 className="text-lg sm:text-xl font-semibold mb-2 tracking-tight">
+            <h3 className="mb-1.5 text-base font-semibold tracking-tight sm:mb-2 sm:text-lg">
               Analytics require Pro or Agency
             </h3>
-            <p className="text-sm text-muted-foreground max-w-sm mb-6 leading-relaxed">
+            <p className="mb-5 max-w-xs text-xs leading-relaxed text-muted-foreground sm:mb-7 sm:text-sm sm:max-w-sm">
               Upgrade to track views, watch time, CTR, and retention across all your videos.
             </p>
-            <Button 
-              asChild 
-              className="h-11 sm:h-12 rounded-xl text-sm font-medium transition-smooth focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            <Button
+              asChild
+              className="h-10 w-full rounded-xl text-sm font-medium sm:h-11 sm:w-auto"
             >
               <Link href="/pricing">Upgrade Plan</Link>
             </Button>
@@ -115,7 +115,7 @@ export function AnalyticsDashboard({ plan }: { plan: string }) {
           <span className="ml-3 text-sm text-muted-foreground">Loading analytics...</span>
         </div>
       ) : !data ? (
-        <Card className="card-premium">
+        <Card className="card-glow rounded-2xl">
           <CardContent className="py-12 text-center text-sm text-muted-foreground">
             Failed to load analytics. Please refresh the page.
           </CardContent>
@@ -152,10 +152,10 @@ export function AnalyticsDashboard({ plan }: { plan: string }) {
 
           {/* Views Over Time Chart */}
           {data.dailyData.length > 0 ? (
-            <Card className="card-premium min-w-0 overflow-hidden">
+            <Card className="card-glow rounded-2xl min-w-0 overflow-hidden">
               <CardHeader className="pb-2 px-4 sm:px-6">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <BarChart2 className="h-4 w-4 text-primary" /> 
+                  <BarChart2 className="h-4 w-4 text-primary" />
                   <span>Views Over Time</span>
                 </CardTitle>
               </CardHeader>
@@ -203,16 +203,24 @@ export function AnalyticsDashboard({ plan }: { plan: string }) {
               </CardContent>
             </Card>
           ) : (
-            <Card className="card-premium min-w-0 overflow-hidden">
-              <CardContent className="py-10 text-center text-sm text-muted-foreground">
-                No view data for this period yet. Share your videos to start seeing analytics!
+            <Card className="card-glow rounded-2xl min-w-0 overflow-hidden">
+              <CardContent className="py-8 px-4 text-center sm:py-10">
+                <div className="empty-state py-0">
+                  <div className="empty-state-icon">
+                    <BarChart2 className="h-5 w-5 sm:h-6 sm:w-6" />
+                  </div>
+                  <p className="empty-state-title">No view data yet</p>
+                  <p className="empty-state-description">
+                    Share your videos to start seeing analytics!
+                  </p>
+                </div>
               </CardContent>
             </Card>
           )}
 
           {/* Top Videos List */}
           {data.topVideos.length > 0 && (
-            <Card className="card-premium min-w-0 overflow-hidden">
+            <Card className="card-glow rounded-2xl min-w-0 overflow-hidden">
               <CardHeader className="pb-2 px-4 sm:px-6">
                 <CardTitle className="text-base">Top Videos</CardTitle>
                 <CardDescription className="text-xs sm:text-sm">
