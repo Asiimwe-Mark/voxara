@@ -1,12 +1,11 @@
-// proxy.ts
+// src/proxy.ts
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-// Imported from our clean, isolated Edge utility file to prevent tracing crashes
-import { applySecurityHeaders, getClientIp, isValidOrigin } from "@/lib/edge-security";
+import { applySecurityHeaders, getClientIp, isValidOrigin } from "@/lib/security";
 
-// Safe initialization for Upstash (REST over HTTP works perfectly in Next 16 Edge)
+// Safe initialization for Upstash
 let ratelimit: Ratelimit | null = null;
 if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
   ratelimit = new Ratelimit({
@@ -19,10 +18,10 @@ if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) 
   });
 }
 
-// Named export 'proxy' is the official standard for Next.js 16
+// Named export 'proxy' is required for Next.js 16
 export async function proxy(request: NextRequest) {
   
-  // 1. Validate incoming origins on your internal API routes
+  // 1. Validate incoming origins on your API routes
   if (request.nextUrl.pathname.startsWith("/api/") && !isValidOrigin(request)) {
     return NextResponse.json(
       { error: "Invalid origin" },
@@ -61,8 +60,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Explicitly forces Turbopack to isolate compilation to the Edge Runtime
-  runtime: "edge",
+  // REMOVED: runtime: "edge" is completely forbidden here in Next 16
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
