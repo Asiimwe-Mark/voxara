@@ -162,11 +162,11 @@ export default function PricingPage() {
         </div>
 
         {/* Plan cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto pb-8 items-start">
           {PLANS.map((plan) => (
             <Card
               key={plan.id}
-              className={plan.highlighted ? 'relative border-primary shadow-lg md:scale-105' : ''}
+              className={plan.highlighted ? 'relative z-10 border-primary shadow-lg md:scale-105' : ''}
             >
               {plan.badge && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -219,7 +219,7 @@ export default function PricingPage() {
         </div>
 
         {/* Free tier earning explainer */}
-        <div className="max-w-2xl mx-auto mt-14">
+        <div className="relative z-0 max-w-2xl mx-auto mt-20 sm:mt-24">
           <h2 className="text-center text-lg font-semibold mb-2">
             How free users earn extra credits
           </h2>
