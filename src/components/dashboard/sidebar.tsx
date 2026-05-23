@@ -81,7 +81,7 @@ export function DashboardSidebar() {
     <Sidebar
       collapsible={isMobile ? 'offcanvas' : 'icon'}
       className={cn(
-        'border-r border-white/[0.06] m-3 rounded-xl overflow-hidden',
+        'border-r border-white/[0.06] m-3 rounded-xl',
         'bg-[hsl(240_12%_7%)] text-[hsl(240_10%_80%)]'
       )}
     >

@@ -27,7 +27,8 @@ export default async function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full overflow-hidden bg-background">
+      {/* Changed h-screen → h-dvh to match Sidebar's internal h-dvh */}
+      <div className="flex h-dvh w-full overflow-hidden bg-background">
         {/* Sidebar - handles mobile drawer/desktop sidebar via SidebarProvider context */}
         <DashboardSidebar />
 

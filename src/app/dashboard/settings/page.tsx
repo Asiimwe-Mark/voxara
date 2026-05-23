@@ -61,7 +61,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
       : 'profile'
 
   return (
-    <div className="w-full max-w-3xl space-y-5 sm:space-y-7">
+    <div className="w-full max-w-3xl space-y-5 sm:space-y-7 overflow-x-hidden">
 
       {/* Header */}
       <div className="pb-1">

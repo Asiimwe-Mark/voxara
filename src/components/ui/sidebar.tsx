@@ -92,10 +92,10 @@ function Sidebar({
       <div
         data-collapsed={isIconMode}
         className={cn(
-          'group/sidebar relative flex flex-col h-dvh border-r bg-sidebar-background text-sidebar-foreground shadow-xl transition-all duration-300',
+          'group/sidebar relative flex flex-col border-r bg-sidebar-background text-sidebar-foreground shadow-xl transition-all duration-300',
           isOffcanvas
             ? 'fixed inset-y-0 left-0 z-50 transform border-r bg-background shadow-2xl md:relative md:translate-x-0 md:z-auto md:shadow-xl'
-            : 'relative',
+            : 'h-dvh relative',
           isOffcanvas ? (open ? 'translate-x-0' : '-translate-x-full md:translate-x-0') : '',
           isIconMode ? 'w-14' : 'w-64',
           className

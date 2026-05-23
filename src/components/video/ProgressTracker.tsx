@@ -30,7 +30,7 @@ export function ProgressTracker({ currentStep, className }: ProgressTrackerProps
       className={cn("w-full", className)}
       role="navigation"
     >
-      <ol className="flex items-center gap-0 sm:gap-2">
+      <ol className="flex items-start gap-0">
         {STEPS.map((step, i) => {
           const isCompleted = i < currentIdx
           const isActive = i === currentIdx
@@ -94,7 +94,7 @@ export function ProgressTracker({ currentStep, className }: ProgressTrackerProps
               {i < STEPS.length - 1 && (
                 <div
                   className={cn(
-                    "flex-1 h-0.5 sm:h-1 mx-1.5 sm:mx-2 mb-5 sm:mb-6 rounded-full transition-all duration-500 ease-out",
+                    "flex-1 h-0.5 mx-2 mt-5 rounded-full transition-all duration-500 ease-out",
                     isCompleted
                       ? "bg-gradient-to-r from-primary to-primary shadow-[0_0_8px_rgba(139,92,246,0.3)]"
                       : "bg-border/50"
