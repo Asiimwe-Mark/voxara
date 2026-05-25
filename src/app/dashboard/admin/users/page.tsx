@@ -57,7 +57,7 @@ export default function AdminUsers() {
   }
 
   return (
-    <div className="w-full max-w-6xl space-y-6 sm:space-y-8">
+    <div className="w-full space-y-6 sm:space-y-8">
       {/* Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">User Management</h1>

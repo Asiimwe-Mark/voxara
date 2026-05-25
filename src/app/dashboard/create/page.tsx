@@ -194,7 +194,7 @@ export default function CreatePage() {
 
   return (
     <div className="w-full">
-      <div className="mx-auto w-full max-w-2xl px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      <div className="w-full px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
 
         {/* ── Header ── */}
         <div className="flex items-start gap-3">

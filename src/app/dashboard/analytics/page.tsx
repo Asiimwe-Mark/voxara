@@ -19,7 +19,7 @@ export default async function AnalyticsPage() {
     .single()
 
   return (
-    <div className="w-full max-w-6xl space-y-6 sm:space-y-8">
+    <div className="w-full space-y-6 sm:space-y-8">
       <AnalyticsDashboard plan={profile?.plan ?? 'free'} />
     </div>
   )

@@ -62,7 +62,7 @@ export default function SEOPage() {
 
   if (error) {
     return (
-      <div className="w-full max-w-6xl space-y-6 sm:space-y-8">
+      <div className="w-full space-y-6 sm:space-y-8">
         <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 sm:p-5 text-sm text-destructive-foreground">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 shrink-0" />
@@ -75,7 +75,7 @@ export default function SEOPage() {
 
   if (!videos.length) {
     return (
-      <div className="w-full max-w-6xl space-y-6 sm:space-y-8">
+      <div className="w-full space-y-6 sm:space-y-8">
         <div>
           <h2 className="text-xl font-bold tracking-tight sm:text-2xl">SEO Optimizer</h2>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground sm:text-sm">
@@ -100,7 +100,7 @@ export default function SEOPage() {
   }
 
   return (
-    <div className="w-full max-w-6xl space-y-5 sm:space-y-7">
+    <div className="w-full space-y-5 sm:space-y-7">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
         <div>
