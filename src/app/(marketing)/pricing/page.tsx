@@ -162,7 +162,7 @@ export default function PricingPage() {
         </div>
 
         {/* Plan cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto pb-8 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full pb-8 items-start">
           {PLANS.map((plan) => (
             <Card
               key={plan.id}

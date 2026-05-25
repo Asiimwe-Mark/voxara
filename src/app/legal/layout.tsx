@@ -29,7 +29,7 @@ export default function LegalLayout({
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-card border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">Legal & Policies</h1>
           <p className="text-muted-foreground mt-2 text-sm sm:text-base">
             Find all the information you need about Voxara&apos;s policies and legal documentation
@@ -38,7 +38,7 @@ export default function LegalLayout({
       </div>
 
       {/* Navigation and Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
           {/* Sidebar Navigation */}
           <aside className="lg:col-span-1">
@@ -98,7 +98,7 @@ export default function LegalLayout({
 
       {/* Footer */}
       <footer className="bg-card border-t border-border mt-12 sm:mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 mb-8">
             <div>
               <h3 className="font-semibold text-foreground mb-4 text-sm tracking-tight">

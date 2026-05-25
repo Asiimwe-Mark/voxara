@@ -177,7 +177,7 @@ export function PublishingScheduler({ videoId }: { videoId: string }) {
   }
 
   return (
-    <Card className="card-premium max-w-3xl mx-auto">
+    <Card className="card-premium w-full">
       <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
         <CardTitle className="text-lg sm:text-xl tracking-tight">
           Publish to Social Media

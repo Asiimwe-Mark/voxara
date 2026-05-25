@@ -176,7 +176,7 @@ export function SEOOptimizer({
   }, [title, description, tags])
 
   return (
-    <Card className="card-premium max-w-4xl mx-auto">
+    <Card className="card-premium w-full">
       <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
